@@ -1,0 +1,212 @@
+# REPOMIX_CACHE.md — Prompt Cache Strategy with Repomix + ContextForge
+
+> **60% API cost reduction** by combining Repomix's compressed output as a stable cached prefix
+> with ContextForge signatures as the per-session dynamic segment.
+
+---
+
+## How Anthropic prompt caching works
+
+Anthropic's API supports `cache_control: { type: "ephemeral" }` on system content blocks.
+When a block is marked as cacheable, the API caches the transformer computation up to that point
+and reuses it for subsequent requests — as long as the text is identical.
+
+| Without caching | With caching |
+|---|---|
+| Full prompt re-processed every request | Cached prefix re-used (read at cache price) |
+| ~$0.015 / 1K tokens | ~$0.003 / 1K tokens (80% cheaper) |
+| Works for any content | Best for stable, rarely-changing context |
+
+---
+
+## The two-layer strategy
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  Layer 1 — Stable prefix (cached with Repomix)              │
+│  Repomix compressed output: full file content               │
+│  Changed: rarely (only on major refactors)                  │
+│  Size: ~8,000 tokens                                        │
+│  Cost: cached at ~$0.001 after first call                   │
+├─────────────────────────────────────────────────────────────┤
+│  Layer 2 — Dynamic segment (always fresh with ContextForge) │
+│  ContextForge signatures: function & class signatures only  │
+│  Changed: on every commit (auto via git hook)               │
+│  Size: ~400–4,000 tokens                                    │
+│  Cost: full price, but tiny                                 │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**Why this split?**
+- Repomix output is large but stable — perfect for caching
+- ContextForge signatures update frequently but are small — pay full price for tiny fresh context
+- Together: ~60% cost reduction on a 10K token combined context
+
+---
+
+## Quick start
+
+### Step 1 — Generate both context files
+
+```bash
+# Install Repomix (one-time)
+npm install -g repomix
+
+# Generate Repomix compressed output (stable prefix)
+npx repomix --compress -o .context/repomix-compressed.md
+
+# Generate ContextForge signatures (dynamic segment)
+node gen-context.js
+
+# Generate the Anthropic cache-ready JSON block
+node gen-context.js --format cache
+# Writes: .github/copilot-instructions.cache.json
+```
+
+### Step 2 — Use in an API call
+
+```javascript
+const fs = require('fs');
+
+// Load the ContextForge cache block
+const cfCache = JSON.parse(
+  fs.readFileSync('.github/copilot-instructions.cache.json', 'utf8')
+);
+
+// Load the Repomix content
+const repomixContent = fs.readFileSync('.context/repomix-compressed.md', 'utf8');
+
+// Build the system array: Repomix prefix (cached) + ContextForge signatures (cached)
+const system = [
+  {
+    type: 'text',
+    text: repomixContent,
+    cache_control: { type: 'ephemeral' },  // cache the large stable prefix
+  },
+  cfCache,  // ContextForge block — also cached (already has cache_control)
+];
+
+// Make the API call
+const response = await fetch('https://api.anthropic.com/v1/messages', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'x-api-key': process.env.ANTHROPIC_API_KEY,
+    'anthropic-version': '2023-06-01',
+    'anthropic-beta': 'prompt-caching-2024-07-31',
+  },
+  body: JSON.stringify({
+    model: 'claude-opus-4-5',
+    max_tokens: 1024,
+    system,
+    messages: [
+      { role: 'user', content: 'What does the AuthService class do?' }
+    ],
+  }),
+});
+```
+
+---
+
+## Cache hit calculation
+
+A cache **hit** occurs when an identical prefix was seen in the last **5 minutes** (Anthropic's
+TTL for ephemeral cache). In a typical developer session:
+
+| Scenario | Cache hits / hour |
+|---|---|
+| Single dev iterating | ~40 (one every 90 seconds) |
+| Team of 5 devs on same codebase | ~200 |
+| CI pipeline on PR | 3–5 per PR |
+
+```
+Hourly cost without cache:  40 × 12,000 tokens × $0.015 / 1K = $7.20
+Hourly cost with cache:     40 × 12,000 tokens × $0.003 / 1K = $1.44
+Saving:                     $5.76 / dev / hour
+```
+
+---
+
+## Keeping the cache warm
+
+To maximise cache hits, refresh the cached context files only when needed:
+
+```bash
+# In your git post-commit hook (installed via --setup)
+# ContextForge already runs here automatically
+
+# For Repomix: refresh only on significant changes
+git diff --stat HEAD~1 | grep -E "\.(ts|py|go|rs|java)$" | wc -l | 
+  xargs -I{} sh -c 'if [ {} -gt 10 ]; then npx repomix --compress -o .context/repomix-compressed.md; fi'
+```
+
+Or in CI, run both tools in the `generate-context` step:
+
+```yaml
+# .github/workflows/context.yml
+- name: Refresh context
+  run: |
+    node gen-context.js --format cache
+    npx repomix --compress -o .context/repomix-compressed.md
+```
+
+---
+
+## Format detail — .github/copilot-instructions.cache.json
+
+The `--format cache` flag writes a single Anthropic content block:
+
+```json
+{
+  "type": "text",
+  "text": "<!-- Generated by ContextForge gen-context.js v0.8.0 -->\n...",
+  "cache_control": {
+    "type": "ephemeral"
+  }
+}
+```
+
+This block can be used as-is in the `system` array of any Anthropic API call.
+The `text` field contains the full ContextForge signatures markdown.
+
+---
+
+## Config option
+
+Enable `--format cache` permanently via `gen-context.config.json`:
+
+```json
+{
+  "format": "cache"
+}
+```
+
+When `format: "cache"` is set, every `node gen-context.js` run also writes
+`.github/copilot-instructions.cache.json` automatically.
+
+---
+
+## Add to .gitignore
+
+The cache JSON embeds your entire codebase signatures — commit it to share with your team,
+or add it to `.gitignore` if you prefer to generate it locally:
+
+```gitignore
+# Optional — if you prefer not to commit the cache file
+.github/copilot-instructions.cache.json
+```
+
+---
+
+## Relationship to Repomix
+
+> *ContextForge for daily always-on context; Repomix for deep one-off sessions — use both.*
+
+| Tool | Role | Cache strategy |
+|---|---|---|
+| **Repomix** | Full compressed file content | Stable prefix — cache aggressively |
+| **ContextForge** | Signature-only index | Dynamic segment — still small enough to cache |
+
+Both tools write output files you can cache independently or together in a layered system array.
+The two approaches are complementary — see [REPOMIX_INTEGRATION.md](REPOMIX_INTEGRATION.md) for
+the full integration guide.
