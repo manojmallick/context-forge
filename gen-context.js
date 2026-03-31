@@ -2,7 +2,7 @@
 'use strict';
 
 /**
- * ContextForge — gen-context.js v0.7.0
+ * ContextForge — gen-context.js v0.8.0
  * Zero-dependency AI context engine.
  * Runs with: node gen-context.js
  * No npm install required. Node 18+ built-ins only.
@@ -13,7 +13,7 @@ const path = require('path');
 const os = require('os');
 const { execSync } = require('child_process');
 
-const VERSION = '0.7.0';
+const VERSION = '0.8.0';
 const MARKER = '\n\n## Auto-generated signatures\n<!-- Updated by gen-context.js -->\n';
 
 // ---------------------------------------------------------------------------
@@ -291,6 +291,21 @@ function ensureDir(filePath) {
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
 }
 
+// ---------------------------------------------------------------------------
+// Cache output writer (v0.8)
+// ---------------------------------------------------------------------------
+function writeCacheOutput(content, cwd) {
+  try {
+    const { formatCache } = require('./src/format/cache');
+    const cachePath = path.join(cwd, '.github', 'copilot-instructions.cache.json');
+    ensureDir(cachePath);
+    fs.writeFileSync(cachePath, formatCache(content), 'utf8');
+    console.warn(`[context-forge] cache: wrote ${path.relative(cwd, cachePath)}`);
+  } catch (err) {
+    console.warn(`[context-forge] cache: failed to write cache output: ${err.message}`);
+  }
+}
+
 function writeOutputs(content, targets, cwd) {
   const targetMap = {
     copilot: path.join(cwd, '.github', 'copilot-instructions.md'),
@@ -482,8 +497,14 @@ function runGenerate(cwd, config, reportMode, reportJson = false) {
   const content = formatOutput(fileEntries, cwd, routingEnabled);
   const finalTokens = estimateTokens(content);
 
+  // --format cache: also write Anthropic prompt-cache JSON
+  const formatIdx = process.argv.indexOf('--format');
+  const formatValue = formatIdx >= 0 ? process.argv[formatIdx + 1] : (config.format || 'default');
   if (!reportMode) {
     writeOutputs(content, config.outputs, cwd);
+    if (formatValue === 'cache') {
+      writeCacheOutput(content, cwd);
+    }
   }
 
   if (reportMode || process.argv.includes('--report')) {
@@ -555,17 +576,18 @@ ContextForge — gen-context.js v${VERSION}
 Zero-dependency AI context engine
 
 Usage:
-  node gen-context.js                  Generate context once and exit
-  node gen-context.js --monorepo       Generate per-package context (monorepo)
-  node gen-context.js --routing        Include model routing hints in output
-  node gen-context.js --watch          Generate + watch for file changes
-  node gen-context.js --setup          Generate + install git hook + watch
-  node gen-context.js --mcp            Start MCP server on stdio
-  node gen-context.js --report         Token reduction stats to stdout
-  node gen-context.js --report --json  Token report as JSON (for CI)
-  node gen-context.js --init           Write example config file
-  node gen-context.js --help           Show this message
-  node gen-context.js --version        Show version
+  node gen-context.js                       Generate context once and exit
+  node gen-context.js --monorepo            Generate per-package context (monorepo)
+  node gen-context.js --routing             Include model routing hints in output
+  node gen-context.js --format cache        Also write Anthropic prompt-cache JSON
+  node gen-context.js --watch              Generate + watch for file changes
+  node gen-context.js --setup              Generate + install git hook + watch
+  node gen-context.js --mcp               Start MCP server on stdio
+  node gen-context.js --report            Token reduction stats to stdout
+  node gen-context.js --report --json     Token report as JSON (for CI)
+  node gen-context.js --init              Write example config file
+  node gen-context.js --help              Show this message
+  node gen-context.js --version           Show version
 
 Config: gen-context.config.json
 Ignore: .contextignore, .repomixignore

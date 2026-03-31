@@ -43,6 +43,9 @@ const DEFAULTS = {
   // Routes files to fast/balanced/powerful model tiers based on complexity
   routing: false,
 
+  // Output format: 'default' (markdown only) | 'cache' (also write Anthropic prompt-cache JSON)
+  format: 'default',
+
   // MCP server configuration
   mcp: {
     autoRegister: true,
