@@ -13,9 +13,9 @@ not just the file — see the decision flow below.
 
 | Tier | Label | Example models | Typical cost |
 |---|---|---|---|
-| `fast` | Fast (low-cost) | claude-haiku-3, gpt-4o-mini, gemini-flash | ~$0.001 / 1K tokens |
-| `balanced` | Balanced (mid-tier) | claude-sonnet-3-5, gpt-4o, gemini-pro | ~$0.003 / 1K tokens |
-| `powerful` | Powerful (high-cost) | claude-opus-4, gpt-4-turbo, gemini-ultra | ~$0.015 / 1K tokens |
+| `fast` | Fast (low-cost) | claude-haiku-4-5, gpt-5-1-codex-mini, gemini-3-flash | ~$0.0008 / 1K tokens |
+| `balanced` | Balanced (mid-tier) | claude-sonnet-4-6, gpt-5-2, gemini-3-1-pro | ~$0.003 / 1K tokens |
+| `powerful` | Powerful (high-cost) | claude-opus-4-6, gpt-5-4, gemini-2-5-pro | ~$0.015 / 1K tokens |
 
 ---
 
@@ -172,8 +172,8 @@ For a typical 60-minute session with context at each turn:
 | Model tier | Turns | Tokens/turn | Cost (est.) |
 |---|---|---|---|
 | All powerful | 20 | 4,000 | **$1.20** |
-| Mixed routing | 10 fast + 8 balanced + 2 powerful | 4,000 each | **$0.31** |
-| **Saving** | | | **~74%** |
+| Mixed routing | 10 fast + 8 balanced + 2 powerful | 4,000 each | **$0.28** |
+| **Saving** | | | **~77%** |
 
 ---
 
@@ -192,6 +192,24 @@ echo "src/generated/**" >> .contextignore
 
 For custom tier rules, edit `src/routing/classifier.js` directly — the function is small
 and fully documented.
+
+---
+
+## `--suggest-tool` — instant tier recommendation
+
+Instead of consulting the table manually, ask ContextForge:
+
+```bash
+node gen-context.js --suggest-tool "migrate from Passport.js v0.6 to v0.7"
+# tier   : powerful
+# models : claude-opus-4-6, gpt-5-4, gemini-2-5-pro
+# cost   : ~$0.015 / 1K tokens
+
+node gen-context.js --suggest-tool "fix the typo in the dockerfile" --json
+# {"tier":"fast","label":"Fast (low-cost)","models":"claude-haiku-4-5, gpt-5-1-codex-mini, gemini-3-flash","costHint":"~$0.0008 / 1K tokens"}
+```
+
+Keyword matching covers the most common task patterns. When in doubt, start balanced and escalate.
 
 ---
 

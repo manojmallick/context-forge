@@ -24,7 +24,7 @@ ContextForge ships three observability features from v0.9:
 
 ```json
 {
-  "version": "0.9.0",
+  "version": "1.0.0",
   "timestamp": "2026-04-01T00:00:00.000Z",
   "rawTokens": 42000,
   "finalTokens": 3200,
@@ -120,8 +120,8 @@ Once enabled, every `node gen-context.js` run appends one JSON line to `.context
 
 Each line is one record:
 ```json
-{"ts":"2026-04-01T09:00:00.000Z","version":"0.9.0","fileCount":147,"droppedCount":0,"rawTokens":42000,"finalTokens":3200,"reductionPct":92.4,"overBudget":false,"budgetLimit":6000}
-{"ts":"2026-04-01T09:30:00.000Z","version":"0.9.0","fileCount":149,"droppedCount":2,"rawTokens":43500,"finalTokens":3400,"reductionPct":92.2,"overBudget":false,"budgetLimit":6000}
+{"ts":"2026-04-01T09:00:00.000Z","version":"1.0.0","fileCount":147,"droppedCount":0,"rawTokens":42000,"finalTokens":3200,"reductionPct":92.4,"overBudget":false,"budgetLimit":6000}
+{"ts":"2026-04-01T09:30:00.000Z","version":"1.0.0","fileCount":149,"droppedCount":2,"rawTokens":43500,"finalTokens":3400,"reductionPct":92.2,"overBudget":false,"budgetLimit":6000}
 ```
 
 Because it's NDJSON (one JSON object per line), it's easy to process with standard tools:
@@ -324,11 +324,53 @@ PROM
 
 ---
 
+## 6 — Health score & self-healing CI (v1.0)
+
+### Check installation health
+
+```bash
+node gen-context.js --health
+# score           : 95/100 (grade A)
+# token reduction : 91.2%
+# days since regen: 1
+# total runs      : 47
+# over-budget runs: 0
+
+# Machine-readable for CI:
+node gen-context.js --health --json
+# {"score":95,"grade":"A","tokenReductionPct":91.2,"daysSinceRegen":1,"totalRuns":47,"overBudgetRuns":0}
+```
+
+Add a health gate to CI to catch degradation early:
+
+```yaml
+- name: ContextForge health check
+  run: |
+    HEALTH=$(node gen-context.js --health --json)
+    SCORE=$(echo "$HEALTH" | node -e "process.stdin.resume();let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>console.log(JSON.parse(d).score))")
+    echo "Health score: $SCORE/100"
+    if [ "$SCORE" -lt 60 ]; then
+      echo "Health score below 60 — context may need attention"
+      exit 1
+    fi
+```
+
+### Self-healing CI
+
+Copy `examples/self-healing-github-action.yml` to `.github/workflows/` to automatically open a PR when:
+- Copilot acceptance rate drops below 30% (requires `COPILOT_API_TOKEN` secret)
+- Context file is older than 7 days (always active, no API needed)
+
+See [examples/self-healing-github-action.yml](../examples/self-healing-github-action.yml) for the full workflow.
+
+---
+
 ## Related docs
 
 - [docs/REPOMIX_CACHE.md](REPOMIX_CACHE.md) — prompt cache cost reduction
-- [docs/MODEL_ROUTING.md](MODEL_ROUTING.md) — model tier routing
+- [docs/MODEL_ROUTING.md](MODEL_ROUTING.md) — model tier routing + `--suggest-tool`
 - [docs/MCP_SETUP.md](MCP_SETUP.md) — MCP server configuration
+- [docs/CI_GUIDE.md](CI_GUIDE.md) — CI integration and monorepo setup
 - [docs/SESSION_DISCIPLINE.md](SESSION_DISCIPLINE.md) — session workflow
 
 > *ContextForge for daily always-on context; Repomix for deep one-off sessions — use both.*

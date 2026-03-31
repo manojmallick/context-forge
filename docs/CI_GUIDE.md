@@ -158,12 +158,38 @@ Use `--report --json` to capture token metrics as structured output:
 JSON schema:
 ```json
 {
+  "version": "1.0.0",
+  "timestamp": "2026-04-01T09:00:00.000Z",
   "rawTokens": 42000,
   "finalTokens": 2800,
   "fileCount": 120,
   "droppedCount": 8,
-  "reductionPct": 93.3
+  "reductionPct": 93.3,
+  "overBudget": false,
+  "budgetLimit": 6000
 }
+```
+
+### CI helper script (v1.0)
+
+`scripts/ci-update.sh` wraps the common CI pattern:
+
+```bash
+# Regenerate, track, and fail the build if over budget
+bash scripts/ci-update.sh --fail-over-budget --track
+
+# Regenerate + cache sidecar + JSON report (no fail)
+bash scripts/ci-update.sh --format cache --json
+```
+
+### Health gate (v1.0)
+
+Add a health check step to catch degradation before it affects acceptance rate:
+
+```yaml
+- name: ContextForge health check
+  run: node gen-context.js --health --json
+  # Prints score/grade/staleness; use --json to capture for dashboards
 ```
 
 ---
@@ -184,3 +210,5 @@ JSON schema:
 
 - [MCP_SETUP.md](MCP_SETUP.md) — real-time context via MCP protocol
 - [REPOMIX_INTEGRATION.md](REPOMIX_INTEGRATION.md) — deep-session context with Repomix
+- [ENTERPRISE_SETUP.md](ENTERPRISE_SETUP.md) — observability, health score, self-healing CI
+- [MODEL_ROUTING.md](MODEL_ROUTING.md) — model tier routing + `--suggest-tool`
