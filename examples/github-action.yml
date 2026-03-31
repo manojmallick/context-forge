@@ -1,0 +1,126 @@
+name: ContextForge — Update AI Context
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  schedule:
+    # Run nightly at 02:00 UTC to keep context fresh
+    - cron: '0 2 * * *'
+
+jobs:
+  # ─────────────────────────────────────────────────────────────────
+  # Job 1: ContextForge — generate always-on compact context
+  # ─────────────────────────────────────────────────────────────────
+  contextforge:
+    name: Generate ContextForge signatures
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 20       # needed for git-diff priority (last 10 commits)
+
+      - name: Use Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Generate context signatures
+        run: node gen-context.js --generate
+
+      - name: Print token report
+        run: node gen-context.js --report --json
+
+      - name: Commit updated context (if changed)
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore(context): auto-update AI context signatures [skip ci]"
+          file_pattern: |
+            .github/copilot-instructions.md
+            .cursorrules
+            .windsurfrules
+
+  # ─────────────────────────────────────────────────────────────────
+  # Job 2: gen-project-map — generate structural project map
+  # ─────────────────────────────────────────────────────────────────
+  project-map:
+    name: Generate project dependency map
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Generate project map
+        run: node gen-project-map.js
+
+      - name: Commit updated project map (if changed)
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore(context): auto-update PROJECT_MAP.md [skip ci]"
+          file_pattern: PROJECT_MAP.md
+
+  # ─────────────────────────────────────────────────────────────────
+  # Job 3: Repomix — deep context for complex sessions
+  # (Companion to ContextForge — see docs/REPOMIX_INTEGRATION.md)
+  # ─────────────────────────────────────────────────────────────────
+  repomix:
+    name: Generate Repomix compressed context
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Generate Repomix compressed output
+        run: npx --yes repomix --compress -o .context/repomix-compressed.md
+
+      - name: Commit updated Repomix output (if changed)
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore(context): auto-update repomix context [skip ci]"
+          file_pattern: .context/repomix-compressed.md
+
+  # ─────────────────────────────────────────────────────────────────
+  # Job 4: Test suite
+  # ─────────────────────────────────────────────────────────────────
+  test:
+    name: Run test suite
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: ['18', '20', '22']
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Run extractor tests
+        run: node test/run.js
+
+      - name: Run integration tests
+        run: |
+          for f in test/integration/*.test.js; do
+            echo "Running $f..."
+            node "$f"
+          done
