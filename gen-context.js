@@ -2,7 +2,7 @@
 'use strict';
 
 /**
- * ContextForge — gen-context.js v0.9.0
+ * ContextForge — gen-context.js v1.0.0
  * Zero-dependency AI context engine.
  * Runs with: node gen-context.js
  * No npm install required. Node 18+ built-ins only.
@@ -13,7 +13,7 @@ const path = require('path');
 const os = require('os');
 const { execSync } = require('child_process');
 
-const VERSION = '0.9.0';
+const VERSION = '1.0.0';
 const MARKER = '\n\n## Auto-generated signatures\n<!-- Updated by gen-context.js -->\n';
 
 // ---------------------------------------------------------------------------
@@ -602,26 +602,66 @@ function runMonorepo(cwd, config) {
 // ---------------------------------------------------------------------------
 // CLI entry point
 // ---------------------------------------------------------------------------
+/**
+ * Classify a task description and return the recommended model tier.
+ *
+ * Rules (ordered):
+ *  1. Match any 'powerful' keyword → 'powerful'
+ *  2. Match any 'fast' keyword     → 'fast'
+ *  3. Default                      → 'balanced'
+ *
+ * @param {string} description - Natural-language task description
+ * @returns {{ tier: string, label: string, models: string, costHint: string }}
+ */
+function suggestTool(description) {
+  const lower = description.toLowerCase();
+  const { TIERS } = require('./src/routing/hints');
+
+  const powerfulKeywords = [
+    'architecture', 'cross-cutting', 'multi-file', 'security audit', 'owasp',
+    'migration plan', 'framework upgrade', 'complex debug', 'async boundar',
+    'multi-service', 'distributed system', 'performance audit', 'new module from',
+    'redesign', 'from requirements',
+  ];
+  const fastKeywords = [
+    'typo', 'rename symbol', 'format', 'lint', 'style change', 'trivial',
+    'quick fix', 'inline suggest', 'autocomplete', 'config file',
+    'dockerfile', 'shell script', '.yaml', '.yml', '.json', '.css',
+    'html template', 'markup',
+  ];
+
+  let tier = 'balanced';
+  if (powerfulKeywords.some((kw) => lower.includes(kw))) tier = 'powerful';
+  else if (fastKeywords.some((kw) => lower.includes(kw))) tier = 'fast';
+
+  const info = TIERS[tier];
+  return { tier, label: info.label, models: info.examples, costHint: info.costHint };
+}
+
 function printHelp() {
   console.log(`
 ContextForge — gen-context.js v${VERSION}
 Zero-dependency AI context engine
 
 Usage:
-  node gen-context.js                       Generate context once and exit
-  node gen-context.js --monorepo            Generate per-package context (monorepo)
-  node gen-context.js --routing             Include model routing hints in output
-  node gen-context.js --format cache        Also write Anthropic prompt-cache JSON
-  node gen-context.js --track              Append run metrics to .context/usage.ndjson
-  node gen-context.js --watch              Generate + watch for file changes
-  node gen-context.js --setup              Generate + install git hook + watch
-  node gen-context.js --mcp               Start MCP server on stdio
-  node gen-context.js --report            Token reduction stats to stdout
-  node gen-context.js --report --json     Token report as JSON (for CI; exits 1 if over budget)
-  node gen-context.js --report --history  Print usage log summary from .context/usage.ndjson
-  node gen-context.js --init              Write example config file
-  node gen-context.js --help              Show this message
-  node gen-context.js --version           Show version
+  node gen-context.js                                   Generate context once and exit
+  node gen-context.js --monorepo                        Generate per-package context (monorepo)
+  node gen-context.js --routing                         Include model routing hints in output
+  node gen-context.js --format cache                    Also write Anthropic prompt-cache JSON
+  node gen-context.js --track                           Append run metrics to .context/usage.ndjson
+  node gen-context.js --watch                           Generate + watch for file changes
+  node gen-context.js --setup                           Generate + install git hook + watch
+  node gen-context.js --mcp                             Start MCP server on stdio
+  node gen-context.js --report                          Token reduction stats to stdout
+  node gen-context.js --report --json                   Token report as JSON (for CI; exits 1 if over budget)
+  node gen-context.js --report --history                Print usage log summary from .context/usage.ndjson
+  node gen-context.js --suggest-tool "<task>"           Recommend model tier for a task description
+  node gen-context.js --suggest-tool "<task>" --json    Machine-readable tier recommendation
+  node gen-context.js --health                          Print composite health score
+  node gen-context.js --health --json                   Machine-readable health score
+  node gen-context.js --init                            Write example config file
+  node gen-context.js --help                            Show this message
+  node gen-context.js --version                         Show version
 
 Config: gen-context.config.json
 Ignore: .contextignore, .repomixignore
@@ -688,6 +728,27 @@ function main() {
 
   if (args.includes('--init')) {
     writeInitConfig(cwd);
+    process.exit(0);
+  }
+
+  if (args.includes('--suggest-tool')) {
+    const idx = args.indexOf('--suggest-tool');
+    const taskDesc = (args[idx + 1] || '').trim();
+    if (!taskDesc || taskDesc.startsWith('--')) {
+      console.error('[context-forge] --suggest-tool requires a task description');
+      console.error('  Example: node gen-context.js --suggest-tool "refactor the auth module"');
+      process.exit(1);
+    }
+    const result = suggestTool(taskDesc);
+    if (args.includes('--json')) {
+      process.stdout.write(JSON.stringify(result) + '\n');
+    } else {
+      console.log('[context-forge] suggest-tool:');
+      console.log(`  tier   : ${result.tier}`);
+      console.log(`  label  : ${result.label}`);
+      console.log(`  models : ${result.models}`);
+      console.log(`  cost   : ${result.costHint}`);
+    }
     process.exit(0);
   }
 
