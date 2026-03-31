@@ -1,5 +1,9 @@
 # ContextForge
 
+[![GitHub Stars](https://img.shields.io/github/stars/manojmallick/context-forge?style=flat&color=7c6af7)](https://github.com/manojmallick/context-forge/stargazers)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Node.js](https://img.shields.io/badge/node-%3E%3D18-brightgreen)](https://nodejs.org)
+
 **Zero-dependency AI context engine — 97% token reduction**
 
 Every coding agent session starts with full codebase context at under 4K tokens.  
@@ -82,6 +86,9 @@ npx repomix --compress         # deep dive sessions
 ---
 
 ## CLI reference
+
+> **Note:** `node gen-context.js`, `--watch`, `--setup`, `--report`, `--mcp`, and `--routing` are live in v1.0.
+> Features marked `(v0.x)` were added incrementally — see [CHANGELOG.md](CHANGELOG.md) for when each shipped.
 
 ```
 node gen-context.js                          Generate once and exit
@@ -277,6 +284,12 @@ scripts/ci-update.sh          ← CI helper for pipelines (v1.0)
 .contextignore.example        ← exclusion template
 gen-context.config.json.example ← annotated config reference
 ```
+
+---
+
+## Support
+
+If ContextForge saves you time — a ⭐ on [GitHub](https://github.com/manojmallick/context-forge) helps others find it.
 
 ---
 

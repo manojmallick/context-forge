@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>ContextForge — Zero-dependency AI context engine</title>
+<meta name="description" content="Reduce AI coding agent token consumption by 97%. Extracts signatures from 21 languages, writes copilot-instructions.md automatically. Zero npm install.">
+<meta property="og:title" content="ContextForge — 97% token reduction for AI coding agents">
+<meta property="og:description" content="node gen-context.js — that's the entire install. Reduces Copilot sessions from 80K to 4K tokens automatically.">
+<meta property="og:url" content="https://manojmallick.github.io/context-forge">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://manojmallick.github.io/context-forge">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=IBM+Plex+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#09090c;--s1:#0f0f13;--s2:#161619;--s3:#1d1d22;--s4:#25252c;
+  --line:#2a2a33;--line2:#38383f;
+  --t1:#f0eeff;--t2:#9896b0;--t3:#52506a;
+  --p:#7c6af7;--pl:rgba(124,106,247,.1);--pd:#b3aaff;
+  --g:#10b981;--gl:rgba(16,185,129,.1);--gd:#6ee7b7;
+  --a:#f59e0b;--al:rgba(245,158,11,.1);--ad:#fcd34d;
+  --r:#f43f5e;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--t1);line-height:1.6;overflow-x:hidden}
+
+/* ── NAV ── */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(9,9,12,.85);backdrop-filter:blur(12px);border-bottom:1px solid var(--line);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between}
+.nav-logo{font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:500;color:var(--pd);text-decoration:none}
+.nav-links{display:flex;align-items:center;gap:24px}
+.nav-links a{font-size:13px;color:var(--t2);text-decoration:none;transition:.15s}
+.nav-links a:hover{color:var(--t1)}
+.nav-gh{background:var(--p);color:#fff;padding:6px 14px;border-radius:7px;font-size:12px;font-weight:600;text-decoration:none;transition:.15s}
+.nav-gh:hover{opacity:.85;color:#fff}
+@media(max-width:600px){.nav-links .hide-sm{display:none}}
+
+/* ── HERO ── */
+.hero{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:100px 24px 80px;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:-200px;left:50%;transform:translateX(-50%);width:800px;height:800px;background:radial-gradient(circle,rgba(124,106,247,.06) 0%,transparent 65%);pointer-events:none}
+.hero::after{content:'';position:absolute;bottom:-100px;right:-100px;width:400px;height:400px;background:radial-gradient(circle,rgba(16,185,129,.04) 0%,transparent 65%);pointer-events:none}
+.hero-inner{max-width:760px;text-align:center;position:relative;z-index:1}
+.hero-badge{display:inline-flex;align-items:center;gap:6px;background:var(--pl);border:1px solid rgba(124,106,247,.25);border-radius:20px;padding:5px 14px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--pd);margin-bottom:24px;letter-spacing:.04em}
+.hero-badge .dot{width:6px;height:6px;border-radius:50%;background:var(--p);animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+h1{font-family:'Syne',sans-serif;font-size:clamp(36px,6vw,72px);font-weight:800;line-height:1.05;margin-bottom:16px;background:linear-gradient(135deg,var(--t1) 30%,var(--pd) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.hero-sub{font-size:clamp(15px,2vw,18px);color:var(--t2);line-height:1.65;max-width:520px;margin:0 auto 32px;font-weight:300}
+.hero-cta{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;margin-bottom:48px}
+.btn-primary{background:var(--p);color:#fff;padding:12px 28px;border-radius:9px;font-size:14px;font-weight:600;text-decoration:none;transition:.15s;display:inline-flex;align-items:center;gap:8px}
+.btn-primary:hover{opacity:.85;color:#fff;transform:translateY(-1px)}
+.btn-secondary{background:transparent;color:var(--t1);border:1px solid var(--line2);padding:12px 24px;border-radius:9px;font-size:14px;font-weight:500;text-decoration:none;transition:.15s}
+.btn-secondary:hover{border-color:var(--p);color:var(--pd)}
+
+/* ── TERMINAL ── */
+.terminal{background:#06060a;border:1px solid var(--line2);border-radius:12px;overflow:hidden;max-width:560px;margin:0 auto;text-align:left;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.term-bar{background:var(--s2);padding:10px 14px;display:flex;align-items:center;gap:6px;border-bottom:1px solid var(--line)}
+.term-dot{width:11px;height:11px;border-radius:50%}
+.term-title{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--t3);margin-left:6px}
+.term-body{padding:16px 18px;font-family:'IBM Plex Mono',monospace;font-size:13px;line-height:1.8}
+.tc{color:var(--t3)}.tk{color:var(--pd)}.ts{color:var(--gd)}.tw{color:var(--ad)}.tr{color:#fca5a5}
+
+/* ── STATS ── */
+.stats{background:var(--s1);border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:40px 24px}
+.stats-inner{max-width:900px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line)}
+@media(max-width:600px){.stats-inner{grid-template-columns:repeat(2,1fr)}}
+.stat{background:var(--s1);padding:28px 20px;text-align:center}
+.stat-val{font-family:'Syne',sans-serif;font-size:36px;font-weight:800;display:block;margin-bottom:4px;background:linear-gradient(135deg,var(--t1),var(--pd));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.stat-label{font-size:12px;color:var(--t3);text-transform:uppercase;letter-spacing:.07em;font-family:'IBM Plex Mono',monospace}
+
+/* ── HOW IT WORKS ── */
+.section{padding:80px 24px;max-width:900px;margin:0 auto}
+.section-ey{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--pd);margin-bottom:10px;text-align:center}
+h2{font-family:'Syne',sans-serif;font-size:clamp(24px,4vw,40px);font-weight:800;text-align:center;margin-bottom:12px}
+.section-sub{font-size:15px;color:var(--t2);text-align:center;max-width:500px;margin:0 auto 48px;font-weight:300;line-height:1.65}
+
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:40px}
+@media(max-width:700px){.steps{grid-template-columns:1fr}}
+.step-card{background:var(--s2);border:1px solid var(--line);border-radius:14px;padding:24px}
+.step-num{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--p);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.step-num::after{content:'';flex:1;height:1px;background:var(--line)}
+.step-card h3{font-size:16px;font-weight:700;margin-bottom:8px;color:var(--t1)}
+.step-card p{font-size:13px;color:var(--t2);line-height:1.6}
+.step-card code{font-family:'IBM Plex Mono',monospace;font-size:12px;background:var(--s4);padding:2px 6px;border-radius:4px;color:var(--pd)}
+
+/* ── TOKEN TABLE ── */
+.token-table-wrap{background:var(--s2);border:1px solid var(--line);border-radius:14px;overflow:hidden;margin-bottom:40px}
+.token-table{width:100%;border-collapse:collapse}
+.token-table th{padding:12px 20px;text-align:left;font-family:'IBM Plex Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--t3);border-bottom:2px solid var(--line2);background:var(--s3)}
+.token-table td{padding:14px 20px;border-bottom:1px solid var(--line);font-size:14px;color:var(--t2)}
+.token-table tr:last-child td{border-bottom:none}
+.token-table td:first-child{font-weight:600;color:var(--t1)}
+.token-table td:last-child{font-family:'IBM Plex Mono',monospace;font-weight:600}
+.bar-cell{display:flex;align-items:center;gap:12px}
+.mini-bar{flex:1;background:var(--line);height:8px;border-radius:4px;overflow:hidden;min-width:80px}
+.mini-fill{height:100%;border-radius:4px}
+.best{color:var(--gd)}
+.good{color:var(--ad)}
+.base{color:var(--rd)}
+
+/* ── LANGUAGES ── */
+.lang-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;margin-bottom:40px}
+.lang-card{background:var(--s2);border:1px solid var(--line);border-radius:9px;padding:12px 14px;display:flex;align-items:center;gap:10px;transition:.15s}
+.lang-card:hover{border-color:var(--line2);background:var(--s3)}
+.lang-icon{font-size:18px;flex-shrink:0}
+.lang-info h4{font-size:13px;font-weight:600;color:var(--t1)}
+.lang-info span{font-size:11px;color:var(--t3);font-family:'IBM Plex Mono',monospace}
+
+/* ── REPOMIX SECTION ── */
+.duo{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:40px}
+@media(max-width:600px){.duo{grid-template-columns:1fr}}
+.duo-card{border-radius:14px;padding:24px}
+.duo-card.cf{background:rgba(124,106,247,.07);border:1px solid rgba(124,106,247,.2)}
+.duo-card.rm{background:rgba(251,113,133,.07);border:1px solid rgba(251,113,133,.2)}
+.duo-card h3{font-size:16px;font-weight:700;margin-bottom:6px}
+.duo-card.cf h3{color:var(--pd)}
+.duo-card.rm h3{color:#fb7185}
+.duo-card p{font-size:13px;color:var(--t2);line-height:1.6;margin-bottom:12px}
+.duo-card ul{list-style:none;font-size:13px;color:var(--t2);line-height:2}
+.duo-card.cf ul li::before{content:'⚡ '}
+.duo-card.rm ul li::before{content:'📦 '}
+
+/* ── QUICK START ── */
+.qs-steps{display:flex;flex-direction:column;gap:2px;margin-bottom:32px}
+.qs-step{display:flex;gap:16px;padding:16px 0;border-bottom:1px solid var(--line);align-items:flex-start}
+.qs-step:last-child{border-bottom:none}
+.qs-num{width:32px;height:32px;border-radius:50%;background:var(--pl);color:var(--pd);font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0;border:1px solid rgba(124,106,247,.25)}
+.qs-body h4{font-size:14px;font-weight:600;margin-bottom:4px}
+.qs-body p{font-size:13px;color:var(--t2);line-height:1.6}
+.qs-body code{font-family:'IBM Plex Mono',monospace;font-size:12px;background:var(--s3);border:1px solid var(--line2);padding:8px 14px;border-radius:7px;display:block;margin-top:8px;color:var(--gd)}
+
+/* ── CTA BOTTOM ── */
+.cta-section{background:var(--s1);border-top:1px solid var(--line);padding:80px 24px;text-align:center}
+.cta-section h2{margin-bottom:12px}
+.cta-section p{font-size:15px;color:var(--t2);max-width:440px;margin:0 auto 32px;font-weight:300}
+
+/* ── FOOTER ── */
+footer{background:var(--s1);border-top:1px solid var(--line);padding:32px 24px;text-align:center}
+.footer-inner{max-width:900px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px}
+.footer-logo{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--t3)}
+.footer-links{display:flex;gap:20px}
+.footer-links a{font-size:12px;color:var(--t3);text-decoration:none;transition:.15s}
+.footer-links a:hover{color:var(--t2)}
+.footer-mit{font-size:11px;color:var(--t3);font-family:'IBM Plex Mono',monospace}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a class="nav-logo" href="/">context-forge</a>
+  <div class="nav-links">
+    <a href="#how-it-works" class="hide-sm">How it works</a>
+    <a href="#languages" class="hide-sm">Languages</a>
+    <a href="#quick-start" class="hide-sm">Quick start</a>
+    <a href="https://github.com/manojmallick/context-forge" class="nav-gh" target="_blank">★ GitHub</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-inner">
+    <div class="hero-badge"><span class="dot"></span>MIT open source · Zero npm install</div>
+    <h1>97% fewer tokens.<br>Better AI suggestions.</h1>
+    <p class="hero-sub">ContextForge extracts function signatures from your codebase and writes a context file that Copilot, Claude, Cursor, and Windsurf read automatically. Every session starts informed.</p>
+    <div class="hero-cta">
+      <a class="btn-primary" href="#quick-start">Get started in 60 seconds</a>
+      <a class="btn-secondary" href="https://github.com/manojmallick/context-forge" target="_blank">View on GitHub →</a>
+    </div>
+    <div class="terminal">
+      <div class="term-bar">
+        <div class="term-dot" style="background:#ff5f57"></div>
+        <div class="term-dot" style="background:#febc2e"></div>
+        <div class="term-dot" style="background:#28c840"></div>
+        <span class="term-title">terminal</span>
+      </div>
+      <div class="term-body">
+        <div><span class="tc">$</span> <span class="tk">node</span> gen-context.js <span class="tw">--report</span></div>
+        <div style="margin-top:8px;color:var(--t3)">ContextForge token report</div>
+        <div style="color:var(--line2)">──────────────────────────────</div>
+        <div>Raw source files <span style="float:right"><span class="tr">~80,000 tokens</span></span></div>
+        <div>Repomix compressed <span style="float:right"><span class="tw">~8,000 tokens</span></span></div>
+        <div>ContextForge <span style="float:right"><span class="ts">~4,000 tokens</span> <span class="tc">−97%</span></span></div>
+        <div style="color:var(--line2)">──────────────────────────────</div>
+        <div style="margin-top:4px"><span class="tc">$</span> <span class="tc"># Copilot now knows your codebase.</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STATS -->
+<div class="stats">
+  <div class="stats-inner">
+    <div class="stat"><span class="stat-val">97%</span><span class="stat-label">Token reduction</span></div>
+    <div class="stat"><span class="stat-val">21</span><span class="stat-label">Languages</span></div>
+    <div class="stat"><span class="stat-val">0</span><span class="stat-label">npm deps</span></div>
+    <div class="stat"><span class="stat-val">4K</span><span class="stat-label">Tokens / session</span></div>
+  </div>
+</div>
+
+<!-- HOW IT WORKS -->
+<section class="section" id="how-it-works">
+  <div class="section-ey">How it works</div>
+  <h2>Three steps. No configuration required.</h2>
+  <p class="section-sub">ContextForge scans your source files, strips function bodies and comments, and writes a compact signature index your AI tools read automatically.</p>
+
+  <div class="steps">
+    <div class="step-card">
+      <div class="step-num">Step 01</div>
+      <h3>Extract signatures</h3>
+      <p>Scans every source file, extracting only the public API surface — function names, class definitions, types, interfaces. No bodies. No imports. No comments.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-num">Step 02</div>
+      <h3>Write context files</h3>
+      <p>Writes <code>.github/copilot-instructions.md</code>, <code>CLAUDE.md</code>, <code>.cursorrules</code>, and <code>.windsurfrules</code> automatically. Copilot reads these on every request.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-num">Step 03</div>
+      <h3>Stay current automatically</h3>
+      <p>File watcher updates on every save. Post-commit git hook updates on every commit. Context is always current — zero developer action required.</p>
+    </div>
+  </div>
+
+  <div class="token-table-wrap">
+    <table class="token-table">
+      <thead>
+        <tr>
+          <th>Approach</th>
+          <th>Tokens / session</th>
+          <th>Reduction</th>
+          <th>Cost (Claude Sonnet)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>No context (cold session)</td>
+          <td><div class="bar-cell"><div class="mini-bar"><div class="mini-fill" style="width:100%;background:var(--r)"></div></div><span class="base">~80,000</span></div></td>
+          <td class="base">baseline</td>
+          <td class="base">~$0.24 / session</td>
+        </tr>
+        <tr>
+          <td>Repomix --compress</td>
+          <td><div class="bar-cell"><div class="mini-bar"><div class="mini-fill" style="width:10%;background:var(--a)"></div></div><span class="good">~8,000</span></div></td>
+          <td class="good">−90%</td>
+          <td class="good">~$0.024</td>
+        </tr>
+        <tr>
+          <td><strong>ContextForge</strong></td>
+          <td><div class="bar-cell"><div class="mini-bar"><div class="mini-fill" style="width:5%;background:var(--g)"></div></div><span class="best">~4,000</span></div></td>
+          <td class="best">−95%</td>
+          <td class="best">~$0.012</td>
+        </tr>
+        <tr>
+          <td>ContextForge + MCP (v0.3)</td>
+          <td><div class="bar-cell"><div class="mini-bar"><div class="mini-fill" style="width:0.5%;background:var(--gd)"></div></div><span class="best">~200–2K</span></div></td>
+          <td class="best">−99%</td>
+          <td class="best">~$0.001</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- LANGUAGES -->
+<section class="section" id="languages" style="padding-top:0">
+  <div class="section-ey">Language support</div>
+  <h2>21 languages. Zero Tree-sitter.</h2>
+  <p class="section-sub">Pure regex AST extraction — no compiler required, no binary dependencies, works on any machine with Node.js 18+.</p>
+
+  <div class="lang-grid">
+    <div class="lang-card"><span class="lang-icon">🔷</span><div class="lang-info"><h4>TypeScript</h4><span>.ts .tsx</span></div></div>
+    <div class="lang-card"><span class="lang-icon">🟡</span><div class="lang-info"><h4>JavaScript</h4><span>.js .jsx .mjs</span></div></div>
+    <div class="lang-card"><span class="lang-icon">🐍</span><div class="lang-info"><h4>Python</h4><span>.py .pyw</span></div></div>
+    <div class="lang-card"><span class="lang-icon">☕</span><div class="lang-info"><h4>Java</h4><span>.java</span></div></div>
+    <div class="lang-card"><span class="lang-icon">🎯</span><div class="lang-info"><h4>Kotlin</h4><span>.kt .kts</span></div></div>
+    <div class="lang-card"><span class="lang-icon">🐹</span><div class="lang-info"><h4>Go</h4><span>.go</span></div></div>
+    <div class="lang-card"><span class="lang-icon">🦀</span><div class="lang-info"><h4>Rust</h4><span>.rs</span></div></div>
+    <div class="lang-card"><span class="lang-icon">🔵</span><div class="lang-info"><h4>C#</h4><span>.cs</span></div></div>
+    <div class="lang-card"><span class="lang-icon">⚙️</span><div class="lang-info"><h4>C / C++</h4><span>.cpp .c .h</span></div></div>
+    <div class="lang-card"><span class="lang-icon">💎</span><div class="lang-info"><h4>Ruby</h4><span>.rb</span></div></div>
+    <div class="lang-card"><span class="lang-icon">🐘</span><div class="lang-info"><h4>PHP</h4><span>.php</span></div></div>
+    <div class="lang-card"><span class="lang-icon">🍎</span><div class="lang-info"><h4>Swift</h4><span>.swift</span></div></div>
+    <div class="lang-card"><span class="lang-icon">🎯</span><div class="lang-info"><h4>Dart</h4><span>.dart</span></div></div>
+    <div class="lang-card"><span class="lang-icon">🔴</span><div class="lang-info"><h4>Scala</h4><span>.scala .sc</span></div></div>
+    <div class="lang-card"><span class="lang-icon">💚</span><div class="lang-info"><h4>Vue</h4><span>.vue</span></div></div>
+    <div class="lang-card"><span class="lang-icon">🧡</span><div class="lang-info"><h4>Svelte</h4><span>.svelte</span></div></div>
+    <div class="lang-card"><span class="lang-icon">🌐</span><div class="lang-info"><h4>HTML</h4><span>.html .htm</span></div></div>
+    <div class="lang-card"><span class="lang-icon">🎨</span><div class="lang-info"><h4>CSS / SCSS</h4><span>.css .scss .sass</span></div></div>
+    <div class="lang-card"><span class="lang-icon">📋</span><div class="lang-info"><h4>YAML</h4><span>.yml .yaml</span></div></div>
+    <div class="lang-card"><span class="lang-icon">🐚</span><div class="lang-info"><h4>Shell</h4><span>.sh .bash .zsh</span></div></div>
+    <div class="lang-card"><span class="lang-icon">🐳</span><div class="lang-info"><h4>Dockerfile</h4><span>Dockerfile.*</span></div></div>
+  </div>
+</section>
+
+<!-- REPOMIX SECTION -->
+<section class="section" style="padding-top:0">
+  <div class="section-ey">Companion tool</div>
+  <h2>Works perfectly with Repomix</h2>
+  <p class="section-sub">ContextForge and Repomix are complementary. Use both — they solve different parts of the context problem.</p>
+
+  <div class="duo">
+    <div class="duo-card cf">
+      <h3>⚡ ContextForge</h3>
+      <p>Always-on. Runs automatically on every save and commit. Produces a compact signature index — 4K tokens for daily Copilot use.</p>
+      <ul>
+        <li>Auto-updates on save + git commit</li>
+        <li>Signatures only — no function bodies</li>
+        <li>21 languages, zero npm install</li>
+        <li>Writes copilot-instructions.md, CLAUDE.md, .cursorrules</li>
+      </ul>
+    </div>
+    <div class="duo-card rm">
+      <h3>📦 Repomix</h3>
+      <p>On-demand. Run before a deep refactor or architecture session. Packs full file content — 8K compressed tokens for detailed analysis.</p>
+      <ul>
+        <li>Manual run before deep sessions</li>
+        <li>Full file content available</li>
+        <li>170+ languages via Tree-sitter</li>
+        <li>MCP server for agent use</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="terminal">
+    <div class="term-bar">
+      <div class="term-dot" style="background:#ff5f57"></div>
+      <div class="term-dot" style="background:#febc2e"></div>
+      <div class="term-dot" style="background:#28c840"></div>
+      <span class="term-title">combined workflow</span>
+    </div>
+    <div class="term-body">
+      <div><span class="tc"># Always-on context (ContextForge)</span></div>
+      <div><span class="tc">$</span> <span class="tk">node</span> gen-context.js <span class="tw">--setup</span></div>
+      <div style="margin-top:12px"><span class="tc"># Before a deep refactor session (Repomix)</span></div>
+      <div><span class="tc">$</span> <span class="tk">npx</span> repomix <span class="tw">--compress</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- QUICK START -->
+<section class="section" id="quick-start" style="padding-top:0">
+  <div class="section-ey">Quick start</div>
+  <h2>Working in under 60 seconds</h2>
+  <p class="section-sub">No package manager. No configuration. One file, one command.</p>
+
+  <div class="qs-steps">
+    <div class="qs-step">
+      <div class="qs-num">1</div>
+      <div class="qs-body">
+        <h4>Download gen-context.js</h4>
+        <p>One file, no install required. Drop it in your project root or download globally.</p>
+        <code>curl -O https://raw.githubusercontent.com/manojmallick/context-forge/main/gen-context.js</code>
+      </div>
+    </div>
+    <div class="qs-step">
+      <div class="qs-num">2</div>
+      <div class="qs-body">
+        <h4>Generate your first context file</h4>
+        <p>Scans your project and writes <code>.github/copilot-instructions.md</code> automatically.</p>
+        <code>node gen-context.js</code>
+      </div>
+    </div>
+    <div class="qs-step">
+      <div class="qs-num">3</div>
+      <div class="qs-body">
+        <h4>Set up auto-update</h4>
+        <p>Installs a post-commit git hook and file watcher. Context stays current without thinking about it.</p>
+        <code>node gen-context.js --setup</code>
+      </div>
+    </div>
+    <div class="qs-step">
+      <div class="qs-num">4</div>
+      <div class="qs-body">
+        <h4>Open Copilot and ask about your code</h4>
+        <p>Copilot now knows your class names, function signatures, and patterns — without reading every file on each request.</p>
+        <code>node gen-context.js --report   # see your token reduction</code>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- BOTTOM CTA -->
+<div class="cta-section">
+  <div class="section-ey">Open source · MIT</div>
+  <h2>Built for the community</h2>
+  <p>Free forever. Zero telemetry. Runs locally. Adding a language extractor is 80 lines of code — contributions welcome.</p>
+  <div style="display:flex;justify-content:center;gap:12px;flex-wrap:wrap">
+    <a class="btn-primary" href="https://github.com/manojmallick/context-forge" target="_blank">★ Star on GitHub</a>
+    <a class="btn-secondary" href="https://github.com/manojmallick/context-forge/blob/main/CONTRIBUTING.md" target="_blank">Contribute</a>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <span class="footer-logo">context-forge</span>
+    <div class="footer-links">
+      <a href="https://github.com/manojmallick/context-forge">GitHub</a>
+      <a href="https://github.com/manojmallick/context-forge/blob/main/CONTRIBUTING.md">Contributing</a>
+      <a href="https://github.com/manojmallick/context-forge/blob/main/CHANGELOG.md">Changelog</a>
+      <a href="https://github.com/yamadashy/repomix">Repomix ↗</a>
+    </div>
+    <span class="footer-mit">MIT © 2026 Manoj Kumar</span>
+  </div>
+</footer>
+
+</body>
+</html>
