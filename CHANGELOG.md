@@ -6,6 +6,30 @@ Format: [Semantic Versioning](https://semver.org/)
 
 ---
 
+## [0.7.0] — 2026-03-31
+
+### Added
+- **Model routing hints** — classifies every indexed file into `fast`, `balanced`, or `powerful` tier based on path conventions and signature count, then appends a `## Model routing hints` section to the context output
+- **`--routing` CLI flag** — `node gen-context.js --routing` appends routing hints in one pass; set `"routing": true` in config to always include them
+- **`src/routing/classifier.js`** — zero-dependency heuristic classifier (path patterns, sig count, indented method count)
+- **`src/routing/hints.js`** — tier definitions (`TIERS`) and `formatRoutingSection()` formatter
+- **`get_routing` MCP tool** (5th tool) — returns routing hints for the current project on demand; reads context file, classifies files, returns formatted markdown
+- **`docs/MODEL_ROUTING.md`** — full routing guide: tier criteria, task-to-tier decision flow, VS Code / Claude Code / CI integration, cost calculation reference
+- Integration test: `test/integration/routing.test.js` — 25 tests covering classifier unit tests, classifyAll grouping, formatRoutingSection, CLI flag, config flag, and MCP tool
+- `routing: false` default added to `src/config/defaults.js`
+- `src/mcp/server.js` version bumped to `0.7.0`
+
+### Changed
+- `tools/list` now returns 5 tools (previously 4) — adds `get_routing`
+
+### Validation gate
+- 119/119 tests pass (21 extractor + 98 integration)
+- `node gen-context.js --routing` produces `## Model routing hints` in output
+- `tools/list` returns 5 tools including `get_routing`
+- `get_routing` MCP call returns tier classification for current project
+
+---
+
 ## [0.6.0] — 2026-03-31
 
 ### Added
