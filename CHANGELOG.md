@@ -6,6 +6,28 @@ Format: [Semantic Versioning](https://semver.org/)
 
 ---
 
+## [0.8.0] — 2026-03-31
+
+### Added
+- **`--format cache` CLI flag** — alongside the standard markdown output, writes `.github/copilot-instructions.cache.json`, a single Anthropic content block with `cache_control: { type: "ephemeral" }` ready for direct use in Anthropic API calls
+- **`src/format/cache.js`** — zero-dependency formatter; exports `formatCache(content) → JSON string` (single content block) and `formatCachePayload(content, model) → JSON string` (full messages API payload with system array)
+- **`format: 'default'` config key** — set `"format": "cache"` in `gen-context.config.json` to always write the cache JSON file on every run; default is `'default'` (markdown only)
+- **`docs/REPOMIX_CACHE.md`** — full prompt cache strategy: two-layer design (Repomix as stable cached prefix + ContextForge as dynamic segment), cost calculations (~60% reduction), API call examples, CI integration, cache warm-up strategy
+- Integration test: `test/integration/cache.test.js` — 20 tests covering `formatCache()`, `formatCachePayload()`, CLI `--format cache` flag, config-driven mode, and absence of cache file when flag is not set
+
+### Changed
+- `gen-context.js` version bumped to `0.8.0`
+- `package.json` version bumped to `0.8.0`
+- README updated: `--format cache` entry in CLI reference, new Prompt Caching section, updated project structure tree
+
+### Validation gate
+- 139/139 tests pass (21 extractor + 118 integration)
+- `node gen-context.js --format cache` writes `.github/copilot-instructions.cache.json`
+- Cache JSON has `type: "text"` and `cache_control: { type: "ephemeral" }`
+- `node gen-context.js` without `--format cache` does NOT write cache file
+
+---
+
 ## [0.7.0] — 2026-03-31
 
 ### Added
