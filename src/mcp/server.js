@@ -14,11 +14,11 @@
 
 const readline = require('readline');
 const { TOOLS } = require('./tools');
-const { readContext, searchSignatures, getMap } = require('./handlers');
+const { readContext, searchSignatures, getMap, createCheckpoint } = require('./handlers');
 
 const SERVER_INFO = {
   name: 'context-forge',
-  version: '0.3.0',
+  version: '0.6.0',
   description: 'ContextForge MCP server — code signatures on demand',
 };
 
@@ -69,6 +69,7 @@ function dispatch(msg, cwd) {
       if (name === 'read_context') text = readContext(args, cwd);
       else if (name === 'search_signatures') text = searchSignatures(args, cwd);
       else if (name === 'get_map') text = getMap(args, cwd);
+      else if (name === 'create_checkpoint') text = createCheckpoint(args, cwd);
       else {
         respondError(id, -32601, `Unknown tool: ${name}`);
         return;

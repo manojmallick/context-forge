@@ -58,6 +58,24 @@ const TOOLS = [
       required: ['type'],
     },
   },
+  {
+    name: 'create_checkpoint',
+    description:
+      'Create a session checkpoint summarising current project state. ' +
+      'Returns recent git commits, active branch, token count, and a ' +
+      'compact snapshot of the codebase context — ideal for session handoffs ' +
+      'or periodic saves during long coding sessions.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        note: {
+          type: 'string',
+          description: 'Optional free-text note to include in the checkpoint (e.g. what you were working on).',
+        },
+      },
+      required: [],
+    },
+  },
 ];
 
 module.exports = { TOOLS };
