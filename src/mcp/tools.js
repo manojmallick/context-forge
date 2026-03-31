@@ -76,6 +76,18 @@ const TOOLS = [
       required: [],
     },
   },
+  {
+    name: 'get_routing',
+    description:
+      'Get model routing hints for this project — which files belong to which complexity ' +
+      'tier (fast/balanced/powerful) and which AI model to use for each type of task. ' +
+      'Helps reduce API costs by 40–80% by routing simple tasks to cheaper models.',
+    inputSchema: {
+      type: 'object',
+      properties: {},
+      required: [],
+    },
+  },
 ];
 
 module.exports = { TOOLS };

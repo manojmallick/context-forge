@@ -219,4 +219,50 @@ function createCheckpoint(args, cwd) {
   return lines.join('\n');
 }
 
-module.exports = { readContext, searchSignatures, getMap, createCheckpoint };
+/**
+ * get_routing({}) → string
+ *
+ * Reads the current context file, classifies all indexed files by complexity,
+ * and returns a formatted markdown routing guide showing which files belong
+ * to the fast/balanced/powerful model tier.
+ */
+function getRouting(args, cwd) {
+  const contextPath = path.join(cwd, CONTEXT_FILE);
+  if (!fs.existsSync(contextPath)) {
+    return (
+      '_No context file found. Run `node gen-context.js --routing` first._\n\n' +
+      'This generates routing hints that map each file to a model tier:\n' +
+      '- **fast** (haiku/gpt-4o-mini) — config, markup, trivial utilities\n' +
+      '- **balanced** (sonnet/gpt-4o) — standard application code\n' +
+      '- **powerful** (opus/gpt-4-turbo) — complex, security-critical, or large modules'
+    );
+  }
+
+  // Parse file list from context (### headings are file paths)
+  const content = fs.readFileSync(contextPath, 'utf8');
+  const fileRels = content.split('\n')
+    .filter((l) => l.startsWith('### '))
+    .map((l) => l.slice(4).trim());
+
+  // Build synthetic fileEntries for the classifier
+  // We don't have live sig arrays here, so rebuild from the context blocks
+  const entries = [];
+  const blocks = content.split(/^### /m).slice(1); // slice past the header
+  for (const block of blocks) {
+    const firstLine = block.split('\n')[0].trim();
+    const codeBlock = block.match(/```\n([\s\S]*?)```/);
+    const sigs = codeBlock ? codeBlock[1].trim().split('\n').filter(Boolean) : [];
+    entries.push({ filePath: path.join(cwd, firstLine), sigs });
+  }
+
+  try {
+    const { classifyAll } = require('../../src/routing/classifier');
+    const { formatRoutingSection } = require('../../src/routing/hints');
+    const groups = classifyAll(entries, cwd);
+    return formatRoutingSection(groups);
+  } catch (err) {
+    return `_Routing classification failed: ${err.message}_`;
+  }
+}
+
+module.exports = { readContext, searchSignatures, getMap, createCheckpoint, getRouting };
