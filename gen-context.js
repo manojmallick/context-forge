@@ -2,7 +2,7 @@
 'use strict';
 
 /**
- * ContextForge — gen-context.js v0.3.0
+ * ContextForge — gen-context.js v0.5.0
  * Zero-dependency AI context engine.
  * Runs with: node gen-context.js
  * No npm install required. Node 18+ built-ins only.
@@ -13,7 +13,7 @@ const path = require('path');
 const os = require('os');
 const { execSync } = require('child_process');
 
-const VERSION = '0.3.0';
+const VERSION = '0.5.0';
 const MARKER = '\n\n## Auto-generated signatures\n<!-- Updated by gen-context.js -->\n';
 
 // ---------------------------------------------------------------------------
@@ -458,6 +458,15 @@ function runGenerate(cwd, config, reportMode, reportJson = false) {
   fileEntries = applyTokenBudget(fileEntries, config.maxTokens);
   const droppedCount = beforeCount - fileEntries.length;
 
+  // Sort for output ordering: recently committed files appear first
+  if (config.diffPriority && recentFiles.size > 0) {
+    fileEntries.sort((a, b) => {
+      const aRecent = recentFiles.has(a.filePath) ? 0 : 1;
+      const bRecent = recentFiles.has(b.filePath) ? 0 : 1;
+      return aRecent - bRecent;
+    });
+  }
+
   const content = formatOutput(fileEntries, cwd);
   const finalTokens = estimateTokens(content);
 
@@ -473,6 +482,59 @@ function runGenerate(cwd, config, reportMode, reportJson = false) {
 }
 
 // ---------------------------------------------------------------------------
+// Monorepo support
+// ---------------------------------------------------------------------------
+const MONO_ROOTS  = ['packages', 'apps', 'services', 'libs'];
+const PKG_MANIFESTS = ['package.json', 'pyproject.toml', 'Cargo.toml', 'go.mod', 'build.gradle', 'pom.xml'];
+
+function detectMonorepoPackages(cwd) {
+  const packages = [];
+  for (const monoDir of MONO_ROOTS) {
+    const abs = path.join(cwd, monoDir);
+    if (!fs.existsSync(abs)) continue;
+    let entries;
+    try { entries = fs.readdirSync(abs, { withFileTypes: true }); } catch (_) { continue; }
+    for (const entry of entries) {
+      if (!entry.isDirectory()) continue;
+      const pkgPath = path.join(abs, entry.name);
+      for (const manifest of PKG_MANIFESTS) {
+        if (fs.existsSync(path.join(pkgPath, manifest))) {
+          packages.push(pkgPath);
+          break;
+        }
+      }
+    }
+  }
+  return packages;
+}
+
+function runMonorepo(cwd, config) {
+  const packages = detectMonorepoPackages(cwd);
+  if (packages.length === 0) {
+    console.warn('[context-forge] no monorepo packages found — checked packages/, apps/, services/, libs/');
+    return;
+  }
+  console.warn(`[context-forge] monorepo: found ${packages.length} packages`);
+
+  for (const pkgPath of packages) {
+    const pkgName = path.relative(cwd, pkgPath);
+    console.warn(`[context-forge] monorepo: processing ${pkgName}`);
+    // Per-package config: scan src/ and package root, write CLAUDE.md per package
+    const pkgConfig = {
+      ...config,
+      srcDirs: ['src', 'lib', 'app', '.'],
+      outputs: ['claude'],
+    };
+    try {
+      runGenerate(pkgPath, pkgConfig, false);
+    } catch (err) {
+      console.warn(`[context-forge] monorepo: failed for ${pkgName}: ${err.message}`);
+    }
+  }
+  console.warn(`[context-forge] monorepo: wrote CLAUDE.md for ${packages.length} packages`);
+}
+
+// ---------------------------------------------------------------------------
 // CLI entry point
 // ---------------------------------------------------------------------------
 function printHelp() {
@@ -482,6 +544,7 @@ Zero-dependency AI context engine
 
 Usage:
   node gen-context.js                  Generate context once and exit
+  node gen-context.js --monorepo       Generate per-package context (monorepo)
   node gen-context.js --watch          Generate + watch for file changes
   node gen-context.js --setup          Generate + install git hook + watch
   node gen-context.js --mcp            Start MCP server on stdio
@@ -561,6 +624,11 @@ function main() {
 
   if (args.includes('--report')) {
     runGenerate(cwd, config, true, args.includes('--json'));
+    process.exit(0);
+  }
+
+  if (args.includes('--monorepo') || config.monorepo) {
+    runMonorepo(cwd, config);
     process.exit(0);
   }
 
