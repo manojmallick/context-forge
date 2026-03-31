@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>User Dashboard</title>
+</head>
+<body>
+  <div id="app" data-component="dashboard">
+    <form id="login-form" action="/api/login" method="post">
+      <input type="text" name="username" />
+      <button id="submit-btn">Login</button>
+    </form>
+    <section id="user-profile" data-controller="profile">
+      <div id="user-avatar"></div>
+    </section>
+  </div>
+</body>
+</html>

@@ -1,0 +1,5 @@
+component UserProfile
+props: [userId]
+  async handleSave(event)
+  handleCancel()
+emits: ['saved', 'cancelled']

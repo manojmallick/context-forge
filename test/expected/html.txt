@@ -1,0 +1,5 @@
+title: User Dashboard
+form#login action="/api/login"
+div#app
+data-component: dashboard
+data-controller: profile

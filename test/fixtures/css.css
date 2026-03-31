@@ -1,0 +1,36 @@
+/* CSS fixture */
+:root {
+  --color-primary: #007bff;
+  --color-secondary: #6c757d;
+  --spacing-base: 8px;
+}
+
+$font-size-base: 16px;
+$color-brand: #007bff;
+
+@mixin flex-center($direction: row) {
+  display: flex;
+  align-items: center;
+}
+
+@mixin responsive($breakpoint) {
+  @media (max-width: $breakpoint) { @content; }
+}
+
+@function rem($px) {
+  @return #{$px / 16}rem;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.button {
+  padding: 8px 16px;
+  border-radius: 4px;
+}
+
+.card {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
