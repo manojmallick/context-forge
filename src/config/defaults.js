@@ -39,6 +39,10 @@ const DEFAULTS = {
   // Sort recently git-committed files higher in output
   diffPriority: true,
 
+  // Append model routing hints section to the context output
+  // Routes files to fast/balanced/powerful model tiers based on complexity
+  routing: false,
+
   // MCP server configuration
   mcp: {
     autoRegister: true,
