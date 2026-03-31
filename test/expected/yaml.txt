@@ -1,0 +1,4 @@
+keys: [name, on, jobs]
+job: test
+job: build
+job: deploy

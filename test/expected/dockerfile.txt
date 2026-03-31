@@ -1,0 +1,11 @@
+FROM node:20-alpine AS base
+FROM base AS deps
+FROM base AS build
+FROM base AS runner
+EXPOSE 3000 9229
+ENTRYPOINT ["node"]
+CMD ["dist/index.js"]
+ENV NODE_ENV
+ENV PORT
+ARG BUILD_VERSION
+ARG GIT_SHA

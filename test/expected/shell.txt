@@ -1,0 +1,7 @@
+# Setup script for ContextForge
+function install_hooks()
+function generate_context()
+function check_node_version()
+main "$@"
+export PROJECT_ROOT
+export CONFIG_FILE
