@@ -15,7 +15,7 @@
 const TIERS = {
   fast: {
     label: 'Fast (low-cost)',
-    examples: 'claude-haiku-3, gpt-4o-mini, gemini-flash',
+    examples: 'claude-haiku-4-5, gpt-5-mini, gemini-3-flash',
     tasks: [
       'Autocomplete and inline suggestions',
       'Edit config or markup files',
@@ -24,12 +24,12 @@ const TIERS = {
       'Explain a short utility function',
       'Generate simple shell scripts or Dockerfiles',
     ],
-    costHint: '~$0.001 / 1K tokens',
+    costHint: '~$0.0008 / 1K tokens',
   },
 
   balanced: {
     label: 'Balanced (mid-tier)',
-    examples: 'claude-sonnet-3-5, gpt-4o, gemini-pro',
+    examples: 'claude-sonnet-4-6, gpt-5-2, gemini-3-1-pro',
     tasks: [
       'Write unit or integration tests',
       'Implement a well-scoped feature function',
@@ -43,7 +43,7 @@ const TIERS = {
 
   powerful: {
     label: 'Powerful (high-cost)',
-    examples: 'claude-opus-4, gpt-4-turbo, gemini-ultra',
+    examples: 'claude-opus-4-6, gpt-5-4, gemini-2-5-pro',
     tasks: [
       'Cross-cutting architecture decisions',
       'Multi-file refactor spanning 5+ files',

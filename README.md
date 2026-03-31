@@ -115,10 +115,10 @@ Classify a task description to get a model tier recommendation:
 ```bash
 node gen-context.js --suggest-tool "security audit of the auth module"
 # tier   : powerful
-# models : claude-opus-4, gpt-4-turbo, gemini-ultra
+# models : claude-opus-4-6, gpt-5-4, gemini-2-5-pro
 
 node gen-context.js --suggest-tool "fix a typo in the yaml config" --json
-# {"tier":"fast","label":"Fast (low-cost)","models":"claude-haiku-3, gpt-4o-mini, gemini-flash","costHint":"~$0.001 / 1K tokens"}
+# {"tier":"fast","label":"Fast (low-cost)","models":"claude-haiku-4-5, gpt-5-mini, gemini-3-flash","costHint":"~$0.0008 / 1K tokens"}
 ```
 
 Tiers: `fast` (config/markup/typos) · `balanced` (features/tests/debug) · `powerful` (architecture/security/multi-file)
