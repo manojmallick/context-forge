@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Repomix Integration — ContextForge</title>
+<meta name="description" content="Use ContextForge and Repomix together for the two-layer AI context strategy. ContextForge for always-on signatures; Repomix for deep one-off sessions. Together they cover every workflow.">
+<meta property="og:title" content="ContextForge + Repomix — the two-layer context strategy">
+<meta property="og:description" content="ContextForge for daily always-on context. Repomix for deep one-off sessions. Use both. Never choose.">
+<meta property="og:url" content="https://manojmallick.github.io/context-forge/repomix.html">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="keywords" content="repomix integration, repomix contextforge, ai context management, copilot token reduction, claude context window, repomix alternative, repomix complement">
+<link rel="canonical" href="https://manojmallick.github.io/context-forge/repomix.html">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=IBM+Plex+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#09090c;--s1:#0f0f13;--s2:#161619;--s3:#1d1d22;--s4:#25252c;
+  --line:#2a2a33;--line2:#38383f;
+  --t1:#f0eeff;--t2:#9896b0;--t3:#52506a;
+  --p:#7c6af7;--pl:rgba(124,106,247,.1);--pd:#b3aaff;
+  --g:#10b981;--gl:rgba(16,185,129,.1);--gd:#6ee7b7;
+  --a:#f59e0b;--al:rgba(245,158,11,.1);--ad:#fcd34d;
+  --r:#f43f5e;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--t1);line-height:1.6;overflow-x:hidden}
+
+nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(9,9,12,.85);backdrop-filter:blur(12px);border-bottom:1px solid var(--line);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between}
+.nav-logo{font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:500;color:var(--pd);text-decoration:none}
+.nav-links{display:flex;align-items:center;gap:24px}
+.nav-links a{font-size:13px;color:var(--t2);text-decoration:none;transition:.15s}
+.nav-links a:hover{color:var(--t1)}
+.nav-links a.active{color:var(--t1)}
+.nav-gh{background:var(--p);color:#fff;padding:6px 14px;border-radius:7px;font-size:12px;font-weight:600;text-decoration:none;transition:.15s}
+.nav-gh:hover{opacity:.85;color:#fff}
+@media(max-width:600px){.nav-links .hide-sm{display:none}}
+
+.page-hero{padding:120px 24px 64px;text-align:center;position:relative;overflow:hidden}
+.page-hero::before{content:'';position:absolute;top:-100px;left:50%;transform:translateX(-50%);width:700px;height:700px;background:radial-gradient(circle,rgba(16,185,129,.05) 0%,transparent 65%);pointer-events:none}
+.hero-inner{max-width:720px;margin:0 auto;position:relative;z-index:1}
+.hero-badge{display:inline-flex;align-items:center;gap:6px;background:var(--gl);border:1px solid rgba(16,185,129,.25);border-radius:20px;padding:5px 14px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--gd);margin-bottom:24px;letter-spacing:.04em}
+h1{font-family:'Syne',sans-serif;font-size:clamp(32px,5vw,56px);font-weight:800;line-height:1.08;margin-bottom:16px;background:linear-gradient(135deg,var(--t1) 30%,var(--gd) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.hero-sub{font-size:clamp(15px,2vw,18px);color:var(--t2);max-width:540px;margin:0 auto;font-weight:300;line-height:1.65}
+.hero-rule{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--pd);background:var(--pl);border:1px solid rgba(124,106,247,.2);border-radius:8px;padding:10px 20px;display:inline-block;margin-top:24px}
+
+.section{padding:64px 24px;max-width:900px;margin:0 auto}
+.section-ey{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--pd);margin-bottom:10px;text-align:center}
+h2{font-family:'Syne',sans-serif;font-size:clamp(22px,3.5vw,34px);font-weight:800;text-align:center;margin-bottom:12px}
+.section-sub{font-size:15px;color:var(--t2);text-align:center;max-width:500px;margin:0 auto 48px;font-weight:300;line-height:1.65}
+.divider{border:none;border-top:1px solid var(--line);margin:0}
+
+/* COMPARE GRID */
+.compare-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:32px}
+@media(max-width:640px){.compare-grid{grid-template-columns:1fr}}
+.compare-card{border-radius:14px;padding:28px;border:2px solid}
+.compare-card.cf{background:var(--pl);border-color:rgba(124,106,247,.3)}
+.compare-card.rx{background:var(--gl);border-color:rgba(16,185,129,.3)}
+.compare-logo{font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:500;margin-bottom:4px}
+.compare-logo.cf{color:var(--pd)}
+.compare-logo.rx{color:var(--gd)}
+.compare-tagline{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;margin-bottom:12px}
+.compare-desc{font-size:13px;color:var(--t2);line-height:1.65;margin-bottom:16px;font-weight:300}
+.compare-list{list-style:none;display:flex;flex-direction:column;gap:6px}
+.compare-list li{font-size:13px;color:var(--t2);display:flex;align-items:flex-start;gap:8px;line-height:1.4}
+.compare-list.cf li::before{content:'⚡';flex-shrink:0;font-size:11px}
+.compare-list.rx li::before{content:'🗂';flex-shrink:0;font-size:11px}
+.cf-stars{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--pd);margin-top:12px}
+.rx-stars{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--gd);margin-top:12px}
+
+/* TOGETHER BOX */
+.together-box{background:var(--s2);border:1px solid var(--line2);border-radius:14px;padding:28px;text-align:center;margin-bottom:48px}
+.together-title{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:8px}
+.together-desc{font-size:14px;color:var(--t2);max-width:500px;margin:0 auto;font-weight:300;line-height:1.65}
+.together-eq{display:flex;align-items:center;justify-content:center;gap:12px;margin-top:20px;flex-wrap:wrap}
+.together-pill{font-family:'IBM Plex Mono',monospace;font-size:12px;padding:8px 18px;border-radius:8px}
+.together-pill.cf{background:var(--pl);color:var(--pd);border:1px solid rgba(124,106,247,.25)}
+.together-pill.rx{background:var(--gl);color:var(--gd);border:1px solid rgba(16,185,129,.25)}
+.together-pill.result{background:var(--al);color:var(--ad);border:1px solid rgba(245,158,11,.25)}
+.together-op{font-size:18px;color:var(--t3)}
+
+/* TERMINAL */
+.terminal{background:#06060a;border:1px solid var(--line2);border-radius:12px;overflow:hidden;max-width:760px;margin:0 auto 32px;text-align:left;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.term-bar{background:var(--s2);padding:10px 14px;display:flex;align-items:center;gap:6px;border-bottom:1px solid var(--line)}
+.term-dot{width:11px;height:11px;border-radius:50%}
+.term-title{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--t3);margin-left:6px}
+.term-body{padding:16px 18px;font-family:'IBM Plex Mono',monospace;font-size:13px;line-height:1.9}
+.tc{color:var(--t3)}.tk{color:var(--pd)}.ts{color:var(--gd)}.tw{color:var(--ad)}.tr{color:#fca5a5}.tp{color:#c084fc}.t1{color:var(--t1)}
+
+/* LAYERS */
+.layers{display:flex;flex-direction:column;gap:12px;margin-bottom:40px}
+.layer{background:var(--s2);border:1px solid var(--line);border-radius:12px;padding:20px 24px;display:grid;grid-template-columns:48px 1fr;gap:16px;align-items:start}
+.layer-num{width:40px;height:40px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:500;flex-shrink:0}
+.layer-num.stable{background:var(--gl);color:var(--gd)}
+.layer-num.dynamic{background:var(--pl);color:var(--pd)}
+.layer-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:800;margin-bottom:4px}
+.layer-desc{font-size:13px;color:var(--t2);line-height:1.6;font-weight:300}
+.layer-tag{font-family:'IBM Plex Mono',monospace;font-size:10px;padding:2px 8px;border-radius:4px;display:inline-block;margin-top:8px}
+.layer-tag.stable{background:var(--gl);color:var(--gd)}
+.layer-tag.dynamic{background:var(--pl);color:var(--pd)}
+
+/* WORKFLOW TABLE */
+.workflow-table{width:100%;border-collapse:collapse;margin-bottom:40px;font-size:13px}
+.workflow-table th{font-family:'IBM Plex Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--t3);text-align:left;padding:10px 16px;border-bottom:1px solid var(--line);background:var(--s2)}
+.workflow-table td{padding:12px 16px;border-bottom:1px solid var(--line);color:var(--t2);vertical-align:top;line-height:1.55}
+.workflow-table tr:hover td{background:var(--s2)}
+.workflow-table td:first-child{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--t1);white-space:nowrap}
+.tool-cf{color:var(--pd)}
+.tool-rx{color:var(--gd)}
+.tool-both{color:var(--ad)}
+
+/* CACHE JSON */
+.json-block{background:#06060a;border:1px solid var(--line2);border-radius:12px;padding:20px 24px;font-family:'IBM Plex Mono',monospace;font-size:12px;line-height:1.9;overflow-x:auto;margin-bottom:32px}
+
+/* IGNORE */
+.ignore-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:32px}
+@media(max-width:580px){.ignore-grid{grid-template-columns:1fr}}
+.ignore-card{background:var(--s2);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.ignore-header{background:var(--s3);padding:12px 18px;border-bottom:1px solid var(--line);font-family:'IBM Plex Mono',monospace;font-size:11px}
+.ignore-body{padding:14px 18px;font-family:'IBM Plex Mono',monospace;font-size:12px;line-height:1.9;color:var(--t2)}
+
+footer{background:var(--s1);border-top:1px solid var(--line);padding:32px 24px}
+.footer-inner{max-width:900px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px}
+.footer-logo{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--t3)}
+.footer-links{display:flex;gap:20px;flex-wrap:wrap}
+.footer-links a{font-size:13px;color:var(--t3);text-decoration:none;transition:.15s}
+.footer-links a:hover{color:var(--t2)}
+.footer-mit{font-size:12px;color:var(--t3)}
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-logo" href="index.html">context-forge</a>
+  <div class="nav-links">
+    <a href="quick-start.html" class="hide-sm">Quick start</a>
+    <a href="languages.html" class="hide-sm">Languages</a>
+    <a href="roadmap.html" class="hide-sm">Roadmap</a>
+    <a href="repomix.html" class="hide-sm active">Repomix</a>
+    <a href="https://github.com/manojmallick/context-forge" class="nav-gh" target="_blank">★ GitHub</a>
+  </div>
+</nav>
+
+<div class="page-hero">
+  <div class="hero-inner">
+    <div class="hero-badge">Complement, not compete</div>
+    <h1>ContextForge<br>+ Repomix</h1>
+    <p class="hero-sub">Two tools, two layers, one strategy. ContextForge keeps signatures always fresh. Repomix provides full-depth context for complex sessions. You need both.</p>
+    <div class="hero-rule">"ContextForge for daily always-on context; Repomix for deep one-off sessions — use both."</div>
+  </div>
+</div>
+
+<hr class="divider">
+
+<section class="section">
+  <p class="section-ey">Side by side</p>
+  <h2>Different tools, different jobs</h2>
+  <p class="section-sub">Each tool is optimised for a specific workflow. They stack, not compete.</p>
+
+  <div class="compare-grid">
+    <div class="compare-card cf">
+      <div class="compare-logo cf">context-forge</div>
+      <div class="compare-tagline">Always-on signatures</div>
+      <div class="compare-desc">Runs automatically on every save and every commit. Extracts function and class signatures from 21 languages. Writes a compact context file under 4K tokens that every AI coding agent reads at session start.</div>
+      <ul class="compare-list cf">
+        <li>Automatic — zero manual steps after --setup</li>
+        <li>Under 4,000 tokens for any codebase</li>
+        <li>Signatures only — shapes, not bodies</li>
+        <li>Secret scanning before every write</li>
+        <li>MCP server for on-demand module pulls</li>
+        <li>Self-healing CI — auto-regenerates on drift</li>
+      </ul>
+      <div class="cf-stars">MIT · zero deps · v1.0.0</div>
+    </div>
+
+    <div class="compare-card rx">
+      <div class="compare-logo rx">repomix</div>
+      <div class="compare-tagline">Deep session context</div>
+      <div class="compare-desc">Packs your entire codebase into a single XML or Markdown file using token-efficient compression. Purpose-built for deep one-off sessions where the agent needs full file contents, not just signatures.</div>
+      <ul class="compare-list rx">
+        <li>Manual — run when you need full depth</li>
+        <li>Full file contents, compressed</li>
+        <li>XML or Markdown output format</li>
+        <li>Broader language support via Tree-sitter</li>
+        <li>Repomix Cloud for team sharing</li>
+        <li>15,000+ GitHub stars, active community</li>
+      </ul>
+      <div class="rx-stars">MIT · <a href="https://github.com/yamadashy/repomix" style="color:var(--gd)">github.com/yamadashy/repomix</a></div>
+    </div>
+  </div>
+
+  <div class="together-box">
+    <div class="together-title">Together they cover every workflow</div>
+    <div class="together-desc">ContextForge handles the 90% — daily coding sessions where you need fast, always-fresh context. Repomix handles the 10% — architectural decisions, large-scale refactors, and debugging sessions that need every line.</div>
+    <div class="together-eq">
+      <div class="together-pill cf">context-forge (daily)</div>
+      <div class="together-op">+</div>
+      <div class="together-pill rx">repomix (deep sessions)</div>
+      <div class="together-op">=</div>
+      <div class="together-pill result">full coverage</div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<section class="section">
+  <p class="section-ey">Architecture</p>
+  <h2>The two-layer caching strategy</h2>
+  <p class="section-sub">Stack both tools for maximum token and cost efficiency. Layer 1 is stable and cached. Layer 2 is fresh and lightweight.</p>
+
+  <div class="layers">
+    <div class="layer">
+      <div class="layer-num stable">L1</div>
+      <div>
+        <div class="layer-title">Layer 1 — Stable Repomix prefix (cached)</div>
+        <div class="layer-desc">Run Repomix once at the start of a deep session. The compressed codebase becomes a stable prefix in the prompt. Using Anthropic's cache_control breakpoints (or OpenAI's equivalent), this prefix is computed once and reused across every request in the session. The codebase rarely changes within a single session — this cache hit rate is typically 95%+.</div>
+        <span class="layer-tag stable">repomix --compress</span>
+        <span class="layer-tag stable">cache_control: ephemeral</span>
+        <span class="layer-tag stable">60% cost reduction</span>
+      </div>
+    </div>
+    <div class="layer">
+      <div class="layer-num dynamic">L2</div>
+      <div>
+        <div class="layer-title">Layer 2 — Fresh ContextForge signatures (dynamic)</div>
+        <div class="layer-desc">ContextForge regenerates on every save. Its compact signature output sits above the Repomix prefix and tells the agent which files changed since the session started. The signatures identify where to look; the cached Repomix context provides the depth. Under 4K tokens, always fresh, always accurate.</div>
+        <span class="layer-tag dynamic">node gen-context.js --watch</span>
+        <span class="layer-tag dynamic">&lt; 4K tokens</span>
+        <span class="layer-tag dynamic">always fresh</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="terminal">
+    <div class="term-bar">
+      <div class="term-dot" style="background:#ff5f57"></div>
+      <div class="term-dot" style="background:#febc2e"></div>
+      <div class="term-dot" style="background:#28c840"></div>
+      <span class="term-title">Combined workflow</span>
+    </div>
+    <div class="term-body">
+      <div><span class="tc"># Session start — run once</span></div>
+      <div><span class="tc">$</span> <span class="ts">npx repomix --compress --output .context/repomix.md</span></div>
+      <div><span class="tk">[repomix]</span> <span class="tw">packed 247 files → 28,400 tokens (compressed)</span></div>
+      <div>&nbsp;</div>
+      <div><span class="tc"># Always running — background watcher</span></div>
+      <div><span class="tc">$</span> <span class="ts">node gen-context.js --watch &amp;</span></div>
+      <div><span class="tk">[context-forge]</span> <span class="tw">watching src/ app/ lib/ ...</span></div>
+      <div>&nbsp;</div>
+      <div><span class="tc"># Query with both layers</span></div>
+      <div><span class="tc">$</span> <span class="ts">cat .context/repomix.md .github/copilot-instructions.md \</span></div>
+      <div>  <span class="ts">| claude --cache "Fix the UserService.findById bug"</span></div>
+      <div>&nbsp;</div>
+      <div><span class="tc"># Result: 28,400 tokens cached (L1) + 3,847 tokens fresh (L2)</span></div>
+      <div><span class="ts">L1 cache hit rate: 97%  ←  pay once per session</span></div>
+      <div><span class="ts">L2 tokens: 3,847        ←  always current</span></div>
+      <div><span class="ts">Effective cost: -76% vs uncached full context</span></div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<section class="section">
+  <p class="section-ey">Use case guide</p>
+  <h2>Which tool for which task</h2>
+  <p class="section-sub">A simple decision table. When in doubt, run ContextForge first.</p>
+
+  <table class="workflow-table">
+    <thead>
+      <tr>
+        <th>Task</th>
+        <th>Use</th>
+        <th>Why</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Daily coding session</td>
+        <td><span class="tool-cf">context-forge</span></td>
+        <td>Auto-updated signatures are enough for navigation and autocomplete context</td>
+      </tr>
+      <tr>
+        <td>Fix a specific bug</td>
+        <td><span class="tool-cf">context-forge</span></td>
+        <td>MCP search_signatures finds the relevant files in &lt;200 tokens</td>
+      </tr>
+      <tr>
+        <td>Add a feature to existing code</td>
+        <td><span class="tool-cf">context-forge</span></td>
+        <td>Signatures show the interface; bodies aren't needed to extend</td>
+      </tr>
+      <tr>
+        <td>Architecture review</td>
+        <td><span class="tool-rx">repomix</span></td>
+        <td>Agent needs full file contents to reason about system design</td>
+      </tr>
+      <tr>
+        <td>Large-scale refactor</td>
+        <td><span class="tool-both">both</span></td>
+        <td>Repomix for full depth, ContextForge to track what changes in real-time</td>
+      </tr>
+      <tr>
+        <td>Onboarding a new codebase</td>
+        <td><span class="tool-both">both</span></td>
+        <td>Repomix for full understanding, ContextForge to keep the session lean</td>
+      </tr>
+      <tr>
+        <td>CI token budget check</td>
+        <td><span class="tool-cf">context-forge</span></td>
+        <td>--report --json outputs machine-readable stats for CI dashboards</td>
+      </tr>
+      <tr>
+        <td>Sharing context with a team</td>
+        <td><span class="tool-rx">repomix</span></td>
+        <td>Repomix Cloud handles team sharing; ContextForge output goes in git</td>
+      </tr>
+      <tr>
+        <td>Security audit</td>
+        <td><span class="tool-cf">context-forge</span></td>
+        <td>Secret scanning redacts credentials before any output is written</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<hr class="divider">
+
+<section class="section">
+  <p class="section-ey">Prompt cache format</p>
+  <h2>Cache control payload</h2>
+  <p class="section-sub">Use <code style="font-family:'IBM Plex Mono',monospace;font-size:13px;background:var(--s3);padding:2px 6px;border-radius:4px">node gen-context.js --format cache</code> to generate the Anthropic cache_control JSON structure. The stable signatures become a cached prefix — pay once, reuse across every request.</p>
+
+  <div class="json-block">
+    <div><span style="color:var(--t3)">{</span></div>
+    <div>  <span style="color:var(--pd)">"messages"</span><span style="color:var(--t3)">: [</span></div>
+    <div>    <span style="color:var(--t3)">{</span></div>
+    <div>      <span style="color:var(--pd)">"role"</span><span style="color:var(--t3)">: </span><span style="color:var(--gd)">"user"</span><span style="color:var(--t3)">,</span></div>
+    <div>      <span style="color:var(--pd)">"content"</span><span style="color:var(--t3)">: [</span></div>
+    <div>        <span style="color:var(--t3)">{</span></div>
+    <div>          <span style="color:var(--pd)">"type"</span><span style="color:var(--t3)">: </span><span style="color:var(--gd)">"text"</span><span style="color:var(--t3)">,</span></div>
+    <div>          <span style="color:var(--pd)">"text"</span><span style="color:var(--t3)">: </span><span style="color:var(--gd)">"# Code signatures\n\n## src/api/users.ts\nexport class UserService\n  async findById(id: string): Promise&lt;User&gt;\n..."</span><span style="color:var(--t3)">,</span></div>
+    <div>          <span style="color:var(--pd)">"cache_control"</span><span style="color:var(--t3)">: {</span> <span style="color:var(--pd)">"type"</span><span style="color:var(--t3)">: </span><span style="color:var(--gd)">"ephemeral"</span> <span style="color:var(--t3)">}</span>  <span style="color:var(--t3)">← cache breakpoint</span></div>
+    <div>        <span style="color:var(--t3)">},</span></div>
+    <div>        <span style="color:var(--t3)">{</span></div>
+    <div>          <span style="color:var(--pd)">"type"</span><span style="color:var(--t3)">: </span><span style="color:var(--gd)">"text"</span><span style="color:var(--t3)">,</span></div>
+    <div>          <span style="color:var(--pd)">"text"</span><span style="color:var(--t3)">: </span><span style="color:var(--gd)">"Fix the race condition in UserService.findById"</span>  <span style="color:var(--t3)">← user task</span></div>
+    <div>        <span style="color:var(--t3)">}</span></div>
+    <div>      <span style="color:var(--t3)">]</span></div>
+    <div>    <span style="color:var(--t3)">}</span></div>
+    <div>  <span style="color:var(--t3)">]</span></div>
+    <div><span style="color:var(--t3)">}</span></div>
+  </div>
+
+  <div style="background:var(--s2);border:1px solid var(--line);border-radius:12px;padding:20px 24px;margin-bottom:32px">
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--t3);margin-bottom:12px">Cache economics on a 100-request session</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;text-align:center">
+      <div>
+        <div style="font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:var(--gd)">1×</div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--t3)">Cache write (full cost)</div>
+      </div>
+      <div>
+        <div style="font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:var(--pd)">99×</div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--t3)">Cache reads (10% cost)</div>
+      </div>
+      <div>
+        <div style="font-family:'Syne',sans-serif;font-size:24px;font-weight:800;background:linear-gradient(135deg,var(--gd),var(--pd));-webkit-background-clip:text;-webkit-text-fill-color:transparent">−60%</div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--t3)">Session API cost</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<section class="section">
+  <p class="section-ey">Shared config</p>
+  <h2>One ignore file for both tools</h2>
+  <p class="section-sub">The .contextignore file uses the same gitignore syntax as .repomixignore. Symlink them to maintain a single exclusion list for both tools.</p>
+
+  <div class="ignore-grid">
+    <div class="ignore-card">
+      <div class="ignore-header" style="color:var(--pd)">.contextignore</div>
+      <div class="ignore-body">
+        <div style="color:var(--t3)"># ContextForge exclusions</div>
+        <div>node_modules/</div>
+        <div>dist/</div>
+        <div>build/</div>
+        <div>*.generated.*</div>
+        <div>*.pb.*</div>
+        <div>coverage/</div>
+        <div>*.test.*</div>
+        <div>*.spec.*</div>
+      </div>
+    </div>
+    <div class="ignore-card">
+      <div class="ignore-header" style="color:var(--gd)">.repomixignore (symlink)</div>
+      <div class="ignore-body">
+        <div style="color:var(--t3)"># Symlink to .contextignore</div>
+        <div style="color:var(--t3)"># ln -s .contextignore .repomixignore</div>
+        <div>&nbsp;</div>
+        <div style="color:var(--t3)"># Same exclusion list.</div>
+        <div style="color:var(--t3)"># One source of truth.</div>
+        <div style="color:var(--t3)"># Both tools respect it.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="terminal" style="margin-bottom:0">
+    <div class="term-bar">
+      <div class="term-dot" style="background:#ff5f57"></div>
+      <div class="term-dot" style="background:#febc2e"></div>
+      <div class="term-dot" style="background:#28c840"></div>
+      <span class="term-title">Setup shared ignore file</span>
+    </div>
+    <div class="term-body">
+      <div><span class="tc"># Create .contextignore once</span></div>
+      <div><span class="tc">$</span> <span class="tw">node gen-context.js --init</span></div>
+      <div><span class="ts">✓ wrote .contextignore.example</span>  <span class="tc">← copy and customise</span></div>
+      <div>&nbsp;</div>
+      <div><span class="tc"># Symlink for Repomix</span></div>
+      <div><span class="tc">$</span> <span class="tw">ln -s .contextignore .repomixignore</span></div>
+      <div>&nbsp;</div>
+      <div><span class="tc"># Both tools now share one exclusion list</span></div>
+      <div><span class="tc">$</span> <span class="tw">node gen-context.js</span>  <span class="tc">← respects .contextignore</span></div>
+      <div><span class="tc">$</span> <span class="tw">npx repomix</span>           <span class="tc">← respects .repomixignore (same file)</span></div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<section class="section">
+  <p class="section-ey">GitHub Action</p>
+  <h2>Run both in CI</h2>
+  <p class="section-sub">The example GitHub Action runs ContextForge on every push, checks the token budget, and makes the Repomix output available as a CI artifact.</p>
+
+  <div class="terminal">
+    <div class="term-bar">
+      <div class="term-dot" style="background:#ff5f57"></div>
+      <div class="term-dot" style="background:#febc2e"></div>
+      <div class="term-dot" style="background:#28c840"></div>
+      <span class="term-title">.github/workflows/context.yml</span>
+    </div>
+    <div class="term-body">
+      <div><span class="tp">name:</span> <span class="t1">AI Context</span></div>
+      <div><span class="tp">on:</span> <span class="t1">[push, pull_request]</span></div>
+      <div>&nbsp;</div>
+      <div><span class="tp">jobs:</span></div>
+      <div>  <span class="tp">context:</span></div>
+      <div>    <span class="tp">runs-on:</span> <span class="t1">ubuntu-latest</span></div>
+      <div>    <span class="tp">steps:</span></div>
+      <div>      <span class="tc">- uses: actions/checkout@v4</span></div>
+      <div>      <span class="tc">- uses: actions/setup-node@v4</span></div>
+      <div>        <span class="tp">with:</span> <span class="t1">{node-version: '22'}</span></div>
+      <div>&nbsp;</div>
+      <div>      <span class="tc">- name: Generate ContextForge signatures</span></div>
+      <div>        <span class="tp">run:</span> <span class="t1">node gen-context.js --report --json &gt; context-report.json</span></div>
+      <div>&nbsp;</div>
+      <div>      <span class="tc">- name: Check token budget</span></div>
+      <div>        <span class="tp">run:</span> <span class="t1">|</span></div>
+      <div>          <span class="t1">tokens=$(jq .outputTokens context-report.json)</span></div>
+      <div>          <span class="t1">if [ $tokens -gt 6000 ]; then exit 1; fi</span></div>
+      <div>&nbsp;</div>
+      <div>      <span class="tc">- name: Run Repomix (deep context artifact)</span></div>
+      <div>        <span class="tp">run:</span> <span class="t1">npx repomix --compress --output repomix-context.md</span></div>
+      <div>&nbsp;</div>
+      <div>      <span class="tc">- uses: actions/upload-artifact@v4</span></div>
+      <div>        <span class="tp">with:</span></div>
+      <div>          <span class="t1">name: ai-context</span></div>
+      <div>          <span class="t1">path: |</span></div>
+      <div>            <span class="t1">.github/copilot-instructions.md</span></div>
+      <div>            <span class="t1">repomix-context.md</span></div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<section class="section" style="text-align:center">
+  <p class="section-ey">Get started</p>
+  <h2>Both tools, five minutes</h2>
+  <p class="section-sub">Install ContextForge in 90 seconds. Then add Repomix for deep sessions. You'll never go back to manually managing context.</p>
+  <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:8px">
+    <a href="quick-start.html" style="background:var(--p);color:#fff;padding:12px 28px;border-radius:9px;font-size:14px;font-weight:600;text-decoration:none">Install ContextForge →</a>
+    <a href="https://github.com/yamadashy/repomix" style="background:var(--gl);color:var(--gd);border:1px solid rgba(16,185,129,.3);padding:12px 24px;border-radius:9px;font-size:14px;font-weight:600;text-decoration:none">★ Repomix on GitHub</a>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-inner">
+    <span class="footer-logo">context-forge v1.0.0</span>
+    <div class="footer-links">
+      <a href="https://github.com/manojmallick/context-forge">GitHub</a>
+      <a href="https://github.com/manojmallick/context-forge/blob/main/CONTRIBUTING.md">Contributing</a>
+      <a href="https://github.com/manojmallick/context-forge/blob/main/CHANGELOG.md">Changelog</a>
+      <a href="repomix.html">Repomix</a>
+    </div>
+    <span class="footer-mit">MIT © 2026 Manoj Kumar</span>
+  </div>
+</footer>
+
+</body>
+</html>

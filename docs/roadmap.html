@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Roadmap — ContextForge</title>
+<meta name="description" content="ContextForge shipped v0.1 through v1.0 — 11 versions, 97% token reduction, 177 tests. Full visual timeline from baseline to complete system.">
+<meta property="og:title" content="ContextForge Roadmap — v0.1 to v1.0 complete">
+<meta property="og:description" content="11 versions shipped. 97% token reduction. 177 tests. MIT license. See how ContextForge was built from first extractor to full enterprise system.">
+<meta property="og:url" content="https://manojmallick.github.io/context-forge/roadmap.html">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://manojmallick.github.io/context-forge/roadmap.html">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=IBM+Plex+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#09090c;--s1:#0f0f13;--s2:#161619;--s3:#1d1d22;--s4:#25252c;
+  --line:#2a2a33;--line2:#38383f;
+  --t1:#f0eeff;--t2:#9896b0;--t3:#52506a;
+  --p:#7c6af7;--pl:rgba(124,106,247,.1);--pd:#b3aaff;
+  --g:#10b981;--gl:rgba(16,185,129,.1);--gd:#6ee7b7;
+  --a:#f59e0b;--al:rgba(245,158,11,.1);--ad:#fcd34d;
+  --r:#f43f5e;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--t1);line-height:1.6;overflow-x:hidden}
+
+nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(9,9,12,.85);backdrop-filter:blur(12px);border-bottom:1px solid var(--line);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between}
+.nav-logo{font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:500;color:var(--pd);text-decoration:none}
+.nav-links{display:flex;align-items:center;gap:24px}
+.nav-links a{font-size:13px;color:var(--t2);text-decoration:none;transition:.15s}
+.nav-links a:hover{color:var(--t1)}
+.nav-links a.active{color:var(--t1)}
+.nav-gh{background:var(--p);color:#fff;padding:6px 14px;border-radius:7px;font-size:12px;font-weight:600;text-decoration:none;transition:.15s}
+.nav-gh:hover{opacity:.85;color:#fff}
+@media(max-width:600px){.nav-links .hide-sm{display:none}}
+
+.page-hero{padding:120px 24px 64px;text-align:center;position:relative;overflow:hidden}
+.page-hero::before{content:'';position:absolute;top:-100px;left:50%;transform:translateX(-50%);width:700px;height:700px;background:radial-gradient(circle,rgba(124,106,247,.06) 0%,transparent 65%);pointer-events:none}
+.hero-inner{max-width:700px;margin:0 auto;position:relative;z-index:1}
+.hero-badge{display:inline-flex;align-items:center;gap:6px;background:var(--gl);border:1px solid rgba(16,185,129,.25);border-radius:20px;padding:5px 14px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--gd);margin-bottom:24px;letter-spacing:.04em}
+.hero-badge .dot{width:6px;height:6px;border-radius:50%;background:var(--g)}
+h1{font-family:'Syne',sans-serif;font-size:clamp(32px,5vw,56px);font-weight:800;line-height:1.08;margin-bottom:16px;background:linear-gradient(135deg,var(--t1) 30%,var(--pd) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.hero-sub{font-size:clamp(15px,2vw,18px);color:var(--t2);max-width:480px;margin:0 auto;font-weight:300}
+.hero-stats{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin-top:28px}
+.hstat{background:var(--s2);border:1px solid var(--line);border-radius:10px;padding:10px 20px;text-align:center}
+.hstat-val{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;display:block}
+.hstat-val.p{background:linear-gradient(135deg,var(--t1),var(--pd));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.hstat-val.g{color:var(--gd)}
+.hstat-lbl{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.08em}
+
+.section{padding:64px 24px;max-width:860px;margin:0 auto}
+.section-ey{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--pd);margin-bottom:10px;text-align:center}
+h2{font-family:'Syne',sans-serif;font-size:clamp(22px,3.5vw,34px);font-weight:800;text-align:center;margin-bottom:12px}
+.section-sub{font-size:15px;color:var(--t2);text-align:center;max-width:500px;margin:0 auto 48px;font-weight:300;line-height:1.65}
+.divider{border:none;border-top:1px solid var(--line);margin:0}
+
+/* TOKEN BAR */
+.token-progress{background:var(--s2);border:1px solid var(--line);border-radius:14px;padding:28px 32px;margin-bottom:48px}
+.tp-title{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--t3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:20px}
+.tp-row{display:grid;grid-template-columns:60px 1fr 100px;align-items:center;gap:12px;margin-bottom:10px}
+.tp-ver{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--t3)}
+.tp-bar-bg{background:var(--s3);border-radius:4px;height:8px;overflow:hidden}
+.tp-bar{height:8px;border-radius:4px;transition:.3s}
+.tp-val{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--t2);text-align:right}
+
+/* TIMELINE */
+.timeline{display:flex;flex-direction:column;gap:0}
+.tl-item{display:grid;grid-template-columns:100px 1fr;gap:0}
+.tl-rail{display:flex;flex-direction:column;align-items:center;padding:0 4px}
+.tl-dot{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:500;flex-shrink:0;position:relative;z-index:1;border:2px solid}
+.tl-dot.done{background:var(--gl);border-color:var(--g);color:var(--gd)}
+.tl-dot.base{background:var(--al);border-color:var(--a);color:var(--ad)}
+.tl-line{flex:1;width:2px;background:var(--line);margin:4px 0}
+.tl-content{padding:0 0 40px 20px}
+.tl-header{display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap}
+.tl-version{font-family:'Syne',sans-serif;font-size:18px;font-weight:800}
+.tl-name{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:var(--t2)}
+.tl-badge{font-family:'IBM Plex Mono',monospace;font-size:10px;padding:2px 8px;border-radius:4px}
+.tl-badge.done{background:var(--gl);color:var(--gd);border:1px solid rgba(16,185,129,.25)}
+.tl-badge.base{background:var(--al);color:var(--ad);border:1px solid rgba(245,158,11,.25)}
+.tl-desc{font-size:14px;color:var(--t2);line-height:1.65;margin-bottom:10px;font-weight:300;max-width:540px}
+.tl-tags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}
+.tl-tag{font-family:'IBM Plex Mono',monospace;font-size:10px;padding:2px 8px;border-radius:4px;background:var(--pl);color:var(--pd);border:1px solid rgba(124,106,247,.2)}
+.tl-impact{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--gd);margin-top:4px}
+
+/* FINAL STATS */
+.final-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:14px;overflow:hidden;margin-bottom:40px}
+@media(max-width:600px){.final-grid{grid-template-columns:repeat(2,1fr)}}
+.final-stat{background:var(--s2);padding:24px;text-align:center}
+.final-stat-val{font-family:'Syne',sans-serif;font-size:30px;font-weight:800;display:block;margin-bottom:4px}
+.final-stat-val.p{background:linear-gradient(135deg,var(--t1),var(--pd));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.final-stat-val.g{color:var(--gd)}
+.final-stat-lbl{font-size:12px;color:var(--t3);font-family:'IBM Plex Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.07em}
+
+footer{background:var(--s1);border-top:1px solid var(--line);padding:32px 24px}
+.footer-inner{max-width:900px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px}
+.footer-logo{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--t3)}
+.footer-links{display:flex;gap:20px;flex-wrap:wrap}
+.footer-links a{font-size:13px;color:var(--t3);text-decoration:none;transition:.15s}
+.footer-links a:hover{color:var(--t2)}
+.footer-mit{font-size:12px;color:var(--t3)}
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-logo" href="index.html">context-forge</a>
+  <div class="nav-links">
+    <a href="quick-start.html" class="hide-sm">Quick start</a>
+    <a href="languages.html" class="hide-sm">Languages</a>
+    <a href="roadmap.html" class="hide-sm active">Roadmap</a>
+    <a href="repomix.html" class="hide-sm">Repomix</a>
+    <a href="https://github.com/manojmallick/context-forge" class="nav-gh" target="_blank">★ GitHub</a>
+  </div>
+</nav>
+
+<div class="page-hero">
+  <div class="hero-inner">
+    <div class="hero-badge"><span class="dot"></span>All versions complete</div>
+    <h1>v0.0 → v1.0</h1>
+    <p class="hero-sub">Eleven versions. Every one shipped. MIT open source from day one.</p>
+    <div class="hero-stats">
+      <div class="hstat"><span class="hstat-val p">97%</span><span class="hstat-lbl">Token reduction</span></div>
+      <div class="hstat"><span class="hstat-val g">177</span><span class="hstat-lbl">Tests passing</span></div>
+      <div class="hstat"><span class="hstat-val g">21</span><span class="hstat-lbl">Languages</span></div>
+      <div class="hstat"><span class="hstat-val g">0</span><span class="hstat-lbl">npm deps</span></div>
+    </div>
+  </div>
+</div>
+
+<hr class="divider">
+
+<section class="section">
+  <p class="section-ey">Token impact</p>
+  <h2>Reduction by version</h2>
+  <p class="section-sub">Every version reduced the token footprint further. From 8K at baseline to under 4K — and the full pipeline at under 2K for active files.</p>
+
+  <div class="token-progress">
+    <div class="tp-title">Tokens per session — lower is better</div>
+
+    <div class="tp-row">
+      <div class="tp-ver">v0.0</div>
+      <div class="tp-bar-bg"><div class="tp-bar" style="width:100%;background:var(--r)"></div></div>
+      <div class="tp-val" style="color:#fca5a5">80,000</div>
+    </div>
+    <div class="tp-row">
+      <div class="tp-ver">v0.1</div>
+      <div class="tp-bar-bg"><div class="tp-bar" style="width:50%;background:var(--a)"></div></div>
+      <div class="tp-val" style="color:var(--ad)">4,000</div>
+    </div>
+    <div class="tp-row">
+      <div class="tp-ver">v0.2</div>
+      <div class="tp-bar-bg"><div class="tp-bar" style="width:38%;background:var(--a)"></div></div>
+      <div class="tp-val" style="color:var(--ad)">3,000</div>
+    </div>
+    <div class="tp-row">
+      <div class="tp-ver">v0.3</div>
+      <div class="tp-bar-bg"><div class="tp-bar" style="width:25%;background:var(--g)"></div></div>
+      <div class="tp-val" style="color:var(--gd)">200–2K</div>
+    </div>
+    <div class="tp-row">
+      <div class="tp-ver">v0.6</div>
+      <div class="tp-bar-bg"><div class="tp-bar" style="width:15%;background:var(--g)"></div></div>
+      <div class="tp-val" style="color:var(--gd)">−40% conv.</div>
+    </div>
+    <div class="tp-row">
+      <div class="tp-ver">v0.8</div>
+      <div class="tp-bar-bg"><div class="tp-bar" style="width:10%;background:var(--p)"></div></div>
+      <div class="tp-val" style="color:var(--pd)">−60% cost</div>
+    </div>
+    <div class="tp-row">
+      <div class="tp-ver">v1.0</div>
+      <div class="tp-bar-bg"><div class="tp-bar" style="width:4%;background:var(--p)"></div></div>
+      <div class="tp-val" style="color:var(--pd)">97% total</div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<section class="section">
+  <p class="section-ey">Complete timeline</p>
+  <h2>Every version, every feature</h2>
+  <p class="section-sub">Built in public. Tagged in git. MIT from the start.</p>
+
+  <div class="timeline">
+
+    <!-- v0.0 -->
+    <div class="tl-item">
+      <div class="tl-rail">
+        <div class="tl-dot base">v0.0</div>
+        <div class="tl-line"></div>
+      </div>
+      <div class="tl-content">
+        <div class="tl-header">
+          <span class="tl-version">v0.0</span>
+          <span class="tl-name">Repomix baseline</span>
+          <span class="tl-badge base">Baseline</span>
+        </div>
+        <div class="tl-desc">Measure the problem. Install Repomix, create .repomixignore, measure token consumption before any optimisation. This is the number we spend every version beating.</div>
+        <div class="tl-tags">
+          <span class="tl-tag">repomix --compress</span>
+          <span class="tl-tag">.repomixignore</span>
+          <span class="tl-tag">token baseline</span>
+        </div>
+        <div class="tl-impact">Starting point: ~80,000 tokens per session</div>
+      </div>
+    </div>
+
+    <!-- v0.1 -->
+    <div class="tl-item">
+      <div class="tl-rail">
+        <div class="tl-dot done">v0.1</div>
+        <div class="tl-line"></div>
+      </div>
+      <div class="tl-content">
+        <div class="tl-header">
+          <span class="tl-version">v0.1</span>
+          <span class="tl-name">Core extractor</span>
+          <span class="tl-badge done">✓ Complete</span>
+        </div>
+        <div class="tl-desc">The first version that matters. A single file — gen-context.js — with all 21 language extractors inline. Zero npm dependencies. Runs on any machine with Node.js 18+. Writes .github/copilot-instructions.md. Installs a post-commit git hook via --setup.</div>
+        <div class="tl-tags">
+          <span class="tl-tag">gen-context.js</span>
+          <span class="tl-tag">21 extractors</span>
+          <span class="tl-tag">--setup hook</span>
+          <span class="tl-tag">--watch</span>
+          <span class="tl-tag">zero deps</span>
+        </div>
+        <div class="tl-impact">80,000 → 4,000 tokens — first 95% reduction</div>
+      </div>
+    </div>
+
+    <!-- v0.2 -->
+    <div class="tl-item">
+      <div class="tl-rail">
+        <div class="tl-dot done">v0.2</div>
+        <div class="tl-line"></div>
+      </div>
+      <div class="tl-content">
+        <div class="tl-header">
+          <span class="tl-version">v0.2</span>
+          <span class="tl-name">Enterprise hardening</span>
+          <span class="tl-badge done">✓ Complete</span>
+        </div>
+        <div class="tl-desc">Secret scanning blocks AWS keys, GitHub tokens, database connection strings, and 10 other credential patterns from ever appearing in the output. The .contextignore file (gitignore syntax) lets teams exclude generated code, test fixtures, and vendor directories. Token budget enforcement with a defined drop order.</div>
+        <div class="tl-tags">
+          <span class="tl-tag">secret scan (10 patterns)</span>
+          <span class="tl-tag">.contextignore</span>
+          <span class="tl-tag">token budget</span>
+          <span class="tl-tag">drop order</span>
+          <span class="tl-tag">config file</span>
+        </div>
+        <div class="tl-impact">4,000 → 3,000 tokens — smarter filtering</div>
+      </div>
+    </div>
+
+    <!-- v0.3 -->
+    <div class="tl-item">
+      <div class="tl-rail">
+        <div class="tl-dot done">v0.3</div>
+        <div class="tl-line"></div>
+      </div>
+      <div class="tl-content">
+        <div class="tl-header">
+          <span class="tl-version">v0.3</span>
+          <span class="tl-name">MCP server</span>
+          <span class="tl-badge done">✓ Complete</span>
+        </div>
+        <div class="tl-desc">A JSON-RPC stdio server implementing the Model Context Protocol. Three tools: read_context (pull signatures for any module on demand), search_signatures (keyword search across all signatures), get_map (structural sections). The MCP server reads files on every call — no stale state, no restart needed.</div>
+        <div class="tl-tags">
+          <span class="tl-tag">stdio JSON-RPC</span>
+          <span class="tl-tag">read_context</span>
+          <span class="tl-tag">search_signatures</span>
+          <span class="tl-tag">get_map</span>
+          <span class="tl-tag">--mcp flag</span>
+        </div>
+        <div class="tl-impact">200–2,000 tokens — pull only what the task needs</div>
+      </div>
+    </div>
+
+    <!-- v0.4 -->
+    <div class="tl-item">
+      <div class="tl-rail">
+        <div class="tl-dot done">v0.4</div>
+        <div class="tl-line"></div>
+      </div>
+      <div class="tl-content">
+        <div class="tl-header">
+          <span class="tl-version">v0.4</span>
+          <span class="tl-name">Project map</span>
+          <span class="tl-badge done">✓ Complete</span>
+        </div>
+        <div class="tl-desc">gen-project-map.js produces PROJECT_MAP.md with three structural views: an import graph showing every file dependency, a class hierarchy showing extends/implements relationships, and a route table extracting HTTP routes from Express, FastAPI, Rails, and similar frameworks.</div>
+        <div class="tl-tags">
+          <span class="tl-tag">import graph</span>
+          <span class="tl-tag">class hierarchy</span>
+          <span class="tl-tag">route table</span>
+          <span class="tl-tag">cycle detection</span>
+          <span class="tl-tag">gen-project-map.js</span>
+        </div>
+        <div class="tl-impact">Structural context — where things are, not just what they are</div>
+      </div>
+    </div>
+
+    <!-- v0.5 -->
+    <div class="tl-item">
+      <div class="tl-rail">
+        <div class="tl-dot done">v0.5</div>
+        <div class="tl-line"></div>
+      </div>
+      <div class="tl-content">
+        <div class="tl-header">
+          <span class="tl-version">v0.5</span>
+          <span class="tl-name">Monorepo + CI</span>
+          <span class="tl-badge done">✓ Complete</span>
+        </div>
+        <div class="tl-desc">Monorepo mode generates a separate context file per package — agents working on one service don't receive signatures from all others. The GitHub Action runs on every push and PR, fails CI if token budget is exceeded, and posts a reduction report as a PR comment.</div>
+        <div class="tl-tags">
+          <span class="tl-tag">monorepo mode</span>
+          <span class="tl-tag">GitHub Action</span>
+          <span class="tl-tag">PR comments</span>
+          <span class="tl-tag">CI budget gate</span>
+          <span class="tl-tag">per-package output</span>
+        </div>
+        <div class="tl-impact">Scales to any repo size — monorepo-safe</div>
+      </div>
+    </div>
+
+    <!-- v0.6 -->
+    <div class="tl-item">
+      <div class="tl-rail">
+        <div class="tl-dot done">v0.6</div>
+        <div class="tl-line"></div>
+      </div>
+      <div class="tl-content">
+        <div class="tl-header">
+          <span class="tl-version">v0.6</span>
+          <span class="tl-name">Session discipline</span>
+          <span class="tl-badge done">✓ Complete</span>
+        </div>
+        <div class="tl-desc">A session compression guide (SESSION_DISCIPLINE.md) that codifies how agents should summarise conversations, checkpoint progress, and restart from a minimal state. The --track flag logs every run to .context-forge/runs.jsonl for monitoring. Reduces per-conversation token cost by 40%.</div>
+        <div class="tl-tags">
+          <span class="tl-tag">SESSION_DISCIPLINE.md</span>
+          <span class="tl-tag">conversation checkpoints</span>
+          <span class="tl-tag">--track flag</span>
+          <span class="tl-tag">runs.jsonl</span>
+        </div>
+        <div class="tl-impact">−40% tokens per conversation</div>
+      </div>
+    </div>
+
+    <!-- v0.7 -->
+    <div class="tl-item">
+      <div class="tl-rail">
+        <div class="tl-dot done">v0.7</div>
+        <div class="tl-line"></div>
+      </div>
+      <div class="tl-content">
+        <div class="tl-header">
+          <span class="tl-version">v0.7</span>
+          <span class="tl-name">Model routing</span>
+          <span class="tl-badge done">✓ Complete</span>
+        </div>
+        <div class="tl-desc">A file complexity scorer classifies every file as fast (simple CRUD, 0.33× cost), balanced (business logic, 1× cost), or powerful (architecture decisions, 3× cost). The routing table is appended to the context file. Agents use the fast-tier model for 70% of tasks — the ones that don't need powerful reasoning.</div>
+        <div class="tl-tags">
+          <span class="tl-tag">complexity scorer</span>
+          <span class="tl-tag">3-tier routing</span>
+          <span class="tl-tag">haiku / sonnet / opus</span>
+          <span class="tl-tag">MODEL_ROUTING.md</span>
+          <span class="tl-tag">--routing flag</span>
+        </div>
+        <div class="tl-impact">Up to 70% reduction in model API cost</div>
+      </div>
+    </div>
+
+    <!-- v0.8 -->
+    <div class="tl-item">
+      <div class="tl-rail">
+        <div class="tl-dot done">v0.8</div>
+        <div class="tl-line"></div>
+      </div>
+      <div class="tl-content">
+        <div class="tl-header">
+          <span class="tl-version">v0.8</span>
+          <span class="tl-name">Prompt cache</span>
+          <span class="tl-badge done">✓ Complete</span>
+        </div>
+        <div class="tl-desc">The --format cache flag wraps context in Anthropic's cache_control breakpoints. The stable codebase signatures become a cached prefix — the most expensive tokens are computed once and reused across every request in a session. The 60% API cost reduction compounds with the model routing savings from v0.7.</div>
+        <div class="tl-tags">
+          <span class="tl-tag">cache_control breakpoints</span>
+          <span class="tl-tag">--format cache</span>
+          <span class="tl-tag">stable prefix</span>
+          <span class="tl-tag">Anthropic API</span>
+        </div>
+        <div class="tl-impact">−60% API cost on repeated context loads</div>
+      </div>
+    </div>
+
+    <!-- v0.9 -->
+    <div class="tl-item">
+      <div class="tl-rail">
+        <div class="tl-dot done">v0.9</div>
+        <div class="tl-line"></div>
+      </div>
+      <div class="tl-content">
+        <div class="tl-header">
+          <span class="tl-version">v0.9</span>
+          <span class="tl-name">Observability</span>
+          <span class="tl-badge done">✓ Complete</span>
+        </div>
+        <div class="tl-desc">The --report --json flag emits a machine-readable token reduction JSON suitable for CI dashboards and custom monitoring. An ENTERPRISE_SETUP.md consolidates all enterprise configuration. 23 new integration tests bring total coverage to 177 passing tests.</div>
+        <div class="tl-tags">
+          <span class="tl-tag">--report --json</span>
+          <span class="tl-tag">--track</span>
+          <span class="tl-tag">ENTERPRISE_SETUP.md</span>
+          <span class="tl-tag">23 new tests</span>
+          <span class="tl-tag">CI dashboard</span>
+        </div>
+        <div class="tl-impact">Full observability stack — see every token saved</div>
+      </div>
+    </div>
+
+    <!-- v1.0 -->
+    <div class="tl-item">
+      <div class="tl-rail">
+        <div class="tl-dot done" style="background:rgba(124,106,247,.2);border-color:var(--p);color:var(--pd);font-size:10px">v1.0</div>
+      </div>
+      <div class="tl-content">
+        <div class="tl-header">
+          <span class="tl-version" style="background:linear-gradient(135deg,var(--t1),var(--pd));-webkit-background-clip:text;-webkit-text-fill-color:transparent">v1.0</span>
+          <span class="tl-name">Full system</span>
+          <span class="tl-badge done">✓ Complete — tagged v1.0.0</span>
+        </div>
+        <div class="tl-desc">The complete ContextForge system. Self-healing CI auto-regenerates the context file when it drifts. The --health flag runs all 21 extractor checks and reports any failures. The --suggest-tool flag recommends which MCP tool to use for the current task. All 177 tests pass. The 97% token reduction is now stable across languages, repo sizes, and CI environments.</div>
+        <div class="tl-tags">
+          <span class="tl-tag">self-healing CI</span>
+          <span class="tl-tag">--health</span>
+          <span class="tl-tag">--suggest-tool</span>
+          <span class="tl-tag">177 tests</span>
+          <span class="tl-tag">MIT v1.0.0</span>
+        </div>
+        <div class="tl-impact">97% total token reduction — 80,000 → under 4,000</div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<hr class="divider">
+
+<section class="section">
+  <p class="section-ey">Final numbers</p>
+  <h2>v1.0.0 at a glance</h2>
+
+  <div class="final-grid">
+    <div class="final-stat">
+      <span class="final-stat-val p">97%</span>
+      <div class="final-stat-lbl">Token reduction</div>
+    </div>
+    <div class="final-stat">
+      <span class="final-stat-val g">177</span>
+      <div class="final-stat-lbl">Tests passing</div>
+    </div>
+    <div class="final-stat">
+      <span class="final-stat-val g">21</span>
+      <div class="final-stat-lbl">Languages</div>
+    </div>
+    <div class="final-stat">
+      <span class="final-stat-val g">0</span>
+      <div class="final-stat-lbl">npm deps</div>
+    </div>
+  </div>
+
+  <div style="text-align:center">
+    <a href="quick-start.html" style="background:var(--p);color:#fff;padding:12px 28px;border-radius:9px;font-size:14px;font-weight:600;text-decoration:none;display:inline-block;margin-right:12px">Get started in 90 seconds</a>
+    <a href="https://github.com/manojmallick/context-forge" style="background:transparent;color:var(--t1);border:1px solid var(--line2);padding:12px 24px;border-radius:9px;font-size:14px;font-weight:500;text-decoration:none;display:inline-block">★ Star on GitHub</a>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-inner">
+    <span class="footer-logo">context-forge v1.0.0</span>
+    <div class="footer-links">
+      <a href="https://github.com/manojmallick/context-forge">GitHub</a>
+      <a href="https://github.com/manojmallick/context-forge/blob/main/CONTRIBUTING.md">Contributing</a>
+      <a href="https://github.com/manojmallick/context-forge/blob/main/CHANGELOG.md">Changelog</a>
+      <a href="repomix.html">Repomix</a>
+    </div>
+    <span class="footer-mit">MIT © 2026 Manoj Kumar</span>
+  </div>
+</footer>
+
+</body>
+</html>

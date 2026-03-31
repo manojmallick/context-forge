@@ -1,0 +1,24 @@
+# GitHub Pages configuration
+# Jekyll is disabled via .nojekyll — this file provides explicit metadata only.
+
+title: ContextForge
+description: Zero-dependency AI context engine. 97% token reduction. 21 languages. node gen-context.js.
+url: https://manojmallick.github.io
+baseurl: /context-forge
+
+# Disable Jekyll theme — we serve pure HTML
+theme: ~
+
+# Exclude source files from Pages output
+exclude:
+  - gen-context.js
+  - gen-project-map.js
+  - CLAUDE.md
+  - TIMELINE.md
+  - CHANGELOG.md
+  - CONTRIBUTING.md
+  - package.json
+  - src/
+  - test/
+  - scripts/
+  - examples/

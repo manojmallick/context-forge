@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Quick Start — ContextForge</title>
+<meta name="description" content="Get ContextForge running in under 2 minutes. One file download, zero npm install, instant 97% token reduction for your AI coding agent.">
+<meta property="og:title" content="ContextForge Quick Start — under 2 minutes to working">
+<meta property="og:description" content="node gen-context.js. That's the entire install. Reduces AI context from 80K to 4K tokens automatically.">
+<meta property="og:url" content="https://manojmallick.github.io/context-forge/quick-start.html">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://manojmallick.github.io/context-forge/quick-start.html">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=IBM+Plex+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#09090c;--s1:#0f0f13;--s2:#161619;--s3:#1d1d22;--s4:#25252c;
+  --line:#2a2a33;--line2:#38383f;
+  --t1:#f0eeff;--t2:#9896b0;--t3:#52506a;
+  --p:#7c6af7;--pl:rgba(124,106,247,.1);--pd:#b3aaff;
+  --g:#10b981;--gl:rgba(16,185,129,.1);--gd:#6ee7b7;
+  --a:#f59e0b;--al:rgba(245,158,11,.1);--ad:#fcd34d;
+  --r:#f43f5e;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--t1);line-height:1.6;overflow-x:hidden}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(9,9,12,.85);backdrop-filter:blur(12px);border-bottom:1px solid var(--line);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between}
+.nav-logo{font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:500;color:var(--pd);text-decoration:none}
+.nav-links{display:flex;align-items:center;gap:24px}
+.nav-links a{font-size:13px;color:var(--t2);text-decoration:none;transition:.15s}
+.nav-links a:hover{color:var(--t1)}
+.nav-links a.active{color:var(--t1)}
+.nav-gh{background:var(--p);color:#fff;padding:6px 14px;border-radius:7px;font-size:12px;font-weight:600;text-decoration:none;transition:.15s}
+.nav-gh:hover{opacity:.85;color:#fff}
+@media(max-width:600px){.nav-links .hide-sm{display:none}}
+
+/* HERO */
+.page-hero{padding:120px 24px 64px;text-align:center;position:relative;overflow:hidden}
+.page-hero::before{content:'';position:absolute;top:-100px;left:50%;transform:translateX(-50%);width:600px;height:600px;background:radial-gradient(circle,rgba(124,106,247,.06) 0%,transparent 65%);pointer-events:none}
+.hero-inner{max-width:700px;margin:0 auto;position:relative;z-index:1}
+.hero-badge{display:inline-flex;align-items:center;gap:6px;background:var(--gl);border:1px solid rgba(16,185,129,.25);border-radius:20px;padding:5px 14px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--gd);margin-bottom:24px;letter-spacing:.04em}
+.hero-badge .dot{width:6px;height:6px;border-radius:50%;background:var(--g)}
+h1{font-family:'Syne',sans-serif;font-size:clamp(32px,5vw,56px);font-weight:800;line-height:1.08;margin-bottom:16px;background:linear-gradient(135deg,var(--t1) 30%,var(--pd) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.hero-sub{font-size:clamp(15px,2vw,18px);color:var(--t2);line-height:1.65;max-width:480px;margin:0 auto;font-weight:300}
+.time-badge{display:inline-flex;align-items:center;gap:8px;background:var(--s2);border:1px solid var(--line);border-radius:8px;padding:8px 18px;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ad);margin-top:24px}
+
+/* SECTIONS */
+.section{padding:64px 24px;max-width:860px;margin:0 auto}
+.section-ey{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--pd);margin-bottom:10px;text-align:center}
+h2{font-family:'Syne',sans-serif;font-size:clamp(22px,3.5vw,34px);font-weight:800;text-align:center;margin-bottom:12px}
+.section-sub{font-size:15px;color:var(--t2);text-align:center;max-width:500px;margin:0 auto 48px;font-weight:300;line-height:1.65}
+
+/* TERMINAL */
+.terminal{background:#06060a;border:1px solid var(--line2);border-radius:12px;overflow:hidden;max-width:700px;margin:0 auto 32px;text-align:left;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.term-bar{background:var(--s2);padding:10px 14px;display:flex;align-items:center;gap:6px;border-bottom:1px solid var(--line)}
+.term-dot{width:11px;height:11px;border-radius:50%}
+.term-title{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--t3);margin-left:6px}
+.term-body{padding:16px 18px;font-family:'IBM Plex Mono',monospace;font-size:13px;line-height:1.8}
+.tc{color:var(--t3)}.tk{color:var(--pd)}.ts{color:var(--gd)}.tw{color:var(--ad)}.tr{color:#fca5a5}.tp{color:#c084fc}
+
+/* STEPS */
+.steps-flow{display:flex;flex-direction:column;gap:0;margin-bottom:48px}
+.step-row{display:grid;grid-template-columns:80px 1fr;gap:0}
+.step-rail{display:flex;flex-direction:column;align-items:center}
+.step-circle{width:48px;height:48px;border-radius:50%;background:var(--pl);border:2px solid var(--p);display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:500;color:var(--pd);flex-shrink:0;position:relative;z-index:1}
+.step-line{flex:1;width:2px;background:var(--line);margin:4px 0}
+.step-content{padding:0 0 40px 16px}
+.step-label{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--pd);margin-bottom:6px}
+.step-title{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:8px}
+.step-desc{font-size:14px;color:var(--t2);line-height:1.65;margin-bottom:16px;font-weight:300}
+
+/* CONFIG */
+.config-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:40px}
+@media(max-width:640px){.config-grid{grid-template-columns:1fr}}
+.config-card{background:var(--s2);border:1px solid var(--line);border-radius:12px;padding:20px}
+.config-key{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--pd);margin-bottom:4px}
+.config-type{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--t3);margin-bottom:8px}
+.config-desc{font-size:13px;color:var(--t2);line-height:1.55}
+.config-default{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ad);margin-top:6px}
+
+/* CTA */
+.cta-row{display:flex;gap:12px;flex-wrap:wrap;margin-top:16px}
+.btn-primary{background:var(--p);color:#fff;padding:11px 24px;border-radius:9px;font-size:14px;font-weight:600;text-decoration:none;transition:.15s;display:inline-flex;align-items:center;gap:8px}
+.btn-primary:hover{opacity:.85;color:#fff;transform:translateY(-1px)}
+.btn-secondary{background:transparent;color:var(--t1);border:1px solid var(--line2);padding:11px 20px;border-radius:9px;font-size:14px;font-weight:500;text-decoration:none;transition:.15s}
+.btn-secondary:hover{border-color:var(--p);color:var(--pd)}
+
+/* PREREQ */
+.prereq-box{background:var(--s2);border:1px solid var(--line);border-radius:12px;padding:24px;margin-bottom:40px;display:flex;align-items:flex-start;gap:16px}
+.prereq-icon{font-size:20px;flex-shrink:0;margin-top:2px}
+.prereq-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;margin-bottom:4px}
+.prereq-text{font-size:13px;color:var(--t2);line-height:1.55}
+
+/* DIVIDER */
+.divider{border:none;border-top:1px solid var(--line);margin:0}
+
+/* NEXT STEPS */
+.next-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+@media(max-width:640px){.next-grid{grid-template-columns:1fr}}
+.next-card{background:var(--s2);border:1px solid var(--line);border-radius:12px;padding:24px;text-decoration:none;transition:.2s;display:block}
+.next-card:hover{border-color:var(--p);transform:translateY(-2px)}
+.next-card-ey{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--pd);margin-bottom:8px}
+.next-card-title{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;margin-bottom:6px;color:var(--t1)}
+.next-card-desc{font-size:13px;color:var(--t2);line-height:1.55;font-weight:300}
+
+/* FOOTER */
+footer{background:var(--s1);border-top:1px solid var(--line);padding:32px 24px}
+.footer-inner{max-width:900px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px}
+.footer-logo{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--t3)}
+.footer-links{display:flex;gap:20px;flex-wrap:wrap}
+.footer-links a{font-size:13px;color:var(--t3);text-decoration:none;transition:.15s}
+.footer-links a:hover{color:var(--t2)}
+.footer-mit{font-size:12px;color:var(--t3)}
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-logo" href="index.html">context-forge</a>
+  <div class="nav-links">
+    <a href="quick-start.html" class="hide-sm active">Quick start</a>
+    <a href="languages.html" class="hide-sm">Languages</a>
+    <a href="roadmap.html" class="hide-sm">Roadmap</a>
+    <a href="repomix.html" class="hide-sm">Repomix</a>
+    <a href="https://github.com/manojmallick/context-forge" class="nav-gh" target="_blank">★ GitHub</a>
+  </div>
+</nav>
+
+<div class="page-hero">
+  <div class="hero-inner">
+    <div class="hero-badge"><span class="dot"></span>Zero npm install</div>
+    <h1>Up and running<br>in under 2 minutes</h1>
+    <p class="hero-sub">One file. One command. Your AI coding agent gets full codebase context at every session start.</p>
+    <div class="time-badge">⏱ Average setup time: 90 seconds</div>
+  </div>
+</div>
+
+<hr class="divider">
+
+<section class="section">
+  <p class="section-ey">Prerequisites</p>
+  <h2>Before you start</h2>
+  <p class="section-sub">One requirement. That's it.</p>
+
+  <div class="prereq-box">
+    <div class="prereq-icon">🟢</div>
+    <div>
+      <div class="prereq-title">Node.js 18 or later</div>
+      <div class="prereq-text">Check with <code style="font-family:'IBM Plex Mono',monospace;font-size:12px;background:var(--s3);padding:2px 6px;border-radius:4px">node --version</code>. Install from <a href="https://nodejs.org" style="color:var(--pd)">nodejs.org</a> if needed. No other tools, runtimes, or package managers required.</div>
+    </div>
+  </div>
+
+  <div class="terminal">
+    <div class="term-bar">
+      <div class="term-dot" style="background:#ff5f57"></div>
+      <div class="term-dot" style="background:#febc2e"></div>
+      <div class="term-dot" style="background:#28c840"></div>
+      <span class="term-title">terminal</span>
+    </div>
+    <div class="term-body">
+      <div><span class="tc">$</span> <span class="tw">node --version</span></div>
+      <div><span class="ts">v22.11.0</span> <span class="tc"> ← v18+ required</span></div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<section class="section">
+  <p class="section-ey">Installation</p>
+  <h2>Three steps</h2>
+  <p class="section-sub">No package manager. No build step. Just copy one file into your project.</p>
+
+  <div class="steps-flow">
+
+    <!-- Step 1 -->
+    <div class="step-row">
+      <div class="step-rail">
+        <div class="step-circle">1</div>
+        <div class="step-line"></div>
+      </div>
+      <div class="step-content">
+        <div class="step-label">Step 1 of 3</div>
+        <div class="step-title">Download gen-context.js</div>
+        <div class="step-desc">Copy the single-file entry point into the root of your project. No package.json changes needed.</div>
+        <div class="terminal">
+          <div class="term-bar">
+            <div class="term-dot" style="background:#ff5f57"></div>
+            <div class="term-dot" style="background:#febc2e"></div>
+            <div class="term-dot" style="background:#28c840"></div>
+            <span class="term-title">your-project/</span>
+          </div>
+          <div class="term-body">
+            <div><span class="tc">$</span> <span class="tw">curl -O https://raw.githubusercontent.com/manojmallick/context-forge/main/gen-context.js</span></div>
+            <div><span class="ts">  % Total    % Received</span></div>
+            <div><span class="ts">100  48.2K  100  48.2K  ←  single file, ~50KB</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step-row">
+      <div class="step-rail">
+        <div class="step-circle">2</div>
+        <div class="step-line"></div>
+      </div>
+      <div class="step-content">
+        <div class="step-label">Step 2 of 3</div>
+        <div class="step-title">Generate your context file</div>
+        <div class="step-desc">Run it once. It scans your codebase, extracts signatures from all 21 supported languages, and writes <code style="font-family:'IBM Plex Mono',monospace;font-size:12px;background:var(--s3);padding:2px 6px;border-radius:4px">.github/copilot-instructions.md</code>.</div>
+        <div class="terminal">
+          <div class="term-bar">
+            <div class="term-dot" style="background:#ff5f57"></div>
+            <div class="term-dot" style="background:#febc2e"></div>
+            <div class="term-dot" style="background:#28c840"></div>
+            <span class="term-title">your-project/</span>
+          </div>
+          <div class="term-body">
+            <div><span class="tc">$</span> <span class="tw">node gen-context.js</span></div>
+            <div>&nbsp;</div>
+            <div><span class="tk">[context-forge]</span> <span class="ts">scanning 247 files across src/ app/ lib/</span></div>
+            <div><span class="tk">[context-forge]</span> <span class="ts">extracted 1,842 signatures from 89 files</span></div>
+            <div><span class="tk">[context-forge]</span> <span class="ts">secret scan: clean (0 findings)</span></div>
+            <div><span class="tk">[context-forge]</span> <span class="tw">budget: 6,000 tokens target, using 3,847</span></div>
+            <div><span class="tk">[context-forge]</span> <span class="ts">✓ wrote .github/copilot-instructions.md</span></div>
+            <div><span class="tk">[context-forge]</span> <span class="ts">reduction: 82,400 → 3,847 tokens (95.3%)</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step-row">
+      <div class="step-rail">
+        <div class="step-circle">3</div>
+      </div>
+      <div class="step-content">
+        <div class="step-label">Step 3 of 3</div>
+        <div class="step-title">Enable always-on updates</div>
+        <div class="step-desc">The <code style="font-family:'IBM Plex Mono',monospace;font-size:12px;background:var(--s3);padding:2px 6px;border-radius:4px">--setup</code> flag installs a git post-commit hook and starts a file watcher. From now on, every save and every commit automatically regenerates the context file.</div>
+        <div class="terminal">
+          <div class="term-bar">
+            <div class="term-dot" style="background:#ff5f57"></div>
+            <div class="term-dot" style="background:#febc2e"></div>
+            <div class="term-dot" style="background:#28c840"></div>
+            <span class="term-title">your-project/</span>
+          </div>
+          <div class="term-body">
+            <div><span class="tc">$</span> <span class="tw">node gen-context.js --setup</span></div>
+            <div>&nbsp;</div>
+            <div><span class="tk">[context-forge]</span> <span class="ts">✓ installed .git/hooks/post-commit</span></div>
+            <div><span class="tk">[context-forge]</span> <span class="ts">✓ watcher started on src/ app/ lib/</span></div>
+            <div><span class="tk">[context-forge]</span> <span class="ts">watching for changes...</span> <span class="tc">(Ctrl+C to stop)</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<hr class="divider">
+
+<section class="section">
+  <p class="section-ey">Verification</p>
+  <h2>What you get</h2>
+  <p class="section-sub">The token report and a structured context file your AI agent reads at every session start.</p>
+
+  <div class="terminal" style="margin-bottom:32px">
+    <div class="term-bar">
+      <div class="term-dot" style="background:#ff5f57"></div>
+      <div class="term-dot" style="background:#febc2e"></div>
+      <div class="term-dot" style="background:#28c840"></div>
+      <span class="term-title">node gen-context.js --report</span>
+    </div>
+    <div class="term-body">
+      <div><span class="tp">╔══════════════════════════════════╗</span></div>
+      <div><span class="tp">║   ContextForge Token Report       ║</span></div>
+      <div><span class="tp">╚══════════════════════════════════╝</span></div>
+      <div>&nbsp;</div>
+      <div><span class="tc">Input</span>    <span class="tw">82,400 tokens</span>   <span class="tc">(full source)</span></div>
+      <div><span class="tc">Output</span>   <span class="ts">3,847 tokens</span>    <span class="tc">(signatures only)</span></div>
+      <div><span class="tc">Saved</span>    <span class="ts">78,553 tokens</span>   <span class="tc">(95.3% reduction)</span></div>
+      <div>&nbsp;</div>
+      <div><span class="tc">Files scanned</span>  <span class="tw">247</span></div>
+      <div><span class="tc">Files included</span> <span class="tw">89</span>  <span class="tc">(dropped 158 under budget)</span></div>
+      <div><span class="tc">Languages</span>      <span class="tw">TypeScript, Python, Go, CSS</span></div>
+      <div><span class="tc">Secrets found</span>  <span class="ts">0</span>  <span class="tc">(clean)</span></div>
+      <div>&nbsp;</div>
+      <div><span class="ts">Output: .github/copilot-instructions.md</span></div>
+    </div>
+  </div>
+
+  <div class="terminal">
+    <div class="term-bar">
+      <div class="term-dot" style="background:#ff5f57"></div>
+      <div class="term-dot" style="background:#febc2e"></div>
+      <div class="term-dot" style="background:#28c840"></div>
+      <span class="term-title">.github/copilot-instructions.md (excerpt)</span>
+    </div>
+    <div class="term-body">
+      <div><span class="tp"># Code signatures</span></div>
+      <div>&nbsp;</div>
+      <div><span class="tp">## src/api/users.ts</span></div>
+      <div><span class="ts">export interface User</span></div>
+      <div><span class="ts">export class UserService</span></div>
+      <div><span class="ts">  async findById(id: string): Promise&lt;User&gt;</span></div>
+      <div><span class="ts">  async create(data: CreateUserDto): Promise&lt;User&gt;</span></div>
+      <div><span class="ts">  async delete(id: string): Promise&lt;void&gt;</span></div>
+      <div>&nbsp;</div>
+      <div><span class="tp">## src/auth/jwt.ts</span></div>
+      <div><span class="ts">export function signToken(payload: JwtPayload): string</span></div>
+      <div><span class="ts">export function verifyToken(token: string): JwtPayload</span></div>
+      <div>&nbsp;</div>
+      <div><span class="tc">...89 more files...</span></div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<section class="section">
+  <p class="section-ey">Configuration</p>
+  <h2>Customise the output</h2>
+  <p class="section-sub">Create <code style="font-family:'IBM Plex Mono',monospace;font-size:13px;background:var(--s3);padding:2px 6px;border-radius:4px">gen-context.config.json</code> in your project root. All fields optional.</p>
+
+  <div class="terminal" style="margin-bottom:32px">
+    <div class="term-bar">
+      <div class="term-dot" style="background:#ff5f57"></div>
+      <div class="term-dot" style="background:#febc2e"></div>
+      <div class="term-dot" style="background:#28c840"></div>
+      <span class="term-title">gen-context.config.json</span>
+    </div>
+    <div class="term-body">
+      <div><span class="tc">{</span></div>
+      <div>  <span class="tk">"output"</span><span class="tc">:</span> <span class="ts">".github/copilot-instructions.md"</span><span class="tc">,</span></div>
+      <div>  <span class="tk">"outputs"</span><span class="tc">:</span> <span class="tc">[</span><span class="ts">"copilot"</span><span class="tc">,</span> <span class="ts">"claude"</span><span class="tc">,</span> <span class="ts">"cursor"</span><span class="tc">],</span></div>
+      <div>  <span class="tk">"srcDirs"</span><span class="tc">:</span> <span class="tc">[</span><span class="ts">"src"</span><span class="tc">,</span> <span class="ts">"app"</span><span class="tc">,</span> <span class="ts">"lib"</span><span class="tc">],</span></div>
+      <div>  <span class="tk">"maxTokens"</span><span class="tc">:</span> <span class="tw">6000</span><span class="tc">,</span></div>
+      <div>  <span class="tk">"secretScan"</span><span class="tc">:</span> <span class="tw">true</span><span class="tc">,</span></div>
+      <div>  <span class="tk">"monorepo"</span><span class="tc">:</span> <span class="tw">false</span><span class="tc">,</span></div>
+      <div>  <span class="tk">"diffPriority"</span><span class="tc">:</span> <span class="tw">true</span></div>
+      <div><span class="tc">}</span></div>
+    </div>
+  </div>
+
+  <div class="config-grid">
+    <div class="config-card">
+      <div class="config-key">outputs</div>
+      <div class="config-type">string[] — default: ["copilot"]</div>
+      <div class="config-desc">Write to multiple target files in one run. Supports <code style="font-family:'IBM Plex Mono',monospace;font-size:11px">copilot</code>, <code style="font-family:'IBM Plex Mono',monospace;font-size:11px">claude</code>, <code style="font-family:'IBM Plex Mono',monospace;font-size:11px">cursor</code>, <code style="font-family:'IBM Plex Mono',monospace;font-size:11px">windsurf</code>.</div>
+    </div>
+    <div class="config-card">
+      <div class="config-key">srcDirs</div>
+      <div class="config-type">string[] — default: ["src","app","lib","packages","services","api"]</div>
+      <div class="config-desc">Directories to scan. Relative to project root. Nested paths are scanned recursively up to maxDepth.</div>
+    </div>
+    <div class="config-card">
+      <div class="config-key">maxTokens</div>
+      <div class="config-type">number — default: 6000</div>
+      <div class="config-desc">Token budget for the output file. Files are dropped in priority order when the budget is exceeded.</div>
+    </div>
+    <div class="config-card">
+      <div class="config-key">maxDepth</div>
+      <div class="config-type">number — default: 6</div>
+      <div class="config-desc">Maximum directory depth to recurse into. Increase for deeply nested monorepos.</div>
+    </div>
+    <div class="config-card">
+      <div class="config-key">secretScan</div>
+      <div class="config-type">boolean — default: true</div>
+      <div class="config-desc">Scan extracted signatures for API keys, tokens, passwords, and secrets before writing. Redacts matches automatically.</div>
+    </div>
+    <div class="config-card">
+      <div class="config-key">diffPriority</div>
+      <div class="config-type">boolean — default: true</div>
+      <div class="config-desc">Files changed in recent git commits are prioritised within the token budget. Keeps the most relevant code front-and-center.</div>
+    </div>
+    <div class="config-card">
+      <div class="config-key">monorepo</div>
+      <div class="config-type">boolean — default: false</div>
+      <div class="config-desc">When enabled, generates a separate context file per package in a monorepo, using the package name as the section header.</div>
+    </div>
+    <div class="config-card">
+      <div class="config-key">routing</div>
+      <div class="config-type">boolean — default: false</div>
+      <div class="config-desc">Appends a model routing recommendation section: which AI model tier to use for each file based on its complexity score.</div>
+    </div>
+  </div>
+
+  <div class="prereq-box" style="margin-bottom:0">
+    <div class="prereq-icon">📄</div>
+    <div>
+      <div class="prereq-title">.contextignore</div>
+      <div class="prereq-text">Create a <code style="font-family:'IBM Plex Mono',monospace;font-size:12px;background:var(--s3);padding:2px 6px;border-radius:4px">.contextignore</code> file in your project root using the same gitignore syntax to exclude specific paths. This file is compatible with <code style="font-family:'IBM Plex Mono',monospace;font-size:12px;background:var(--s3);padding:2px 6px;border-radius:4px">.repomixignore</code> — you can symlink them to share one exclusion list.</div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<section class="section">
+  <p class="section-ey">All CLI flags</p>
+  <h2>Command reference</h2>
+  <p class="section-sub">Every flag the CLI accepts.</p>
+
+  <div class="terminal">
+    <div class="term-bar">
+      <div class="term-dot" style="background:#ff5f57"></div>
+      <div class="term-dot" style="background:#febc2e"></div>
+      <div class="term-dot" style="background:#28c840"></div>
+      <span class="term-title">node gen-context.js --help</span>
+    </div>
+    <div class="term-body">
+      <div><span class="tp">ContextForge v1.0.0</span></div>
+      <div>&nbsp;</div>
+      <div><span class="tc">Usage:</span> <span class="tw">node gen-context.js [flag]</span></div>
+      <div>&nbsp;</div>
+      <div><span class="ts">  (no flags)         </span><span class="tc">Generate context and exit</span></div>
+      <div><span class="ts">  --watch            </span><span class="tc">Generate and watch for file changes</span></div>
+      <div><span class="ts">  --setup            </span><span class="tc">Generate + install git hook + start watcher</span></div>
+      <div><span class="ts">  --mcp              </span><span class="tc">Start MCP server on stdio</span></div>
+      <div><span class="ts">  --report           </span><span class="tc">Print token reduction stats to stdout</span></div>
+      <div><span class="ts">  --report --json    </span><span class="tc">Token report as JSON (for CI pipelines)</span></div>
+      <div><span class="ts">  --health           </span><span class="tc">Run all 21 extractor health checks</span></div>
+      <div><span class="ts">  --suggest-tool     </span><span class="tc">Recommend MCP tool for current task context</span></div>
+      <div><span class="ts">  --track            </span><span class="tc">Log run metrics to .context-forge/runs.jsonl</span></div>
+      <div><span class="ts">  --init             </span><span class="tc">Write gen-context.config.json.example</span></div>
+      <div><span class="ts">  --version          </span><span class="tc">Print version string</span></div>
+      <div><span class="ts">  --help             </span><span class="tc">Show this message</span></div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<section class="section">
+  <p class="section-ey">What's next</p>
+  <h2>Explore further</h2>
+  <div class="next-grid">
+    <a class="next-card" href="languages.html">
+      <div class="next-card-ey">21 languages</div>
+      <div class="next-card-title">Language support</div>
+      <div class="next-card-desc">See what gets extracted for TypeScript, Python, Go, Rust, and 17 more languages.</div>
+    </a>
+    <a class="next-card" href="repomix.html">
+      <div class="next-card-ey">Integration guide</div>
+      <div class="next-card-title">Repomix + ContextForge</div>
+      <div class="next-card-desc">Stack both tools for the two-layer caching strategy. ContextForge for daily; Repomix for deep sessions.</div>
+    </a>
+    <a class="next-card" href="roadmap.html">
+      <div class="next-card-ey">v0.1 → v1.0</div>
+      <div class="next-card-title">Full roadmap</div>
+      <div class="next-card-desc">All 11 versions shipped. 97% token reduction. 177 tests. MIT license.</div>
+    </a>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-inner">
+    <span class="footer-logo">context-forge v1.0.0</span>
+    <div class="footer-links">
+      <a href="https://github.com/manojmallick/context-forge">GitHub</a>
+      <a href="https://github.com/manojmallick/context-forge/blob/main/CONTRIBUTING.md">Contributing</a>
+      <a href="https://github.com/manojmallick/context-forge/blob/main/CHANGELOG.md">Changelog</a>
+      <a href="repomix.html">Repomix</a>
+    </div>
+    <span class="footer-mit">MIT © 2026 Manoj Kumar</span>
+  </div>
+</footer>
+
+</body>
+</html>

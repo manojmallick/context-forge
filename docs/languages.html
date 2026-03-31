@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Language Support — ContextForge</title>
+<meta name="description" content="ContextForge extracts signatures from 21 programming languages using pure regex — no npm install, no Tree-sitter. TypeScript, Python, Go, Rust, Java, Kotlin, C#, C++, Ruby, PHP, Swift, Dart, Scala, Vue, Svelte, HTML, CSS, YAML, Shell, Dockerfile.">
+<meta property="og:title" content="ContextForge — 21 languages, zero dependencies">
+<meta property="og:description" content="Signature extraction for TypeScript, Python, Go, Rust, Java, Kotlin, C#, C++, Ruby, PHP, Swift, Dart, Scala, Vue, Svelte, HTML, CSS, YAML, Shell, Dockerfile.">
+<meta property="og:url" content="https://manojmallick.github.io/context-forge/languages.html">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://manojmallick.github.io/context-forge/languages.html">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=IBM+Plex+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#09090c;--s1:#0f0f13;--s2:#161619;--s3:#1d1d22;--s4:#25252c;
+  --line:#2a2a33;--line2:#38383f;
+  --t1:#f0eeff;--t2:#9896b0;--t3:#52506a;
+  --p:#7c6af7;--pl:rgba(124,106,247,.1);--pd:#b3aaff;
+  --g:#10b981;--gl:rgba(16,185,129,.1);--gd:#6ee7b7;
+  --a:#f59e0b;--al:rgba(245,158,11,.1);--ad:#fcd34d;
+  --r:#f43f5e;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--t1);line-height:1.6;overflow-x:hidden}
+
+nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(9,9,12,.85);backdrop-filter:blur(12px);border-bottom:1px solid var(--line);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between}
+.nav-logo{font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:500;color:var(--pd);text-decoration:none}
+.nav-links{display:flex;align-items:center;gap:24px}
+.nav-links a{font-size:13px;color:var(--t2);text-decoration:none;transition:.15s}
+.nav-links a:hover{color:var(--t1)}
+.nav-links a.active{color:var(--t1)}
+.nav-gh{background:var(--p);color:#fff;padding:6px 14px;border-radius:7px;font-size:12px;font-weight:600;text-decoration:none;transition:.15s}
+.nav-gh:hover{opacity:.85;color:#fff}
+@media(max-width:600px){.nav-links .hide-sm{display:none}}
+
+.page-hero{padding:120px 24px 64px;text-align:center;position:relative;overflow:hidden}
+.page-hero::before{content:'';position:absolute;top:-100px;left:50%;transform:translateX(-50%);width:700px;height:700px;background:radial-gradient(circle,rgba(16,185,129,.05) 0%,transparent 65%);pointer-events:none}
+.hero-inner{max-width:720px;margin:0 auto;position:relative;z-index:1}
+.hero-badge{display:inline-flex;align-items:center;gap:6px;background:var(--pl);border:1px solid rgba(124,106,247,.25);border-radius:20px;padding:5px 14px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--pd);margin-bottom:24px;letter-spacing:.04em}
+h1{font-family:'Syne',sans-serif;font-size:clamp(32px,5vw,56px);font-weight:800;line-height:1.08;margin-bottom:16px;background:linear-gradient(135deg,var(--t1) 30%,var(--gd) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.hero-sub{font-size:clamp(15px,2vw,18px);color:var(--t2);max-width:500px;margin:0 auto;font-weight:300}
+.lang-count{display:inline-flex;gap:20px;margin-top:28px;flex-wrap:wrap;justify-content:center}
+.lang-stat{background:var(--s2);border:1px solid var(--line);border-radius:10px;padding:10px 20px;text-align:center}
+.lang-stat-val{font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:var(--gd);display:block}
+.lang-stat-lbl{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.08em}
+
+.section{padding:64px 24px;max-width:960px;margin:0 auto}
+.section-ey{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--pd);margin-bottom:10px;text-align:center}
+h2{font-family:'Syne',sans-serif;font-size:clamp(22px,3.5vw,34px);font-weight:800;text-align:center;margin-bottom:12px}
+.section-sub{font-size:15px;color:var(--t2);text-align:center;max-width:500px;margin:0 auto 48px;font-weight:300;line-height:1.65}
+.divider{border:none;border-top:1px solid var(--line);margin:0}
+
+/* FEATURED EXAMPLES */
+.featured{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:48px}
+@media(max-width:700px){.featured{grid-template-columns:1fr}}
+.feat-panel{background:var(--s2);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.feat-header{background:var(--s3);padding:14px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px}
+.feat-lang{font-family:'Syne',sans-serif;font-size:14px;font-weight:700}
+.feat-ext{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--t3);background:var(--s4);padding:2px 8px;border-radius:4px}
+.feat-body{padding:16px 20px;font-family:'IBM Plex Mono',monospace;font-size:12px;line-height:1.9}
+.fi{color:var(--t3)}.fk{color:var(--pd)}.fs{color:var(--gd)}.fw{color:var(--ad)}.fr{color:#fca5a5}
+.feat-arrow{display:flex;align-items:center;justify-content:center;padding:8px;color:var(--t3);font-size:20px}
+.feat-label{font-family:'IBM Plex Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--t3);padding:0 20px 8px}
+
+/* LANGUAGE GRID */
+.lang-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+@media(max-width:750px){.lang-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:480px){.lang-grid{grid-template-columns:1fr}}
+.lang-card{background:var(--s2);border:1px solid var(--line);border-radius:12px;padding:20px;transition:.2s}
+.lang-card:hover{border-color:var(--line2);background:var(--s3)}
+.lang-icon{font-size:24px;margin-bottom:10px;display:block}
+.lang-name{font-family:'Syne',sans-serif;font-size:15px;font-weight:800;margin-bottom:4px}
+.lang-exts{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--t3);margin-bottom:12px}
+.extracts-title{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--t3);margin-bottom:6px;font-family:'IBM Plex Mono',monospace}
+.extract-tags{display:flex;flex-wrap:wrap;gap:4px}
+.tag{font-family:'IBM Plex Mono',monospace;font-size:10px;padding:2px 7px;border-radius:4px;background:var(--pl);color:var(--pd);border:1px solid rgba(124,106,247,.2)}
+.tag.g{background:var(--gl);color:var(--gd);border-color:rgba(16,185,129,.2)}
+.tag.a{background:var(--al);color:var(--ad);border-color:rgba(245,158,11,.2)}
+
+/* WHAT'S NOT EXTRACTED */
+.note-box{background:var(--s2);border:1px solid var(--line);border-radius:12px;padding:24px;margin-bottom:40px;display:grid;grid-template-columns:1fr 1fr;gap:24px}
+@media(max-width:640px){.note-box{grid-template-columns:1fr}}
+.note-col-title{font-family:'IBM Plex Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px}
+.note-col-title.g{color:var(--gd)}
+.note-col-title.r{color:#fca5a5}
+.note-list{list-style:none;display:flex;flex-direction:column;gap:6px}
+.note-list li{font-size:13px;color:var(--t2);display:flex;align-items:flex-start;gap:8px;line-height:1.4}
+.note-list li::before{flex-shrink:0;margin-top:1px}
+.note-list.g li::before{content:'✓';color:var(--gd)}
+.note-list.r li::before{content:'✗';color:#f43f5e}
+
+footer{background:var(--s1);border-top:1px solid var(--line);padding:32px 24px}
+.footer-inner{max-width:900px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px}
+.footer-logo{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--t3)}
+.footer-links{display:flex;gap:20px;flex-wrap:wrap}
+.footer-links a{font-size:13px;color:var(--t3);text-decoration:none;transition:.15s}
+.footer-links a:hover{color:var(--t2)}
+.footer-mit{font-size:12px;color:var(--t3)}
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-logo" href="index.html">context-forge</a>
+  <div class="nav-links">
+    <a href="quick-start.html" class="hide-sm">Quick start</a>
+    <a href="languages.html" class="hide-sm active">Languages</a>
+    <a href="roadmap.html" class="hide-sm">Roadmap</a>
+    <a href="repomix.html" class="hide-sm">Repomix</a>
+    <a href="https://github.com/manojmallick/context-forge" class="nav-gh" target="_blank">★ GitHub</a>
+  </div>
+</nav>
+
+<div class="page-hero">
+  <div class="hero-inner">
+    <div class="hero-badge">Pure regex — no Tree-sitter, no native binaries</div>
+    <h1>21 languages.<br>Zero install.</h1>
+    <p class="hero-sub">Every extractor is a single JS file. No grammar files to download. Runs deterministically on any machine with Node.js 18+.</p>
+    <div class="lang-count">
+      <div class="lang-stat"><span class="lang-stat-val">21</span><span class="lang-stat-lbl">Languages</span></div>
+      <div class="lang-stat"><span class="lang-stat-val">25</span><span class="lang-stat-lbl">Max sigs/file</span></div>
+      <div class="lang-stat"><span class="lang-stat-val">0</span><span class="lang-stat-lbl">npm packages</span></div>
+      <div class="lang-stat"><span class="lang-stat-val">177</span><span class="lang-stat-lbl">Tests passing</span></div>
+    </div>
+  </div>
+</div>
+
+<hr class="divider">
+
+<section class="section">
+  <p class="section-ey">How extraction works</p>
+  <h2>Input → Signatures</h2>
+  <p class="section-sub">Full source code goes in. Only public shapes come out. Bodies, comments, imports, and private members are stripped entirely.</p>
+
+  <!-- TypeScript example -->
+  <div style="margin-bottom:16px">
+    <div class="feat-panel" style="max-width:860px;margin:0 auto">
+      <div class="feat-header">
+        <span style="font-size:18px">🟦</span>
+        <span class="feat-lang">TypeScript</span>
+        <span class="feat-ext">.ts .tsx</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 40px 1fr">
+        <div>
+          <div class="feat-label">Source file (1,240 tokens)</div>
+          <div class="feat-body">
+            <div><span class="fw">export interface</span> <span class="fk">User</span> <span class="fi">{</span></div>
+            <div>  <span class="fi">id: string;</span></div>
+            <div>  <span class="fi">email: string;</span></div>
+            <div>  <span class="fi">createdAt: Date;</span></div>
+            <div><span class="fi">}</span></div>
+            <div>&nbsp;</div>
+            <div><span class="fw">export class</span> <span class="fk">UserService</span> <span class="fi">{</span></div>
+            <div>  <span class="fi">private db: Database;</span></div>
+            <div>&nbsp;</div>
+            <div>  <span class="fw">async</span> <span class="fk">findById</span><span class="fi">(id: string):</span></div>
+            <div>  <span class="fi">Promise&lt;User&gt; {</span></div>
+            <div>    <span class="fi">// implementation...</span></div>
+            <div>  <span class="fi">}</span></div>
+            <div>&nbsp;</div>
+            <div>  <span class="fw">async</span> <span class="fk">create</span><span class="fi">(dto: CreateDto):</span></div>
+            <div>  <span class="fi">Promise&lt;User&gt; { ... }</span></div>
+            <div>&nbsp;</div>
+            <div>  private _validate<span class="fi">(d: any) { ... }</span></div>
+            <div><span class="fi">}</span></div>
+          </div>
+        </div>
+        <div class="feat-arrow">→</div>
+        <div>
+          <div class="feat-label">Signatures (62 tokens)</div>
+          <div class="feat-body">
+            <div><span class="fs">export interface User</span></div>
+            <div><span class="fs">export class UserService</span></div>
+            <div>  <span class="fs">async findById(id: string): Promise&lt;User&gt;</span></div>
+            <div>  <span class="fs">async create(dto: CreateDto): Promise&lt;User&gt;</span></div>
+            <div>&nbsp;</div>
+            <div><span class="fi"># 95% token reduction</span></div>
+            <div><span class="fi"># private _validate stripped</span></div>
+            <div><span class="fi"># bodies stripped</span></div>
+            <div><span class="fi"># comments stripped</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Python + Go side by side -->
+  <div class="featured">
+    <div class="feat-panel">
+      <div class="feat-header">
+        <span style="font-size:18px">🐍</span>
+        <span class="feat-lang">Python</span>
+        <span class="feat-ext">.py .pyw</span>
+      </div>
+      <div class="feat-label" style="padding-top:12px">Extracted signatures</div>
+      <div class="feat-body">
+        <div><span class="fs">class OrderService</span></div>
+        <div>  <span class="fs">def place_order(self, items, user_id)</span></div>
+        <div>  <span class="fs">def cancel(self, order_id)</span></div>
+        <div>  <span class="fs">async def notify(self, event)</span></div>
+        <div>&nbsp;</div>
+        <div><span class="fs">def calculate_tax(amount, region)</span></div>
+        <div><span class="fs">def format_receipt(order)</span></div>
+        <div>&nbsp;</div>
+        <div><span class="fi"># _helper methods stripped</span></div>
+        <div><span class="fi"># docstrings stripped</span></div>
+      </div>
+    </div>
+
+    <div class="feat-panel">
+      <div class="feat-header">
+        <span style="font-size:18px">🐹</span>
+        <span class="feat-lang">Go</span>
+        <span class="feat-ext">.go</span>
+      </div>
+      <div class="feat-label" style="padding-top:12px">Extracted signatures</div>
+      <div class="feat-body">
+        <div><span class="fs">type Repository interface</span></div>
+        <div>  <span class="fs">FindByID(ctx, id string) (*User, error)</span></div>
+        <div>  <span class="fs">Save(ctx, u *User) error</span></div>
+        <div>&nbsp;</div>
+        <div><span class="fs">type UserHandler struct</span></div>
+        <div>  <span class="fs">func (h *UserHandler) Get(w, r)</span></div>
+        <div>  <span class="fs">func (h *UserHandler) Post(w, r)</span></div>
+        <div>&nbsp;</div>
+        <div><span class="fi"># unexported funcs stripped</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<section class="section">
+  <p class="section-ey">Extraction rules</p>
+  <h2>What's in, what's out</h2>
+  <p class="section-sub">Consistent rules across all 21 languages. Deterministic. Always the same output for the same input.</p>
+
+  <div class="note-box">
+    <div>
+      <div class="note-col-title g">✓ Extracted</div>
+      <ul class="note-list g">
+        <li>Exported / public classes with public methods</li>
+        <li>Exported / public functions and procedures</li>
+        <li>Exported types, interfaces, and enums</li>
+        <li>Internal classes (unexported, lower priority)</li>
+        <li>Internal functions (unexported, lower priority)</li>
+        <li>Method signatures — name, parameters, return type</li>
+        <li>Generic type parameters and constraints</li>
+        <li>Async / await marker where language supports it</li>
+      </ul>
+    </div>
+    <div>
+      <div class="note-col-title r">✗ Never extracted</div>
+      <ul class="note-list r">
+        <li>Function and method bodies (everything inside {})</li>
+        <li>Comments — //, /*, #, """, ''' in all languages</li>
+        <li>Import and require statements</li>
+        <li>Variable declarations that aren't type definitions</li>
+        <li>Private class members (_prefix, # prefix, private keyword)</li>
+        <li>Test files (*.test.*, *.spec.*, *_test.*)</li>
+        <li>Generated files (*.pb.*, *.generated.*)</li>
+        <li>Any credential, key, token, or secret pattern</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<section class="section">
+  <p class="section-ey">Reference</p>
+  <h2>All 21 languages</h2>
+  <p class="section-sub">One extractor file per language. Add a language by contributing a file to src/extractors/.</p>
+
+  <div class="lang-grid">
+
+    <div class="lang-card">
+      <span class="lang-icon">🟦</span>
+      <div class="lang-name">TypeScript</div>
+      <div class="lang-exts">.ts .tsx</div>
+      <div class="extracts-title">Extracts</div>
+      <div class="extract-tags">
+        <span class="tag">export function</span>
+        <span class="tag">export class</span>
+        <span class="tag g">interface</span>
+        <span class="tag g">type alias</span>
+        <span class="tag a">enum</span>
+        <span class="tag">methods</span>
+        <span class="tag g">generics</span>
+      </div>
+    </div>
+
+    <div class="lang-card">
+      <span class="lang-icon">🟨</span>
+      <div class="lang-name">JavaScript</div>
+      <div class="lang-exts">.js .jsx .mjs .cjs</div>
+      <div class="extracts-title">Extracts</div>
+      <div class="extract-tags">
+        <span class="tag">export function</span>
+        <span class="tag">export class</span>
+        <span class="tag">arrow functions</span>
+        <span class="tag">module.exports</span>
+        <span class="tag">methods</span>
+      </div>
+    </div>
+
+    <div class="lang-card">
+      <span class="lang-icon">🐍</span>
+      <div class="lang-name">Python</div>
+      <div class="lang-exts">.py .pyw</div>
+      <div class="extracts-title">Extracts</div>
+      <div class="extract-tags">
+        <span class="tag">def functions</span>
+        <span class="tag">class</span>
+        <span class="tag">methods</span>
+        <span class="tag g">async def</span>
+        <span class="tag g">@dataclass</span>
+        <span class="tag a">@property</span>
+      </div>
+    </div>
+
+    <div class="lang-card">
+      <span class="lang-icon">☕</span>
+      <div class="lang-name">Java</div>
+      <div class="lang-exts">.java</div>
+      <div class="extracts-title">Extracts</div>
+      <div class="extract-tags">
+        <span class="tag">public class</span>
+        <span class="tag g">interface</span>
+        <span class="tag a">enum</span>
+        <span class="tag">public methods</span>
+        <span class="tag g">annotations</span>
+      </div>
+    </div>
+
+    <div class="lang-card">
+      <span class="lang-icon">🎯</span>
+      <div class="lang-name">Kotlin</div>
+      <div class="lang-exts">.kt .kts</div>
+      <div class="extracts-title">Extracts</div>
+      <div class="extract-tags">
+        <span class="tag">fun</span>
+        <span class="tag">class</span>
+        <span class="tag">data class</span>
+        <span class="tag g">interface</span>
+        <span class="tag a">object</span>
+        <span class="tag g">sealed class</span>
+      </div>
+    </div>
+
+    <div class="lang-card">
+      <span class="lang-icon">🐹</span>
+      <div class="lang-name">Go</div>
+      <div class="lang-exts">.go</div>
+      <div class="extracts-title">Extracts</div>
+      <div class="extract-tags">
+        <span class="tag">func</span>
+        <span class="tag">type struct</span>
+        <span class="tag g">interface</span>
+        <span class="tag">method receivers</span>
+        <span class="tag a">type alias</span>
+      </div>
+    </div>
+
+    <div class="lang-card">
+      <span class="lang-icon">🦀</span>
+      <div class="lang-name">Rust</div>
+      <div class="lang-exts">.rs</div>
+      <div class="extracts-title">Extracts</div>
+      <div class="extract-tags">
+        <span class="tag">pub fn</span>
+        <span class="tag">pub struct</span>
+        <span class="tag g">trait</span>
+        <span class="tag a">enum</span>
+        <span class="tag">impl methods</span>
+        <span class="tag g">pub type</span>
+      </div>
+    </div>
+
+    <div class="lang-card">
+      <span class="lang-icon">🔷</span>
+      <div class="lang-name">C#</div>
+      <div class="lang-exts">.cs</div>
+      <div class="extracts-title">Extracts</div>
+      <div class="extract-tags">
+        <span class="tag">public class</span>
+        <span class="tag g">interface</span>
+        <span class="tag a">enum</span>
+        <span class="tag">public methods</span>
+        <span class="tag g">record</span>
+        <span class="tag g">struct</span>
+      </div>
+    </div>
+
+    <div class="lang-card">
+      <span class="lang-icon">⚙️</span>
+      <div class="lang-name">C / C++</div>
+      <div class="lang-exts">.c .cpp .h .hpp .cc</div>
+      <div class="extracts-title">Extracts</div>
+      <div class="extract-tags">
+        <span class="tag">functions</span>
+        <span class="tag">class / struct</span>
+        <span class="tag">public methods</span>
+        <span class="tag g">template</span>
+        <span class="tag a">typedef</span>
+      </div>
+    </div>
+
+    <div class="lang-card">
+      <span class="lang-icon">💎</span>
+      <div class="lang-name">Ruby</div>
+      <div class="lang-exts">.rb .rake</div>
+      <div class="extracts-title">Extracts</div>
+      <div class="extract-tags">
+        <span class="tag">def</span>
+        <span class="tag">class</span>
+        <span class="tag">module</span>
+        <span class="tag a">attr_accessor</span>
+        <span class="tag g">include / extend</span>
+      </div>
+    </div>
+
+    <div class="lang-card">
+      <span class="lang-icon">🐘</span>
+      <div class="lang-name">PHP</div>
+      <div class="lang-exts">.php</div>
+      <div class="extracts-title">Extracts</div>
+      <div class="extract-tags">
+        <span class="tag">function</span>
+        <span class="tag">class</span>
+        <span class="tag g">interface</span>
+        <span class="tag a">trait</span>
+        <span class="tag">public methods</span>
+      </div>
+    </div>
+
+    <div class="lang-card">
+      <span class="lang-icon">🍎</span>
+      <div class="lang-name">Swift</div>
+      <div class="lang-exts">.swift</div>
+      <div class="extracts-title">Extracts</div>
+      <div class="extract-tags">
+        <span class="tag">func</span>
+        <span class="tag">class / struct</span>
+        <span class="tag g">protocol</span>
+        <span class="tag a">enum</span>
+        <span class="tag">extension</span>
+      </div>
+    </div>
+
+    <div class="lang-card">
+      <span class="lang-icon">🎯</span>
+      <div class="lang-name">Dart</div>
+      <div class="lang-exts">.dart</div>
+      <div class="extracts-title">Extracts</div>
+      <div class="extract-tags">
+        <span class="tag">class</span>
+        <span class="tag">void / return type functions</span>
+        <span class="tag g">abstract class</span>
+        <span class="tag a">mixin</span>
+        <span class="tag">methods</span>
+      </div>
+    </div>
+
+    <div class="lang-card">
+      <span class="lang-icon">🎭</span>
+      <div class="lang-name">Scala</div>
+      <div class="lang-exts">.scala .sc</div>
+      <div class="extracts-title">Extracts</div>
+      <div class="extract-tags">
+        <span class="tag">def</span>
+        <span class="tag">class</span>
+        <span class="tag">object</span>
+        <span class="tag g">trait</span>
+        <span class="tag a">case class</span>
+        <span class="tag">methods</span>
+      </div>
+    </div>
+
+    <div class="lang-card">
+      <span class="lang-icon">💚</span>
+      <div class="lang-name">Vue</div>
+      <div class="lang-exts">.vue</div>
+      <div class="extracts-title">Extracts</div>
+      <div class="extract-tags">
+        <span class="tag">defineProps</span>
+        <span class="tag">defineEmits</span>
+        <span class="tag g">composables</span>
+        <span class="tag a">component name</span>
+        <span class="tag">script functions</span>
+      </div>
+    </div>
+
+    <div class="lang-card">
+      <span class="lang-icon">🔶</span>
+      <div class="lang-name">Svelte</div>
+      <div class="lang-exts">.svelte</div>
+      <div class="extracts-title">Extracts</div>
+      <div class="extract-tags">
+        <span class="tag">export let props</span>
+        <span class="tag">export function</span>
+        <span class="tag g">script functions</span>
+        <span class="tag a">component name</span>
+      </div>
+    </div>
+
+    <div class="lang-card">
+      <span class="lang-icon">🌐</span>
+      <div class="lang-name">HTML</div>
+      <div class="lang-exts">.html .htm</div>
+      <div class="extracts-title">Extracts</div>
+      <div class="extract-tags">
+        <span class="tag">page title</span>
+        <span class="tag">h1 — h3 headings</span>
+        <span class="tag g">form id/action</span>
+        <span class="tag a">script src</span>
+        <span class="tag">link rel</span>
+      </div>
+    </div>
+
+    <div class="lang-card">
+      <span class="lang-icon">🎨</span>
+      <div class="lang-name">CSS / SCSS / LESS</div>
+      <div class="lang-exts">.css .scss .sass .less</div>
+      <div class="extracts-title">Extracts</div>
+      <div class="extract-tags">
+        <span class="tag">CSS variables (--)</span>
+        <span class="tag g">@mixin</span>
+        <span class="tag g">@function</span>
+        <span class="tag a">media queries</span>
+        <span class="tag">top-level selectors</span>
+      </div>
+    </div>
+
+    <div class="lang-card">
+      <span class="lang-icon">📋</span>
+      <div class="lang-name">YAML</div>
+      <div class="lang-exts">.yml .yaml</div>
+      <div class="extracts-title">Extracts</div>
+      <div class="extract-tags">
+        <span class="tag">top-level keys</span>
+        <span class="tag g">CI job names</span>
+        <span class="tag a">K8s kind/name</span>
+        <span class="tag">second-level keys</span>
+      </div>
+    </div>
+
+    <div class="lang-card">
+      <span class="lang-icon">🐚</span>
+      <div class="lang-name">Shell</div>
+      <div class="lang-exts">.sh .bash .zsh .fish</div>
+      <div class="extracts-title">Extracts</div>
+      <div class="extract-tags">
+        <span class="tag">function names</span>
+        <span class="tag g">exported vars</span>
+        <span class="tag a">script description</span>
+      </div>
+    </div>
+
+    <div class="lang-card">
+      <span class="lang-icon">🐳</span>
+      <div class="lang-name">Dockerfile</div>
+      <div class="lang-exts">Dockerfile Dockerfile.*</div>
+      <div class="extracts-title">Extracts</div>
+      <div class="extract-tags">
+        <span class="tag">FROM image</span>
+        <span class="tag">EXPOSE ports</span>
+        <span class="tag g">ENTRYPOINT</span>
+        <span class="tag a">multi-stage names</span>
+        <span class="tag">ARG / ENV keys</span>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<hr class="divider">
+
+<section class="section" style="text-align:center">
+  <p class="section-ey">Want to add a language?</p>
+  <h2>Contributing is simple</h2>
+  <p class="section-sub">One file per language. Follow the extractor contract. All tests must pass. See CONTRIBUTING.md.</p>
+  <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:8px">
+    <a href="https://github.com/manojmallick/context-forge/blob/main/CONTRIBUTING.md" style="background:var(--p);color:#fff;padding:11px 24px;border-radius:9px;font-size:14px;font-weight:600;text-decoration:none;transition:.15s">Read contributing guide</a>
+    <a href="quick-start.html" style="background:transparent;color:var(--t1);border:1px solid var(--line2);padding:11px 20px;border-radius:9px;font-size:14px;font-weight:500;text-decoration:none;transition:.15s">Quick start →</a>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-inner">
+    <span class="footer-logo">context-forge v1.0.0</span>
+    <div class="footer-links">
+      <a href="https://github.com/manojmallick/context-forge">GitHub</a>
+      <a href="https://github.com/manojmallick/context-forge/blob/main/CONTRIBUTING.md">Contributing</a>
+      <a href="https://github.com/manojmallick/context-forge/blob/main/CHANGELOG.md">Changelog</a>
+      <a href="repomix.html">Repomix</a>
+    </div>
+    <span class="footer-mit">MIT © 2026 Manoj Kumar</span>
+  </div>
+</footer>
+
+</body>
+</html>
