@@ -5,47 +5,10 @@
 
 ## src
 
-### src/map/class-hierarchy.js
-```
-module.exports = { analyze }
-function analyze(files, cwd)
-```
-
-### src/map/import-graph.js
-```
-module.exports = { analyze }
-function extractImports(filePath, content, fileSet)
-function resolveJsPath(dir, importStr, fileSet)
-function detectCycles(graph)
-function analyze(files, cwd)
-```
-
 ### src/map/route-table.js
 ```
 module.exports = { analyze }
 function analyze(files, cwd)
-```
-
-### src/mcp/handlers.js
-```
-module.exports = { readContext, searchSignatures, getMap }
-function readContext(args, cwd)
-function searchSignatures(args, cwd)
-function getMap(args, cwd)
-```
-
-### src/mcp/server.js
-```
-module.exports = { start }
-function respond(id, result)
-function respondError(id, code, message)
-function dispatch(msg, cwd)
-function start(cwd)
-```
-
-### src/mcp/tools.js
-```
-module.exports = { TOOLS }
 ```
 
 ### src/config/defaults.js
@@ -224,6 +187,44 @@ function normalizeParams(params)
 ```
 module.exports = { extract }
 function extract(src)
+```
+
+### src/map/class-hierarchy.js
+```
+module.exports = { analyze }
+function analyze(files, cwd)
+```
+
+### src/map/import-graph.js
+```
+module.exports = { analyze }
+function extractImports(filePath, content, fileSet)
+function resolveJsPath(dir, importStr, fileSet)
+function detectCycles(graph)
+function analyze(files, cwd)
+```
+
+### src/mcp/handlers.js
+```
+module.exports = { readContext, searchSignatures, getMap, createCheckpoint }
+function readContext(args, cwd)
+function searchSignatures(args, cwd)
+function getMap(args, cwd)
+function createCheckpoint(args, cwd)
+```
+
+### src/mcp/server.js
+```
+module.exports = { start }
+function respond(id, result)
+function respondError(id, code, message)
+function dispatch(msg, cwd)
+function start(cwd)
+```
+
+### src/mcp/tools.js
+```
+module.exports = { TOOLS }
 ```
 
 ### src/security/patterns.js
