@@ -87,3 +87,54 @@ function run(args) {
   const r = run('--suggest-tool ""');
   assert.notStrictEqual(r.code, 0, '--suggest-tool with empty description exits non-zero');
 }
+
+// ── --health tests ────────────────────────────────────────────────────────────
+
+// text output contains expected fields
+{
+  const r = run('--health');
+  assert.strictEqual(r.code, 0, '--health exits 0');
+  assert.ok(r.stdout.includes('score'), '--health text: score present');
+  assert.ok(r.stdout.includes('grade'), '--health text: grade present');
+  assert.ok(r.stdout.includes('token reduction'), '--health text: token reduction line present');
+  assert.ok(r.stdout.includes('days since regen'), '--health text: days since regen line present');
+}
+
+// --json output shape
+{
+  const r = run('--health --json');
+  assert.strictEqual(r.code, 0, '--health --json exits 0');
+  let parsed;
+  try { parsed = JSON.parse(r.stdout.trim()); } catch (_) { assert.fail('--health --json: invalid JSON'); }
+  assert.ok('score' in parsed, '--health --json: score field present');
+  assert.ok('grade' in parsed, '--health --json: grade field present');
+  assert.ok('tokenReductionPct' in parsed, '--health --json: tokenReductionPct field present');
+  assert.ok('daysSinceRegen' in parsed, '--health --json: daysSinceRegen field present');
+  assert.ok('totalRuns' in parsed, '--health --json: totalRuns field present');
+  assert.ok('overBudgetRuns' in parsed, '--health --json: overBudgetRuns field present');
+}
+
+// score must be 0–100
+{
+  const r = run('--health --json');
+  const parsed = JSON.parse(r.stdout.trim());
+  assert.ok(
+    typeof parsed.score === 'number' && parsed.score >= 0 && parsed.score <= 100,
+    '--health --json: score in 0-100 range',
+  );
+}
+
+// grade must be one of A/B/C/D
+{
+  const r = run('--health --json');
+  const parsed = JSON.parse(r.stdout.trim());
+  assert.ok(['A', 'B', 'C', 'D'].includes(parsed.grade), '--health --json: grade is A/B/C/D');
+}
+
+// totalRuns must be a non-negative integer
+{
+  const r = run('--health --json');
+  const parsed = JSON.parse(r.stdout.trim());
+  assert.ok(Number.isInteger(parsed.totalRuns) && parsed.totalRuns >= 0, '--health --json: totalRuns is non-negative int');
+  assert.ok(Number.isInteger(parsed.overBudgetRuns) && parsed.overBudgetRuns >= 0, '--health --json: overBudgetRuns is non-negative int');
+}

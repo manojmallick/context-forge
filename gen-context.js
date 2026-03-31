@@ -731,6 +731,22 @@ function main() {
     process.exit(0);
   }
 
+  if (args.includes('--health')) {
+    const { score } = require('./src/health/scorer');
+    const result = score(cwd);
+    if (args.includes('--json')) {
+      process.stdout.write(JSON.stringify(result) + '\n');
+    } else {
+      console.log('[context-forge] health:');
+      console.log(`  score           : ${result.score}/100 (grade ${result.grade})`);
+      console.log(`  token reduction : ${result.tokenReductionPct !== null ? result.tokenReductionPct + '%' : 'no history'}`);
+      console.log(`  days since regen: ${result.daysSinceRegen !== null ? result.daysSinceRegen : 'context file not found'}`);
+      console.log(`  total runs      : ${result.totalRuns}`);
+      console.log(`  over-budget runs: ${result.overBudgetRuns}`);
+    }
+    process.exit(0);
+  }
+
   if (args.includes('--suggest-tool')) {
     const idx = args.indexOf('--suggest-tool');
     const taskDesc = (args[idx + 1] || '').trim();
