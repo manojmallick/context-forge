@@ -1,0 +1,22 @@
+{
+  "name": "context-forge",
+  "version": "0.1.0",
+  "description": "Zero-dependency AI context engine — 97% token reduction",
+  "main": "gen-context.js",
+  "bin": {
+    "gen-context": "./gen-context.js",
+    "gen-project-map": "./gen-project-map.js"
+  },
+  "scripts": {
+    "test": "node test/run.js",
+    "generate": "node gen-context.js",
+    "report": "node gen-context.js --report"
+  },
+  "keywords": ["ai", "context", "copilot", "claude", "llm", "tokens"],
+  "author": "Manoj Mallick,Independent Researcher, Amsterdam, Netherlands",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {}
+}

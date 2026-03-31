@@ -1,0 +1,31 @@
+{
+  "_comment": "ContextForge configuration — all keys are optional (defaults shown)",
+
+  "output": ".github/copilot-instructions.md",
+
+  "outputs": ["copilot"],
+
+  "srcDirs": ["src", "app", "lib", "packages", "services", "api"],
+
+  "exclude": [
+    "node_modules", ".git", "dist", "build", "out",
+    "__pycache__", ".next", "coverage", "target", "vendor",
+    ".context"
+  ],
+
+  "maxDepth": 6,
+
+  "maxSigsPerFile": 25,
+
+  "maxTokens": 6000,
+
+  "secretScan": true,
+
+  "monorepo": false,
+
+  "diffPriority": true,
+
+  "mcp": {
+    "autoRegister": true
+  }
+}

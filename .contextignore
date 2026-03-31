@@ -1,0 +1,6 @@
+# .contextignore — ContextForge exclusions for this repo
+node_modules/
+dist/
+build/
+coverage/
+*.generated.*
