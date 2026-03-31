@@ -6,6 +6,28 @@ Format: [Semantic Versioning](https://semver.org/)
 
 ---
 
+## [0.6.0] — 2026-03-31
+
+### Added
+- **`create_checkpoint` MCP tool** — returns a markdown session snapshot: active branch, last 5 commits, context token count, modules indexed, and route table summary (when `PROJECT_MAP.md` is present)
+- **`examples/copilot-prompts.code-snippets`** — 20 VS Code code snippets with `cf-` prefix covering the full session lifecycle (`cf-start`, `cf-checkpoint`, `cf-end`, `cf-pr`, `cf-debug`, `cf-test`, `cf-search`, `cf-map-*`, and more)
+- **`examples/slack-context-bot.js`** — zero-dependency Node.js script that posts daily context-freshness reminders to a Slack channel via an Incoming Webhook URL; includes branch, recent commit, token count, and a session checklist
+- **`docs/SESSION_DISCIPLINE.md`** — complete session discipline guide: session lifecycle, 30-minute checkpoint cadence, token hygiene table, multi-session workflow, git hook integration, MCP tool reference, and VS Code snippet install instructions
+- `src/mcp/server.js` version bumped to `0.6.0`
+- Integration tests: 5 new tests for `create_checkpoint` in `test/integration/mcp-server.test.js`
+
+### Changed
+- `tools/list` now returns 4 tools (previously 3) — `read_context`, `search_signatures`, `get_map`, `create_checkpoint`
+
+### Validation gate
+- 94/94 tests pass (21 extractor + 73 integration)
+- `create_checkpoint` MCP tool returns JSON with `# ContextForge Checkpoint` header
+- `create_checkpoint` with `note` param includes note in output
+- `tools/list` returns 4 tools including `create_checkpoint`
+- VS Code snippets file has JSON-valid syntax; `cf-` prefix on all 20 snippets
+
+---
+
 ## [0.5.0] — 2026-03-31
 
 ### Added
