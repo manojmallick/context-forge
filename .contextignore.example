@@ -1,0 +1,34 @@
+# .contextignore — ContextForge exclusion file (gitignore syntax)
+# Patterns here are unioned with .repomixignore if present.
+# Lines starting with # are comments.
+
+# Build outputs
+dist/
+build/
+out/
+.next/
+.nuxt/
+
+# Dependencies
+node_modules/
+vendor/
+target/
+
+# Generated files
+*.generated.*
+*.pb.go
+*_pb.py
+coverage/
+
+# Test snapshots (keep test code, drop snapshots)
+**/__snapshots__/
+
+# Large data files
+*.csv
+*.sql
+*.parquet
+
+# IDE
+.idea/
+.vscode/
+*.suo
