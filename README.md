@@ -118,7 +118,7 @@ node gen-context.js --suggest-tool "security audit of the auth module"
 # models : claude-opus-4-6, gpt-5-4, gemini-2-5-pro
 
 node gen-context.js --suggest-tool "fix a typo in the yaml config" --json
-# {"tier":"fast","label":"Fast (low-cost)","models":"claude-haiku-4-5, gpt-5-mini, gemini-3-flash","costHint":"~$0.0008 / 1K tokens"}
+# {"tier":"fast","label":"Fast (low-cost)","models":"claude-haiku-4-5, gpt-5-1-codex-mini, gemini-3-flash","costHint":"~$0.0008 / 1K tokens"}
 ```
 
 Tiers: `fast` (config/markup/typos) · `balanced` (features/tests/debug) · `powerful` (architecture/security/multi-file)

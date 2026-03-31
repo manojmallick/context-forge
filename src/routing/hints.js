@@ -15,7 +15,7 @@
 const TIERS = {
   fast: {
     label: 'Fast (low-cost)',
-    examples: 'claude-haiku-4-5, gpt-5-mini, gemini-3-flash',
+    examples: 'claude-haiku-4-5, gpt-5-1-codex-mini, gemini-3-flash',
     tasks: [
       'Autocomplete and inline suggestions',
       'Edit config or markup files',
