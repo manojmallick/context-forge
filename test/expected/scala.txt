@@ -1,0 +1,9 @@
+case class User
+  def findById(id)
+  def save(entity)
+class UserService
+  def getUser(id)
+  def createUser(dto)
+object UserService
+  def apply(repo)
+def hashPassword(password)

@@ -1,0 +1,8 @@
+abstract class Repository
+  findById(String id)
+  save(T entity)
+class UserService
+  getUser(String id)
+  createUser(CreateUserDto data)
+class User
+hashPassword(String password)
