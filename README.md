@@ -84,15 +84,35 @@ npx repomix --compress         # deep dive sessions
 ## CLI reference
 
 ```
-node gen-context.js                  Generate once and exit
-node gen-context.js --watch          Generate + watch for changes
-node gen-context.js --setup          Generate + install git hook + start watcher
-node gen-context.js --report         Token reduction stats
-node gen-context.js --report --json  Token report as JSON (for CI)
-node gen-context.js --init           Write example config file
-node gen-context.js --help           Usage information
-node gen-context.js --version        Version string
+node gen-context.js                       Generate once and exit
+node gen-context.js --monorepo            Generate per-package context (monorepo)
+node gen-context.js --routing             Include model routing hints in output
+node gen-context.js --format cache        Also write Anthropic prompt-cache JSON
+node gen-context.js --watch              Generate + watch for changes
+node gen-context.js --setup              Generate + install git hook + start watcher
+node gen-context.js --report            Token reduction stats
+node gen-context.js --report --json     Token report as JSON (for CI)
+node gen-context.js --init              Write example config file
+node gen-context.js --help              Usage information
+node gen-context.js --version           Version string
 ```
+
+---
+
+## Prompt caching (v0.8)
+
+Reduce Anthropic API costs by ~60% using prompt cache. ContextForge writes a cache-ready
+JSON block that you can embed in your API calls:
+
+```bash
+node gen-context.js --format cache
+# Writes: .github/copilot-instructions.cache.json
+# Format: { type: 'text', text: '...', cache_control: { type: 'ephemeral' } }
+```
+
+Combine with Repomix for maximum savings — use Repomix output as the stable cached prefix
+and ContextForge signatures as the per-session dynamic segment.
+See [docs/REPOMIX_CACHE.md](docs/REPOMIX_CACHE.md) for the full strategy.
 
 ---
 
@@ -105,7 +125,8 @@ Copy `gen-context.config.json.example` to `gen-context.config.json`:
   "srcDirs": ["src", "app", "lib"],
   "maxTokens": 6000,
   "outputs": ["copilot"],
-  "secretScan": true
+  "secretScan": true,
+  "format": "cache"
 }
 ```
 
@@ -147,10 +168,18 @@ sleep 2
 
 ```
 gen-context.js                ← single-file entry point
+gen-project-map.js            ← import graph, class hierarchy, route table
 src/extractors/               ← 21 language extractors
+src/format/cache.js           ← Anthropic prompt-cache JSON formatter (v0.8)
+src/routing/                  ← model routing hints (v0.7)
+src/mcp/                      ← MCP stdio server (v0.3)
+src/security/                 ← secret scanner (v0.2)
+src/config/                   ← config loader + defaults
 test/fixtures/                ← one fixture per language
 test/expected/                ← expected extractor output
 test/run.js                   ← zero-dep test runner
+docs/REPOMIX_CACHE.md         ← prompt cache strategy guide (v0.8)
+docs/MODEL_ROUTING.md         ← model routing guide (v0.7)
 .contextignore.example        ← exclusion template
 gen-context.config.json.example ← annotated config reference
 ```
