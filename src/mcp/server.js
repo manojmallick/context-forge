@@ -18,7 +18,7 @@ const { readContext, searchSignatures, getMap, createCheckpoint, getRouting } = 
 
 const SERVER_INFO = {
   name: 'context-forge',
-  version: '0.7.0',
+  version: '0.9.0',
   description: 'ContextForge MCP server — code signatures on demand',
 };
 

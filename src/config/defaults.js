@@ -46,6 +46,9 @@ const DEFAULTS = {
   // Output format: 'default' (markdown only) | 'cache' (also write Anthropic prompt-cache JSON)
   format: 'default',
 
+  // Append run metrics to .context/usage.ndjson after each generate
+  tracking: false,
+
   // MCP server configuration
   mcp: {
     autoRegister: true,

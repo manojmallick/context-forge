@@ -2,7 +2,7 @@
 'use strict';
 
 /**
- * ContextForge — gen-context.js v0.8.0
+ * ContextForge — gen-context.js v0.9.0
  * Zero-dependency AI context engine.
  * Runs with: node gen-context.js
  * No npm install required. Node 18+ built-ins only.
@@ -13,7 +13,7 @@ const path = require('path');
 const os = require('os');
 const { execSync } = require('child_process');
 
-const VERSION = '0.8.0';
+const VERSION = '0.9.0';
 const MARKER = '\n\n## Auto-generated signatures\n<!-- Updated by gen-context.js -->\n';
 
 // ---------------------------------------------------------------------------
@@ -349,20 +349,33 @@ function writeClaude(content, cwd) {
 // ---------------------------------------------------------------------------
 // Report
 // ---------------------------------------------------------------------------
-function printReport(rawTokens, finalTokens, fileCount, droppedCount, asJson) {
+function printReport(rawTokens, finalTokens, fileCount, droppedCount, asJson, budgetLimit) {
   const reduction = rawTokens > 0 ? (100 - (finalTokens / rawTokens) * 100).toFixed(1) : 0;
+  const overBudget = finalTokens > (budgetLimit || 6000);
   if (asJson) {
     process.stdout.write(JSON.stringify({
-      rawTokens, finalTokens, fileCount, droppedCount,
+      version: VERSION,
+      timestamp: new Date().toISOString(),
+      rawTokens,
+      finalTokens,
+      fileCount,
+      droppedCount,
       reductionPct: parseFloat(reduction),
+      overBudget,
+      budgetLimit: budgetLimit || 6000,
     }) + '\n');
+    // Exit 1 in CI if over budget — lets pipelines fail fast
+    if (overBudget) process.exitCode = 1;
   } else {
     console.log(`[context-forge] report:`);
+    console.log(`  version         : ${VERSION}`);
     console.log(`  files processed : ${fileCount}`);
     console.log(`  files dropped   : ${droppedCount}`);
     console.log(`  raw tokens      : ~${rawTokens}`);
     console.log(`  output tokens   : ~${finalTokens}`);
+    console.log(`  budget limit    : ${budgetLimit || 6000}`);
     console.log(`  reduction       : ${reduction}%`);
+    if (overBudget) console.warn(`[context-forge] WARNING: output (${finalTokens} tokens) exceeds budget (${budgetLimit || 6000})`);
   }
 }
 
@@ -508,7 +521,26 @@ function runGenerate(cwd, config, reportMode, reportJson = false) {
   }
 
   if (reportMode || process.argv.includes('--report')) {
-    printReport(rawTokenTotal, finalTokens, beforeCount, droppedCount, reportJson);
+    printReport(rawTokenTotal, finalTokens, beforeCount, droppedCount, reportJson, config.maxTokens);
+  }
+
+  // Usage tracking (v0.9) — optional append-only NDJSON log
+  const trackingEnabled = !!(config.tracking || process.argv.includes('--track'));
+  if (trackingEnabled && !reportMode) {
+    try {
+      const { logRun } = require('./src/tracking/logger');
+      logRun({
+        version: VERSION,
+        fileCount: beforeCount,
+        droppedCount,
+        rawTokens: rawTokenTotal,
+        finalTokens,
+        overBudget: finalTokens > config.maxTokens,
+        budgetLimit: config.maxTokens,
+      }, cwd);
+    } catch (err) {
+      console.warn(`[context-forge] tracking: ${err.message}`);
+    }
   }
 
   return { rawTokenTotal, finalTokens, fileCount: beforeCount, droppedCount };
@@ -580,11 +612,13 @@ Usage:
   node gen-context.js --monorepo            Generate per-package context (monorepo)
   node gen-context.js --routing             Include model routing hints in output
   node gen-context.js --format cache        Also write Anthropic prompt-cache JSON
+  node gen-context.js --track              Append run metrics to .context/usage.ndjson
   node gen-context.js --watch              Generate + watch for file changes
   node gen-context.js --setup              Generate + install git hook + watch
   node gen-context.js --mcp               Start MCP server on stdio
   node gen-context.js --report            Token reduction stats to stdout
-  node gen-context.js --report --json     Token report as JSON (for CI)
+  node gen-context.js --report --json     Token report as JSON (for CI; exits 1 if over budget)
+  node gen-context.js --report --history  Print usage log summary from .context/usage.ndjson
   node gen-context.js --init              Write example config file
   node gen-context.js --help              Show this message
   node gen-context.js --version           Show version
@@ -658,6 +692,27 @@ function main() {
   }
 
   if (args.includes('--report')) {
+    if (args.includes('--history')) {
+      try {
+        const { readLog, summarize } = require('./src/tracking/logger');
+        const entries = readLog(cwd);
+        const summary = summarize(entries);
+        if (args.includes('--json')) {
+          process.stdout.write(JSON.stringify(summary) + '\n');
+        } else {
+          console.log('[context-forge] usage history:');
+          console.log(`  total runs      : ${summary.totalRuns}`);
+          console.log(`  avg reduction   : ${summary.avgReductionPct}%`);
+          console.log(`  avg tokens out  : ~${summary.avgFinalTokens}`);
+          console.log(`  over-budget runs: ${summary.overBudgetRuns}`);
+          if (summary.firstRun) console.log(`  first run       : ${summary.firstRun}`);
+          if (summary.lastRun)  console.log(`  last run        : ${summary.lastRun}`);
+        }
+      } catch (err) {
+        console.warn(`[context-forge] tracking: ${err.message}`);
+      }
+      process.exit(0);
+    }
     runGenerate(cwd, config, true, args.includes('--json'));
     process.exit(0);
   }
