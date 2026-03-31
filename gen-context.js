@@ -2,7 +2,7 @@
 'use strict';
 
 /**
- * ContextForge — gen-context.js v0.1.0
+ * ContextForge — gen-context.js v0.2.0
  * Zero-dependency AI context engine.
  * Runs with: node gen-context.js
  * No npm install required. Node 18+ built-ins only.
@@ -13,28 +13,14 @@ const path = require('path');
 const os = require('os');
 const { execSync } = require('child_process');
 
-const VERSION = '0.1.0';
+const VERSION = '0.2.0';
 const MARKER = '\n\n## Auto-generated signatures\n<!-- Updated by gen-context.js -->\n';
 
 // ---------------------------------------------------------------------------
-// Built-in defaults (overridable via gen-context.config.json)
+// Config — delegate to src/config/loader.js
 // ---------------------------------------------------------------------------
-const DEFAULTS = {
-  output: '.github/copilot-instructions.md',
-  outputs: ['copilot'],
-  srcDirs: ['src', 'app', 'lib', 'packages', 'services', 'api'],
-  exclude: [
-    'node_modules', '.git', 'dist', 'build', 'out',
-    '__pycache__', '.next', 'coverage', 'target', 'vendor',
-    '.context',
-  ],
-  maxDepth: 6,
-  maxSigsPerFile: 25,
-  maxTokens: 6000,
-  secretScan: false,
-  monorepo: false,
-  diffPriority: true,
-};
+const { loadConfig } = require('./src/config/loader');
+const { DEFAULTS } = require('./src/config/defaults');
 
 // ---------------------------------------------------------------------------
 // Language → extractor mapping (by file extension)
@@ -65,22 +51,6 @@ const EXT_MAP = {
 // Dockerfile handled separately (no extension)
 function isDockerfile(filename) {
   return filename === 'Dockerfile' || filename.startsWith('Dockerfile.');
-}
-
-// ---------------------------------------------------------------------------
-// Config loader
-// ---------------------------------------------------------------------------
-function loadConfig(cwd) {
-  const configPath = path.join(cwd, 'gen-context.config.json');
-  let userConfig = {};
-  if (fs.existsSync(configPath)) {
-    try {
-      userConfig = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-    } catch (err) {
-      console.warn(`[context-forge] config parse error: ${err.message}`);
-    }
-  }
-  return Object.assign({}, DEFAULTS, userConfig);
 }
 
 // ---------------------------------------------------------------------------
@@ -211,8 +181,10 @@ function isGeneratedFile(filePath) {
 
 function applyTokenBudget(fileEntries, maxTokens) {
   // fileEntries: [{ filePath, sigs, mtime }]
+  // Reserve ~10% for formatting overhead (section headers, code fences, top-level header)
+  const effectiveBudget = Math.floor(maxTokens * 0.90);
   let total = fileEntries.reduce((s, e) => s + estimateTokens(e.sigs.join('\n')), 0);
-  if (total <= maxTokens) return fileEntries;
+  if (total <= effectiveBudget) return fileEntries;
 
   // Sort by drop priority (drop first = index 0)
   const withPriority = fileEntries.map((e) => {
@@ -235,7 +207,7 @@ function applyTokenBudget(fileEntries, maxTokens) {
   for (let i = withPriority.length - 1; i >= 0; i--) {
     const entry = withPriority[i];
     const entryTokens = estimateTokens(entry.sigs.join('\n'));
-    if (total <= maxTokens) {
+    if (total <= effectiveBudget) {
       kept.unshift(entry);
     } else {
       total -= entryTokens;
@@ -458,8 +430,17 @@ function runGenerate(cwd, config, reportMode, reportJson = false) {
       continue;
     }
 
-    const sigs = detectAndExtract(filePath, content, config.maxSigsPerFile);
+    let sigs = detectAndExtract(filePath, content, config.maxSigsPerFile);
     if (sigs.length === 0) continue;
+
+    if (config.secretScan) {
+      const { scan } = require('./src/security/scanner');
+      const result = scan(sigs, filePath);
+      if (result.redacted) {
+        console.warn(`[context-forge] secrets redacted in ${path.relative(cwd, filePath)}`);
+      }
+      sigs = result.safe;
+    }
 
     rawTokenTotal += estimateTokens(sigs.join('\n'));
     let mtime = 0;
