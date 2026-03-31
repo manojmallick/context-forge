@@ -1,6 +1,6 @@
 {
   "name": "context-forge",
-  "version": "0.9.0",
+  "version": "1.0.0",
   "description": "Zero-dependency AI context engine — 97% token reduction",
   "main": "gen-context.js",
   "bin": {

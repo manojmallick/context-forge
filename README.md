@@ -95,10 +95,70 @@ node gen-context.js --report                 Token reduction stats
 node gen-context.js --report --json          Structured JSON report (exits 1 if over budget)
 node gen-context.js --report --history       Usage log summary from .context/usage.ndjson
 node gen-context.js --report --history --json Usage history as JSON
+node gen-context.js --suggest-tool "<task>"  Recommend model tier for a task description
+node gen-context.js --suggest-tool "<task>" --json  Machine-readable tier recommendation
+node gen-context.js --health                 Print composite health score (0-100, grade A-D)
+node gen-context.js --health --json          Machine-readable health score
 node gen-context.js --init                   Write example config file
 node gen-context.js --help                   Usage information
 node gen-context.js --version                Version string
 ```
+
+---
+
+## Full system (v1.0)
+
+### Task classification — `--suggest-tool`
+
+Classify a task description to get a model tier recommendation:
+
+```bash
+node gen-context.js --suggest-tool "security audit of the auth module"
+# tier   : powerful
+# models : claude-opus-4, gpt-4-turbo, gemini-ultra
+
+node gen-context.js --suggest-tool "fix a typo in the yaml config" --json
+# {"tier":"fast","label":"Fast (low-cost)","models":"claude-haiku-3, gpt-4o-mini, gemini-flash","costHint":"~$0.001 / 1K tokens"}
+```
+
+Tiers: `fast` (config/markup/typos) · `balanced` (features/tests/debug) · `powerful` (architecture/security/multi-file)
+
+### Health score — `--health`
+
+Composite 0-100 health score for your ContextForge installation:
+
+```bash
+node gen-context.js --health
+# [context-forge] health:
+#   score           : 95/100 (grade A)
+#   token reduction : 91.2%
+#   days since regen: 1
+#   total runs      : 47
+#   over-budget runs: 0
+
+node gen-context.js --health --json
+# {"score":95,"grade":"A","tokenReductionPct":91.2,"daysSinceRegen":1,"totalRuns":47,"overBudgetRuns":0}
+```
+
+Scoring: starts at 100, penalties for stale context (−4 pts/day > 7 days), low reduction (−20 if < 60%), and frequent over-budget runs (−20 if > 20% of runs).
+
+### Self-healing CI
+
+Copy `examples/self-healing-github-action.yml` to `.github/workflows/` to auto-regenerate context when:
+- Copilot acceptance rate drops below 30% (requires `COPILOT_API_TOKEN` secret — GitHub Enterprise)
+- Context file is more than 7 days old (always active, no API needed)
+
+A PR is opened automatically with the regenerated signatures.
+
+```yaml
+# .github/workflows/self-healing.yml (excerpt)
+- name: Run ContextForge health check
+  run: node gen-context.js --health --json
+- name: Regenerate if needed
+  run: node gen-context.js
+```
+
+See [examples/self-healing-github-action.yml](examples/self-healing-github-action.yml) for the full workflow and [scripts/ci-update.sh](scripts/ci-update.sh) for the CI helper.
 
 ---
 
@@ -112,7 +172,7 @@ node gen-context.js --track
 
 # Structured JSON report for CI (exits 1 if over budget)
 node gen-context.js --report --json
-# { "version": "0.9.0", "finalTokens": 3200, "reductionPct": 92.4, "overBudget": false, ... }
+# { "version": "1.0.0", "finalTokens": 3200, "reductionPct": 92.4, "overBudget": false, ... }
 
 # View usage history summary
 node gen-context.js --report --history
@@ -202,6 +262,7 @@ src/extractors/               ← 21 language extractors
 src/format/cache.js           ← Anthropic prompt-cache JSON formatter (v0.8)
 src/routing/                  ← model routing hints (v0.7)
 src/tracking/logger.js        ← NDJSON usage log (v0.9)
+src/health/scorer.js          ← composite health score (v1.0)
 src/mcp/                      ← MCP stdio server (v0.3)
 src/security/                 ← secret scanner (v0.2)
 src/config/                   ← config loader + defaults
@@ -211,6 +272,8 @@ test/run.js                   ← zero-dep test runner
 docs/ENTERPRISE_SETUP.md      ← enterprise & CI observability guide (v0.9)
 docs/REPOMIX_CACHE.md         ← prompt cache strategy guide (v0.8)
 docs/MODEL_ROUTING.md         ← model routing guide (v0.7)
+examples/self-healing-github-action.yml  ← auto-regeneration CI workflow (v1.0)
+scripts/ci-update.sh          ← CI helper for pipelines (v1.0)
 .contextignore.example        ← exclusion template
 gen-context.config.json.example ← annotated config reference
 ```

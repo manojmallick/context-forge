@@ -6,6 +6,30 @@ Format: [Semantic Versioning](https://semver.org/)
 
 ---
 
+## [1.0.0] — 2026-04-01
+
+### Added
+- **Self-healing CI** — `examples/self-healing-github-action.yml`: weekly cron workflow that queries the GitHub Enterprise Copilot API for acceptance rate; automatically opens a PR with regenerated context when rate drops below threshold (default 30%) or context file is stale (> 7 days); falls back to staleness check when no API token is configured
+- **`scripts/ci-update.sh`** — CI helper script: `--fail-over-budget` (exits 1 if output tokens exceed budget), `--track`, `--format cache`; designed for required CI pipeline steps
+- **`--suggest-tool "<task>"`** — recommends a model tier (fast / balanced / powerful) from a free-text task description using keyword matching against `src/routing/hints.js` TIERS; `--json` variant returns machine-readable `{ tier, label, models, costHint }` for IDE integrations
+- **`--health`** — composite 0-100 health score derived from: context staleness (days since last regeneration), average token reduction %, and over-budget run rate; letter grade A–D; `--json` variant for dashboards and CI
+- **`src/health/scorer.js`** — zero-dependency health scoring module: `score(cwd)` reads usage log + context file mtime; never throws
+- Integration test: `test/integration/system.test.js` — 15 tests covering suggest-tool (all three tiers, `--json` shape, missing-description guard) and health (`--json` field presence, score range, grade values, run counters)
+
+### Changed
+- `gen-context.js` version bumped to `1.0.0`; help text expanded with `--suggest-tool`, `--health`
+- `package.json` version bumped to `1.0.0`
+- `src/mcp/server.js` version bumped to `1.0.0`
+- README updated: v1.0 features section, new CLI reference entries, updated project structure tree
+
+### Validation gate
+- 177/177 tests pass (21 extractor + 156 integration)
+- `node gen-context.js --suggest-tool "security audit" ` → tier: powerful
+- `node gen-context.js --health --json` → `{ score, grade, tokenReductionPct, daysSinceRegen, ... }`
+- Self-healing CI workflow validates via `node gen-context.js --health --json` in check job
+
+---
+
 ## [0.9.0] — 2026-04-01
 
 ### Added

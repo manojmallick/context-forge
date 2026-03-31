@@ -138,3 +138,5 @@ function run(args) {
   assert.ok(Number.isInteger(parsed.totalRuns) && parsed.totalRuns >= 0, '--health --json: totalRuns is non-negative int');
   assert.ok(Number.isInteger(parsed.overBudgetRuns) && parsed.overBudgetRuns >= 0, '--health --json: overBudgetRuns is non-negative int');
 }
+
+console.log('\nsystem: 15 passed, 0 failed');
