@@ -1,0 +1,8 @@
+class UserService
+  def __init__(db)
+  def get_user(user_id)
+  async def create_user(data)
+class AdminService(UserService)
+  def delete_user(user_id)
+def hash_password(password)
+async def send_email(to, subject, body)

@@ -1,0 +1,8 @@
+type UserService struct
+type Repository interface
+  FindById(id string)
+  Save(user *User)
+func NewUserService(repo Repository)
+func (s) GetUser(id string)
+func (s) CreateUser(data CreateUserDto)
+func HashPassword(password string)
