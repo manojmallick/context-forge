@@ -99,18 +99,19 @@ test('initialize returns serverInfo', () => {
 });
 
 // ─────────────────────────────────────────────────────────────
-// Gate 2: tools/list returns 3 tools
+// Gate 2: tools/list returns 4 tools
 // ─────────────────────────────────────────────────────────────
-test('tools/list returns exactly 3 tools', () => {
+test('tools/list returns exactly 4 tools', () => {
   withTempProject((dir) => {
     const [res] = mcpCall({ jsonrpc: '2.0', method: 'tools/list', id: 2 }, dir);
     assert.ok(res.result, 'Should have result');
     assert.ok(Array.isArray(res.result.tools), 'tools should be array');
-    assert.strictEqual(res.result.tools.length, 3);
+    assert.strictEqual(res.result.tools.length, 4);
     const names = res.result.tools.map((t) => t.name);
     assert.ok(names.includes('read_context'), 'Should have read_context');
     assert.ok(names.includes('search_signatures'), 'Should have search_signatures');
     assert.ok(names.includes('get_map'), 'Should have get_map');
+    assert.ok(names.includes('create_checkpoint'), 'Should have create_checkpoint');
   });
 });
 
@@ -245,6 +246,72 @@ test('read_context returns helpful message when no context file', () => {
     // No seedContextFile — no .github/copilot-instructions.md
     const [res] = mcpCall(
       { jsonrpc: '2.0', method: 'tools/call', id: 10, params: { name: 'read_context', arguments: {} } },
+      dir
+    );
+    const text = res.result.content[0].text;
+    assert.ok(text.includes('gen-context.js'), 'Should suggest running gen-context.js');
+  });
+});
+
+// ─────────────────────────────────────────────────────────────
+// create_checkpoint — v0.6
+// ─────────────────────────────────────────────────────────────
+test('create_checkpoint returns valid markdown', () => {
+  withTempProject((dir) => {
+    const [res] = mcpCall(
+      { jsonrpc: '2.0', method: 'tools/call', id: 20, params: { name: 'create_checkpoint', arguments: {} } },
+      dir
+    );
+    assert.ok(res.result, 'Should have result');
+    const text = res.result.content[0].text;
+    assert.ok(text.includes('# ContextForge Checkpoint'), 'Should include checkpoint header');
+    assert.ok(text.includes('## Git state'), 'Should include Git state section');
+    assert.ok(text.includes('## Context snapshot'), 'Should include Context snapshot section');
+    assert.ok(text.includes('**Created:**'), 'Should include timestamp');
+  });
+});
+
+test('create_checkpoint includes note when provided', () => {
+  withTempProject((dir) => {
+    const [res] = mcpCall(
+      { jsonrpc: '2.0', method: 'tools/call', id: 21, params: { name: 'create_checkpoint', arguments: { note: 'working on auth middleware' } } },
+      dir
+    );
+    const text = res.result.content[0].text;
+    assert.ok(text.includes('working on auth middleware'), 'Should include the note text');
+    assert.ok(text.includes('**Note:**'), 'Should include Note label');
+  });
+});
+
+test('create_checkpoint without note omits Note line', () => {
+  withTempProject((dir) => {
+    const [res] = mcpCall(
+      { jsonrpc: '2.0', method: 'tools/call', id: 22, params: { name: 'create_checkpoint', arguments: {} } },
+      dir
+    );
+    const text = res.result.content[0].text;
+    assert.ok(!text.includes('**Note:**'), 'Should NOT include Note label when note is empty');
+  });
+});
+
+test('create_checkpoint reports context stats when context file present', () => {
+  withTempProject((dir) => {
+    seedContextFile(dir);
+    const [res] = mcpCall(
+      { jsonrpc: '2.0', method: 'tools/call', id: 23, params: { name: 'create_checkpoint', arguments: {} } },
+      dir
+    );
+    const text = res.result.content[0].text;
+    assert.ok(text.includes('**Token count:**'), 'Should show token count');
+    assert.ok(text.includes('**Modules in context:**'), 'Should show module count');
+  });
+});
+
+test('create_checkpoint reports missing context when no file', () => {
+  withTempProject((dir) => {
+    // No seedContextFile
+    const [res] = mcpCall(
+      { jsonrpc: '2.0', method: 'tools/call', id: 24, params: { name: 'create_checkpoint', arguments: {} } },
       dir
     );
     const text = res.result.content[0].text;
