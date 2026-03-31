@@ -1,0 +1,6 @@
+class UserService
+  public User GetUser(string id)
+  public async Task<User> CreateUserAsync(CreateUserDto dto)
+  protected void ValidateUser(User user)
+interface IUserRepository
+enum UserStatus

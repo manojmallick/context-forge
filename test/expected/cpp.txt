@@ -1,0 +1,7 @@
+class UserService
+  UserService(std::shared_ptr<Repository> repo)
+  getUser(const std::string& id)
+  createUser(const CreateUserDto& dto)
+struct Repository
+  findById(const std::string& id)
+  save(const User& user)
