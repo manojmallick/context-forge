@@ -6,13 +6,17 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
   pages: write
   id-token: write
 
 concurrency:
   group: pages
   cancel-in-progress: false
+
+# PREREQUISITE (one-time, 30 seconds):
+# GitHub Settings → Pages → Source → select "GitHub Actions" → Save
+# After that this workflow runs fully automatically on every push to main.
 
 jobs:
   deploy:
@@ -23,11 +27,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
-        with:
-          enablement: true
 
       - name: Upload docs/ as Pages artifact
         uses: actions/upload-pages-artifact@v3
