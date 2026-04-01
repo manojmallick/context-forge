@@ -3365,19 +3365,31 @@ function watchMode(cwd, config) {
 // ---------------------------------------------------------------------------
 // Git hook installer
 // ---------------------------------------------------------------------------
-function installHook(cwd) {
+function installHook(cwd, scriptPath) {
   const hookDir = path.join(cwd, '.git', 'hooks');
   if (!fs.existsSync(hookDir)) {
     console.warn('[context-forge] .git/hooks not found — skipping hook install');
     return;
   }
   const hookPath = path.join(hookDir, 'post-commit');
-  const hookLine = '\nnode "$(git rev-parse --show-toplevel)/gen-context.js" --generate 2>/dev/null || true\n';
+  const resolvedScript = path.resolve(scriptPath);
+  const hookLine = `\nnode ${JSON.stringify(resolvedScript)} --generate 2>/dev/null || true\n`;
 
   if (fs.existsSync(hookPath)) {
     const existing = fs.readFileSync(hookPath, 'utf8');
-    if (existing.includes('gen-context.js')) {
+    const existingHookLines = existing.split('\n').filter((line) => line.includes('gen-context.js'));
+    if (existing.includes(hookLine.trim()) && existingHookLines.length === 1) {
       console.warn('[context-forge] post-commit hook already installed');
+      return;
+    }
+    if (existing.includes('gen-context.js')) {
+      const updated = existing
+        .split('\n')
+        .filter((line) => !line.includes('gen-context.js'))
+        .join('\n')
+        .replace(/\n+$/g, '\n');
+      fs.writeFileSync(hookPath, updated.replace(/\n?$/g, '') + hookLine);
+      console.warn('[context-forge] updated post-commit hook');
       return;
     }
     fs.appendFileSync(hookPath, hookLine);
@@ -3602,6 +3614,18 @@ function suggestTool(description) {
   return { tier, label: info.label, models: info.examples, costHint: info.costHint };
 }
 
+function resolveProjectRoot(startDir) {
+  try {
+    const gitRoot = execSync('git rev-parse --show-toplevel', {
+      cwd: startDir,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore'],
+    }).trim();
+    if (gitRoot) return gitRoot;
+  } catch (_) {}
+  return startDir;
+}
+
 function printHelp() {
   console.log(`
 ContextForge — gen-context.js v${VERSION}
@@ -3636,10 +3660,10 @@ Output: .github/copilot-instructions.md (default)
 // ---------------------------------------------------------------------------
 // MCP auto-registration
 // ---------------------------------------------------------------------------
-function registerMcp(cwd) {
+function registerMcp(cwd, scriptPath) {
   const serverEntry = {
     command: 'node',
-    args: [path.resolve(__dirname, 'gen-context.js'), '--mcp'],
+    args: [path.resolve(scriptPath), '--mcp'],
   };
 
   const targets = [
@@ -3669,7 +3693,13 @@ function registerMcp(cwd) {
 
 function main() {
   const args = process.argv.slice(2);
-  const cwd = process.cwd();
+  const invokedFrom = process.cwd();
+  const cwd = resolveProjectRoot(invokedFrom);
+  const scriptPath = process.argv[1] || path.join(invokedFrom, 'gen-context.js');
+
+  if (cwd !== invokedFrom) {
+    console.warn(`[context-forge] using project root: ${cwd}`);
+  }
 
   if (args.includes('--help') || args.includes('-h')) {
     printHelp();
@@ -3765,8 +3795,8 @@ function main() {
 
   if (args.includes('--setup')) {
     runGenerate(cwd, config, false);
-    installHook(cwd);
-    registerMcp(cwd);
+    installHook(cwd, scriptPath);
+    registerMcp(cwd, scriptPath);
     watchMode(cwd, config);
     return; // keep process alive for watch
   }
