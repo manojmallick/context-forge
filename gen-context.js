@@ -3311,14 +3311,15 @@ function writeClaude(content, cwd) {
 // ---------------------------------------------------------------------------
 // Report
 // ---------------------------------------------------------------------------
-function printReport(rawTokens, finalTokens, fileCount, droppedCount, asJson, budgetLimit) {
-  const reduction = rawTokens > 0 ? (100 - (finalTokens / rawTokens) * 100).toFixed(1) : 0;
+function printReport(inputTokens, finalTokens, fileCount, droppedCount, asJson, budgetLimit) {
+  const reduction = inputTokens > 0 ? (100 - (finalTokens / inputTokens) * 100).toFixed(1) : 0;
   const overBudget = finalTokens > (budgetLimit || 6000);
   if (asJson) {
     process.stdout.write(JSON.stringify({
       version: VERSION,
       timestamp: new Date().toISOString(),
-      rawTokens,
+      rawTokens: inputTokens,
+      inputTokens,
       finalTokens,
       fileCount,
       droppedCount,
@@ -3333,7 +3334,7 @@ function printReport(rawTokens, finalTokens, fileCount, droppedCount, asJson, bu
     console.log(`  version         : ${VERSION}`);
     console.log(`  files processed : ${fileCount}`);
     console.log(`  files dropped   : ${droppedCount}`);
-    console.log(`  raw tokens      : ~${rawTokens}`);
+    console.log(`  input tokens    : ~${inputTokens}`);
     console.log(`  output tokens   : ~${finalTokens}`);
     console.log(`  budget limit    : ${budgetLimit || 6000}`);
     console.log(`  reduction       : ${reduction}%`);
@@ -3432,7 +3433,7 @@ function runGenerate(cwd, config, reportMode, reportJson = false) {
   // Gather mtime and git-committed info
   const recentFiles = config.diffPriority ? getRecentlyCommittedFiles(cwd) : new Set();
 
-  let rawTokenTotal = 0;
+  let inputTokenTotal = 0;
   let fileEntries = [];
 
   for (const filePath of allFiles) {
@@ -3446,6 +3447,9 @@ function runGenerate(cwd, config, reportMode, reportJson = false) {
     let sigs = detectAndExtract(filePath, content, config.maxSigsPerFile);
     if (sigs.length === 0) continue;
 
+    // Baseline = estimated tokens of original source content for intuitive reduction stats.
+    inputTokenTotal += estimateTokens(content);
+
     if (config.secretScan) {
       const { scan } = __require('./src/security/scanner');
       const result = scan(sigs, filePath);
@@ -3455,7 +3459,6 @@ function runGenerate(cwd, config, reportMode, reportJson = false) {
       sigs = result.safe;
     }
 
-    rawTokenTotal += estimateTokens(sigs.join('\n'));
     let mtime = 0;
     try {
       mtime = fs.statSync(filePath).mtimeMs;
@@ -3495,7 +3498,7 @@ function runGenerate(cwd, config, reportMode, reportJson = false) {
   }
 
   if (reportMode || process.argv.includes('--report')) {
-    printReport(rawTokenTotal, finalTokens, beforeCount, droppedCount, reportJson, config.maxTokens);
+    printReport(inputTokenTotal, finalTokens, beforeCount, droppedCount, reportJson, config.maxTokens);
   }
 
   // Usage tracking (v0.9) — optional append-only NDJSON log
@@ -3507,7 +3510,7 @@ function runGenerate(cwd, config, reportMode, reportJson = false) {
         version: VERSION,
         fileCount: beforeCount,
         droppedCount,
-        rawTokens: rawTokenTotal,
+        rawTokens: inputTokenTotal,
         finalTokens,
         overBudget: finalTokens > config.maxTokens,
         budgetLimit: config.maxTokens,
@@ -3517,7 +3520,7 @@ function runGenerate(cwd, config, reportMode, reportJson = false) {
     }
   }
 
-  return { rawTokenTotal, finalTokens, fileCount: beforeCount, droppedCount };
+  return { inputTokenTotal, finalTokens, fileCount: beforeCount, droppedCount };
 }
 
 // ---------------------------------------------------------------------------
