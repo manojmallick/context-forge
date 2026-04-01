@@ -5,32 +5,16 @@
 
 ## src
 
+### src/map/route-table.js
+```
+module.exports = { analyze }
+function shouldSkipFile(rel)
+function analyze(files, cwd)
+```
+
 ### src/config/defaults.js
 ```
 module.exports = { DEFAULTS }
-```
-
-### src/health/scorer.js
-```
-module.exports = { score }
-function score(cwd)
-```
-
-### src/mcp/server.js
-```
-module.exports = { start }
-function respond(id, result)
-function respondError(id, code, message)
-function dispatch(msg, cwd)
-function start(cwd)
-```
-
-### src/tracking/logger.js
-```
-module.exports = { logRun, readLog, summarize }
-function logRun(entry, cwd)
-function readLog(cwd)
-function summarize(entries)
 ```
 
 ### src/config/loader.js
@@ -213,6 +197,12 @@ function formatCache(content)
 function formatCachePayload(content, model)
 ```
 
+### src/health/scorer.js
+```
+module.exports = { score }
+function score(cwd)
+```
+
 ### src/map/class-hierarchy.js
 ```
 module.exports = { analyze }
@@ -228,12 +218,6 @@ function detectCycles(graph)
 function analyze(files, cwd)
 ```
 
-### src/map/route-table.js
-```
-module.exports = { analyze }
-function analyze(files, cwd)
-```
-
 ### src/mcp/handlers.js
 ```
 module.exports = { readContext, searchSignatures, getMap, createCheckpoint, getRouting }
@@ -242,6 +226,15 @@ function searchSignatures(args, cwd)
 function getMap(args, cwd)
 function createCheckpoint(args, cwd)
 function getRouting(args, cwd)
+```
+
+### src/mcp/server.js
+```
+module.exports = { start }
+function respond(id, result)
+function respondError(id, code, message)
+function dispatch(msg, cwd)
+function start(cwd)
 ```
 
 ### src/mcp/tools.js
@@ -271,4 +264,12 @@ module.exports = { PATTERNS }
 ```
 module.exports = { scan }
 function scan(signatures, filePath)
+```
+
+### src/tracking/logger.js
+```
+module.exports = { logRun, readLog, summarize }
+function logRun(entry, cwd)
+function readLog(cwd)
+function summarize(entries)
 ```

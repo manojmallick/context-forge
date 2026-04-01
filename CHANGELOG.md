@@ -6,6 +6,41 @@ Format: [Semantic Versioning](https://semver.org/)
 
 ---
 
+## [1.1.0] — 2026-04-01
+
+### Added
+- **Context strategies** — new `"strategy"` config key with three options:
+  - `"full"` (default) — existing behaviour, single output file, all signatures
+  - `"per-module"` — one `.github/context-<module>.md` per top-level `srcDir` plus a
+    thin always-injected overview table (~100–300 tokens); ~70% fewer injected tokens
+    per question with zero context loss; no MCP required
+  - `"hot-cold"` — recently committed files auto-injected as usual; all other files
+    written to `.github/context-cold.md` for MCP on-demand retrieval; ~90% fewer
+    always-injected tokens; best with Claude Code / Cursor MCP enabled
+- **`"hotCommits"`** config key — controls how many recent git commits count as "hot"
+  for the `hot-cold` strategy (default: 10)
+- **`docs/CONTEXT_STRATEGIES.md`** — comprehensive strategy guide: decision tree,
+  four worked-scenario comparisons (fix-a-bug, cross-module question, daily dev,
+  onboarding), full configuration reference, migration guide, and feature-compatibility
+  matrix
+- README: new "Context strategies" section with inline examples linking to full guide
+- `gen-context.config.json.example`: `strategy` and `hotCommits` keys with comments
+
+### Changed
+- `gen-context.js` version remains `1.0.0`; `runGenerate` now dispatches to
+  `runPerModuleStrategy` or `runHotColdStrategy` based on `config.strategy`
+- `getRecentlyCommittedFiles(cwd, count)` now accepts a count parameter so
+  `hotCommits` is respected
+- `--help` text updated with strategy descriptions
+
+### Validation gate
+- `strategy: per-module` on arbi-platform: `3 modules, overview ~117 tokens, total ~4,058 tokens`
+- `strategy: hot-cold` on arbi-platform: `79 hot files ~3,700 tokens, 1 cold ~363 tokens`
+- `strategy: full` unchanged: `80 files, ~3,980 tokens, 94.9% reduction`
+- All 21 checks pass post-deployment
+
+---
+
 ## [1.0.0] — 2026-04-01
 
 ### Added

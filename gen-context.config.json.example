@@ -27,5 +27,14 @@
 
   "mcp": {
     "autoRegister": true
-  }
+  },
+
+  "_strategy_comment": "Context output strategy. Options: 'full' | 'per-module' | 'hot-cold'",
+  "_strategy_full":       "  full       — single file, all signatures, always injected (default)",
+  "_strategy_per_module": "  per-module — one .github/context-<module>.md per srcDir + thin overview",
+  "_strategy_hot_cold":   "  hot-cold   — recently changed files injected; rest in context-cold.md (MCP)",
+  "strategy": "full",
+
+  "_hotCommits_comment": "Only used by hot-cold strategy: how many recent commits count as 'hot'",
+  "hotCommits": 10
 }

@@ -195,6 +195,62 @@ CI acceptance rate gates, and Prometheus/Grafana dashboard setup.
 
 ---
 
+## Context strategies (v1.1)
+
+Reduce always-injected tokens by 70–90% by choosing how ContextForge splits its output.
+Set `"strategy"` in `gen-context.config.json`:
+
+| Strategy | Always-injected | Context lost? | Needs MCP? |
+|---|---|---|---|
+| `full` | ~4,000 tokens (all files) | No | No |
+| `per-module` | ~100–300 tokens (overview only) | No | No |
+| `hot-cold` | ~200–800 tokens (recent files only) | Cold files without MCP | Yes (for cold) |
+
+### `full` — default, works everywhere
+
+One file, all signatures, injected on every question. Use this when starting out or when
+cross-module questions are common.
+
+```json
+{ "strategy": "full" }
+```
+
+### `per-module` — one file per srcDir, no context lost
+
+One `.github/context-<module>.md` per top-level source directory, plus a tiny always-on
+overview table (~100–300 tokens). Load the relevant module file in your IDE context
+window for focused sessions. No MCP required.
+
+```json
+{ "strategy": "per-module" }
+```
+
+Output for a `["server", "web", "desktop"]` project:
+```
+.github/copilot-instructions.md   ← overview table, ~117 tokens (always-on)
+.github/context-server.md         ← server/ signatures, ~2,140 tokens
+.github/context-web.md            ← web/ signatures,    ~335 tokens
+.github/context-desktop.md        ← desktop/ signatures, ~1,583 tokens
+```
+
+### `hot-cold` — minimal injection, MCP for the rest
+
+Recently committed files are **hot** (auto-injected). Everything else is **cold**
+(written to `.github/context-cold.md`, retrieved via MCP only). Best ~90% token
+reduction when using Claude Code or Cursor with MCP enabled.
+
+```json
+{ "strategy": "hot-cold", "hotCommits": 10 }
+```
+
+**Requires MCP** — cold files are invisible to the model without it. Use `per-module`
+if MCP is not available.
+
+See [docs/CONTEXT_STRATEGIES.md](docs/CONTEXT_STRATEGIES.md) for the full guide:
+decision tree, scenario-by-scenario comparisons, migration steps, and config reference.
+
+---
+
 ## Prompt caching (v0.8)
 
 Reduce Anthropic API costs by ~60% using prompt cache. ContextForge writes a cache-ready
@@ -276,6 +332,7 @@ src/config/                   ← config loader + defaults
 test/fixtures/                ← one fixture per language
 test/expected/                ← expected extractor output
 test/run.js                   ← zero-dep test runner
+docs/CONTEXT_STRATEGIES.md    ← full/per-module/hot-cold strategy guide (v1.1)
 docs/ENTERPRISE_SETUP.md      ← enterprise & CI observability guide (v0.9)
 docs/REPOMIX_CACHE.md         ← prompt cache strategy guide (v0.8)
 docs/MODEL_ROUTING.md         ← model routing guide (v0.7)
