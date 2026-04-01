@@ -3092,10 +3092,8 @@ function buildFileList(cwd, config) {
 const _extractorCache = {};
 function getExtractor(name) {
   if (_extractorCache[name]) return _extractorCache[name];
-  const p = path.join(__dirname, 'src', 'extractors', `${name}.js`);
-  if (!fs.existsSync(p)) return null;
   try {
-    const mod = require(p);
+    const mod = __require(`./src/extractors/${name}`);
     _extractorCache[name] = mod;
     return mod;
   } catch (err) {
