@@ -321,6 +321,173 @@ test('--report --history --json outputs valid JSON', () => {
 });
 
 // ---------------------------------------------------------------------------
+// Unit tests — scorer.js strategy-aware health score (v1.4)
+// ---------------------------------------------------------------------------
+
+console.log('\nUnit tests — health scorer (strategy-aware)\n');
+
+const { score } = require('../../src/health/scorer');
+
+test('score() returns an object with required fields', () => {
+  withTempDir((dir) => {
+    const result = score(dir);
+    assert.ok(typeof result.score === 'number', 'score should be number');
+    assert.ok(['A', 'B', 'C', 'D'].includes(result.grade), 'grade should be A/B/C/D');
+    assert.ok(typeof result.strategy === 'string', 'strategy should be string');
+    assert.ok(typeof result.totalRuns === 'number', 'totalRuns should be number');
+    assert.ok(typeof result.overBudgetRuns === 'number', 'overBudgetRuns should be number');
+  });
+});
+
+test('score() returns strategy:"full" when no config file', () => {
+  withTempDir((dir) => {
+    const result = score(dir);
+    assert.strictEqual(result.strategy, 'full');
+  });
+});
+
+test('score() returns strategy:"hot-cold" when config sets it', () => {
+  withTempDir((dir) => {
+    fs.writeFileSync(
+      path.join(dir, 'gen-context.config.json'),
+      JSON.stringify({ strategy: 'hot-cold' }),
+      'utf8'
+    );
+    const result = score(dir);
+    assert.strictEqual(result.strategy, 'hot-cold');
+  });
+});
+
+test('score() returns strategy:"per-module" when config sets it', () => {
+  withTempDir((dir) => {
+    fs.writeFileSync(
+      path.join(dir, 'gen-context.config.json'),
+      JSON.stringify({ strategy: 'per-module' }),
+      'utf8'
+    );
+    const result = score(dir);
+    assert.strictEqual(result.strategy, 'per-module');
+  });
+});
+
+test('score() does NOT penalise low reduction for hot-cold strategy', () => {
+  withTempDir((dir) => {
+    // Set hot-cold config
+    fs.writeFileSync(
+      path.join(dir, 'gen-context.config.json'),
+      JSON.stringify({ strategy: 'hot-cold' }),
+      'utf8'
+    );
+    // Seed a usage log with 0% reduction (intentionally tiny hot output)
+    logRun({ rawTokens: 1000, finalTokens: 950, reductionPct: 5, overBudget: false }, dir);
+
+    const withHotCold = score(dir);
+
+    // Compare to full strategy with same reduction — full should lose 20 pts
+    const fullDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cf-obs-full-'));
+    try {
+      logRun({ rawTokens: 1000, finalTokens: 950, reductionPct: 5, overBudget: false }, fullDir);
+      const withFull = score(fullDir);
+      assert.ok(withHotCold.score >= withFull.score + 20,
+        `hot-cold (${withHotCold.score}) should score at least 20 pts higher than full (${withFull.score}) on same low reduction`
+      );
+    } finally {
+      fs.rmSync(fullDir, { recursive: true, force: true });
+    }
+  });
+});
+
+test('score() does NOT penalise low reduction for per-module strategy', () => {
+  withTempDir((dir) => {
+    fs.writeFileSync(
+      path.join(dir, 'gen-context.config.json'),
+      JSON.stringify({ strategy: 'per-module' }),
+      'utf8'
+    );
+    logRun({ rawTokens: 1000, finalTokens: 950, reductionPct: 5, overBudget: false }, dir);
+    const result = score(dir);
+    // Score should be 100 (no staleness, no over-budget, no reduction penalty)
+    assert.strictEqual(result.score, 100, `per-module should not lose reduction points, got ${result.score}`);
+  });
+});
+
+test('score() penalises low reduction for full strategy', () => {
+  withTempDir((dir) => {
+    // Default strategy (full), low reduction
+    logRun({ rawTokens: 1000, finalTokens: 950, reductionPct: 5, overBudget: false }, dir);
+    const result = score(dir);
+    // Should lose 20 pts for low reduction
+    assert.ok(result.score <= 80, `full strategy with 5% reduction should penalise, got ${result.score}`);
+  });
+});
+
+test('score() strategyFreshnessDays is null for full strategy', () => {
+  withTempDir((dir) => {
+    const result = score(dir);
+    assert.strictEqual(result.strategyFreshnessDays, null);
+  });
+});
+
+test('score() strategyFreshnessDays is null for hot-cold when context-cold.md absent', () => {
+  withTempDir((dir) => {
+    fs.writeFileSync(
+      path.join(dir, 'gen-context.config.json'),
+      JSON.stringify({ strategy: 'hot-cold' }),
+      'utf8'
+    );
+    const result = score(dir);
+    assert.strictEqual(result.strategyFreshnessDays, null,
+      'Should be null when context-cold.md does not exist');
+  });
+});
+
+test('score() strategyFreshnessDays is a number when context-cold.md exists (hot-cold)', () => {
+  withTempDir((dir) => {
+    fs.writeFileSync(
+      path.join(dir, 'gen-context.config.json'),
+      JSON.stringify({ strategy: 'hot-cold' }),
+      'utf8'
+    );
+    const ghDir = path.join(dir, '.github');
+    fs.mkdirSync(ghDir, { recursive: true });
+    fs.writeFileSync(path.join(ghDir, 'context-cold.md'), '# cold context\n', 'utf8');
+    const result = score(dir);
+    assert.ok(typeof result.strategyFreshnessDays === 'number',
+      `strategyFreshnessDays should be a number, got ${result.strategyFreshnessDays}`);
+    assert.ok(result.strategyFreshnessDays >= 0, 'strategyFreshnessDays should be >= 0');
+  });
+});
+
+test('score() grade is A when project is fully healthy', () => {
+  withTempDir((dir) => {
+    // No runs, no staleness, full strategy (defaults) → score = 100 → A
+    const result = score(dir);
+    assert.strictEqual(result.grade, 'A');
+    assert.strictEqual(result.score, 100);
+  });
+});
+
+test('score() never returns score outside 0-100', () => {
+  withTempDir((dir) => {
+    // Simulate worst-case: stale, low reduction, over-budget
+    logRun({ rawTokens: 100, finalTokens: 99, reductionPct: 1, overBudget: true }, dir);
+    logRun({ rawTokens: 100, finalTokens: 99, reductionPct: 1, overBudget: true }, dir);
+    // Write a stale context file
+    const ghDir = path.join(dir, '.github');
+    fs.mkdirSync(ghDir, { recursive: true });
+    // Use a file and manipulate its mtime via utimes to simulate 30-day staleness
+    const ctxFile = path.join(ghDir, 'copilot-instructions.md');
+    fs.writeFileSync(ctxFile, '# stale\n', 'utf8');
+    const thirtyDaysAgo = (Date.now() - 30 * 24 * 60 * 60 * 1000) / 1000;
+    fs.utimesSync(ctxFile, thirtyDaysAgo, thirtyDaysAgo);
+
+    const result = score(dir);
+    assert.ok(result.score >= 0, 'score should not go below 0');
+    assert.ok(result.score <= 100, 'score should not exceed 100');
+  });
+});
+
+// ---------------------------------------------------------------------------
 // Summary
 // ---------------------------------------------------------------------------
 
