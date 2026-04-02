@@ -2351,7 +2351,7 @@ __factories["./src/mcp/server"] = function(module, exports) {
   
   const SERVER_INFO = {
     name: 'context-forge',
-    version: '1.0.0',
+    version: '1.1.0',
     description: 'ContextForge MCP server — code signatures on demand',
   };
   
@@ -2986,7 +2986,7 @@ __factories["./src/tracking/logger"] = function(module, exports) {
 
 
 /**
- * ContextForge — gen-context.js v1.0.0
+ * ContextForge — gen-context.js v1.1.0
  * Zero-dependency AI context engine.
  * Runs with: node gen-context.js
  * No npm install required. Node 18+ built-ins only.
@@ -2997,7 +2997,7 @@ const path = require('path');
 const os = require('os');
 const { execSync } = require('child_process');
 
-const VERSION = '1.0.0';
+const VERSION = '1.1.0';
 const MARKER = '\n\n## Auto-generated signatures\n<!-- Updated by gen-context.js -->\n';
 
 // ---------------------------------------------------------------------------
@@ -3426,16 +3426,44 @@ function installHook(cwd, scriptPath) {
 function writeInitConfig(cwd) {
   const dest = path.join(cwd, 'gen-context.config.json');
   if (fs.existsSync(dest)) {
-    console.warn('[context-forge] gen-context.config.json already exists');
-    return;
-  }
-  const example = path.join(__dirname, 'gen-context.config.json.example');
-  if (fs.existsSync(example)) {
-    fs.copyFileSync(example, dest);
+    console.warn('[context-forge] gen-context.config.json already exists — skipping');
   } else {
-    fs.writeFileSync(dest, JSON.stringify(DEFAULTS, null, 2) + '\n');
+    const example = path.join(__dirname, 'gen-context.config.json.example');
+    if (fs.existsSync(example)) {
+      fs.copyFileSync(example, dest);
+    } else {
+      fs.writeFileSync(dest, JSON.stringify(DEFAULTS, null, 2) + '\n');
+    }
+    console.warn('[context-forge] wrote gen-context.config.json');
   }
-  console.warn('[context-forge] wrote gen-context.config.json');
+
+  // Also scaffold .contextignore if it does not already exist
+  const ignoreDest = path.join(cwd, '.contextignore');
+  if (fs.existsSync(ignoreDest)) {
+    console.warn('[context-forge] .contextignore already exists — skipping');
+  } else {
+    const ignoreContent = [
+      '# ContextForge ignore file — gitignore syntax',
+      '# Files and directories listed here are excluded from signature extraction.',
+      '# This file is union-merged with .repomixignore if present.',
+      '',
+      'node_modules/',
+      'dist/',
+      'build/',
+      'out/',
+      '.next/',
+      'coverage/',
+      'target/',
+      'vendor/',
+      '*.generated.*',
+      '*.pb.*',
+      '*_pb.*',
+      '*.min.js',
+      '*.min.css',
+    ].join('\n') + '\n';
+    fs.writeFileSync(ignoreDest, ignoreContent);
+    console.warn('[context-forge] wrote .contextignore');
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -3782,7 +3810,9 @@ Usage:
   node gen-context.js --suggest-tool "<task>" --json    Machine-readable tier recommendation
   node gen-context.js --health                          Print composite health score
   node gen-context.js --health --json                   Machine-readable health score
-  node gen-context.js --init                            Write example config file
+  node gen-context.js --diff                            Generate context for git-changed files only
+  node gen-context.js --diff --staged                   Generate context for staged files only
+  node gen-context.js --init                            Write example config + .contextignore scaffold
   node gen-context.js --help                            Show this message
   node gen-context.js --version                         Show version
 
