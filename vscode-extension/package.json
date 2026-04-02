@@ -1,0 +1,41 @@
+{
+  "name": "context-forge",
+  "displayName": "ContextForge",
+  "description": "Zero-dependency AI context engine — keeps copilot-instructions.md fresh automatically.",
+  "version": "1.5.0",
+  "publisher": "manojmallick",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": ["Other", "AI"],
+  "keywords": ["copilot", "ai-context", "token-reduction", "code-signatures", "claude", "cursor"],
+  "activationEvents": ["onStartupFinished"],
+  "main": "./src/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "contextforge.regenerate",
+        "title": "ContextForge: Regenerate Context"
+      },
+      {
+        "command": "contextforge.openContext",
+        "title": "ContextForge: Open Context File"
+      }
+    ],
+    "configuration": {
+      "title": "ContextForge",
+      "properties": {
+        "contextforge.scriptPath": {
+          "type": "string",
+          "default": "",
+          "description": "Absolute path to gen-context.js. Leave empty to auto-detect from workspace root."
+        }
+      }
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/manojmallick/context-forge.git"
+  },
+  "license": "MIT"
+}
