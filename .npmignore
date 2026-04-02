@@ -1,0 +1,42 @@
+# ContextForge — files excluded from npm publish
+# Only gen-context.js, gen-project-map.js, src/, README.md, LICENSE, CHANGELOG.md,
+# .contextignore.example, and gen-context.config.json.example are published.
+
+# Tests
+test/
+coverage/
+
+# Docs site and extended docs
+docs/
+
+# Dev tooling / scripts
+scripts/
+examples/
+
+# Editor / agent settings
+.claude/
+.cursor/
+.vscode/
+vscode-extension/
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# CI
+.github/workflows/
+.github/copilot-instructions.md
+
+# Project planning docs
+TIMELINE.md
+CONTRIBUTING.md
+CLAUDE.md
+paper/
+
+# Ignore files
+.contextignore
+.repomixignore
+
+# Config examples already included via files[] in package.json — exclude the project's own config
+gen-context.config.json
