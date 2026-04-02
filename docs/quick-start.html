@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Quick Start — ContextForge</title>
-<meta name="description" content="Get ContextForge running in under 2 minutes. One file download, zero npm install, instant 97% token reduction for your AI coding agent.">
-<meta property="og:title" content="ContextForge Quick Start — under 2 minutes to working">
+<title>Quick Start — SigMap</title>
+<meta name="description" content="Get SigMap running in under 2 minutes. One file download, zero npm install, instant 97% token reduction for your AI coding agent.">
+<meta property="og:title" content="SigMap Quick Start — under 2 minutes to working">
 <meta property="og:description" content="node gen-context.js. That's the entire install. Reduces AI context from 80K to 4K tokens automatically.">
-<meta property="og:url" content="https://manojmallick.github.io/context-forge/quick-start.html">
+<meta property="og:url" content="https://manojmallick.github.io/sigmap/quick-start.html">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="canonical" href="https://manojmallick.github.io/context-forge/quick-start.html">
+<link rel="canonical" href="https://manojmallick.github.io/sigmap/quick-start.html">
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=IBM+Plex+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <script>(function(){var r=document.documentElement;if(localStorage.getItem('cf-theme')==='light')r.classList.add('light');document.addEventListener('DOMContentLoaded',function(){document.querySelectorAll('.theme-toggle').forEach(function(b){b.addEventListener('click',function(){r.classList.toggle('light');localStorage.setItem('cf-theme',r.classList.contains('light')?'light':'dark');});});});})();</script>
 <style>
@@ -136,7 +136,7 @@ footer{background:var(--s1);border-top:1px solid var(--line);padding:32px 24px}
 <body>
 
 <nav>
-  <a class="nav-logo" href="index.html">context-forge</a>
+  <a class="nav-logo" href="index.html">sigmap</a>
   <div class="nav-links">
     <a href="quick-start.html" class="hide-sm active">Quick start</a>
     <a href="strategies.html" class="hide-sm">Strategies</a>
@@ -147,7 +147,7 @@ footer{background:var(--s1);border-top:1px solid var(--line);padding:32px 24px}
       <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
       <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
     </button>
-    <a href="https://github.com/manojmallick/context-forge" class="nav-gh" target="_blank">★ GitHub</a>
+    <a href="https://github.com/manojmallick/sigmap" class="nav-gh" target="_blank">★ GitHub</a>
   </div>
 </nav>
 
@@ -216,7 +216,7 @@ footer{background:var(--s1);border-top:1px solid var(--line);padding:32px 24px}
             <span class="term-title">your-project/</span>
           </div>
           <div class="term-body">
-            <div><span class="tc">$</span> <span class="tw">curl -O https://raw.githubusercontent.com/manojmallick/context-forge/main/gen-context.js</span></div>
+            <div><span class="tc">$</span> <span class="tw">curl -O https://raw.githubusercontent.com/manojmallick/sigmap/main/gen-context.js</span></div>
             <div><span class="ts">  % Total    % Received</span></div>
             <div><span class="ts">100  48.2K  100  48.2K  ←  single file, ~50KB</span></div>
           </div>
@@ -244,12 +244,12 @@ footer{background:var(--s1);border-top:1px solid var(--line);padding:32px 24px}
           <div class="term-body">
             <div><span class="tc">$</span> <span class="tw">node gen-context.js</span></div>
             <div>&nbsp;</div>
-            <div><span class="tk">[context-forge]</span> <span class="ts">scanning 247 files across src/ app/ lib/</span></div>
-            <div><span class="tk">[context-forge]</span> <span class="ts">extracted 1,842 signatures from 89 files</span></div>
-            <div><span class="tk">[context-forge]</span> <span class="ts">secret scan: clean (0 findings)</span></div>
-            <div><span class="tk">[context-forge]</span> <span class="tw">budget: 6,000 tokens target, using 3,847</span></div>
-            <div><span class="tk">[context-forge]</span> <span class="ts">✓ wrote .github/copilot-instructions.md</span></div>
-            <div><span class="tk">[context-forge]</span> <span class="ts">reduction: 82,400 → 3,847 tokens (95.3%)</span></div>
+            <div><span class="tk">[sigmap]</span> <span class="ts">scanning 247 files across src/ app/ lib/</span></div>
+            <div><span class="tk">[sigmap]</span> <span class="ts">extracted 1,842 signatures from 89 files</span></div>
+            <div><span class="tk">[sigmap]</span> <span class="ts">secret scan: clean (0 findings)</span></div>
+            <div><span class="tk">[sigmap]</span> <span class="tw">budget: 6,000 tokens target, using 3,847</span></div>
+            <div><span class="tk">[sigmap]</span> <span class="ts">✓ wrote .github/copilot-instructions.md</span></div>
+            <div><span class="tk">[sigmap]</span> <span class="ts">reduction: 82,400 → 3,847 tokens (95.3%)</span></div>
           </div>
         </div>
       </div>
@@ -274,9 +274,9 @@ footer{background:var(--s1);border-top:1px solid var(--line);padding:32px 24px}
           <div class="term-body">
             <div><span class="tc">$</span> <span class="tw">node gen-context.js --setup</span></div>
             <div>&nbsp;</div>
-            <div><span class="tk">[context-forge]</span> <span class="ts">✓ installed .git/hooks/post-commit</span></div>
-            <div><span class="tk">[context-forge]</span> <span class="ts">✓ watcher started on src/ app/ lib/</span></div>
-            <div><span class="tk">[context-forge]</span> <span class="ts">watching for changes...</span> <span class="tc">(Ctrl+C to stop)</span></div>
+            <div><span class="tk">[sigmap]</span> <span class="ts">✓ installed .git/hooks/post-commit</span></div>
+            <div><span class="tk">[sigmap]</span> <span class="ts">✓ watcher started on src/ app/ lib/</span></div>
+            <div><span class="tk">[sigmap]</span> <span class="ts">watching for changes...</span> <span class="tc">(Ctrl+C to stop)</span></div>
           </div>
         </div>
       </div>
@@ -301,7 +301,7 @@ footer{background:var(--s1);border-top:1px solid var(--line);padding:32px 24px}
     </div>
     <div class="term-body">
       <div><span class="tp">╔══════════════════════════════════╗</span></div>
-      <div><span class="tp">║   ContextForge Token Report       ║</span></div>
+      <div><span class="tp">║   SigMap Token Report       ║</span></div>
       <div><span class="tp">╚══════════════════════════════════╝</span></div>
       <div>&nbsp;</div>
       <div><span class="tc">Input</span>    <span class="tw">82,400 tokens</span>   <span class="tc">(full source)</span></div>
@@ -437,7 +437,7 @@ footer{background:var(--s1);border-top:1px solid var(--line);padding:32px 24px}
       <span class="term-title">node gen-context.js --help</span>
     </div>
     <div class="term-body">
-      <div><span class="tp">ContextForge v1.5.0</span></div>
+      <div><span class="tp">SigMap v1.5.0</span></div>
       <div>&nbsp;</div>
       <div><span class="tc">Usage:</span> <span class="tw">node gen-context.js [flag]</span></div>
       <div>&nbsp;</div>
@@ -451,7 +451,7 @@ footer{background:var(--s1);border-top:1px solid var(--line);padding:32px 24px}
       <div><span class="ts">  --diff --staged    </span><span class="tc">Generate context for staged files only</span></div>
       <div><span class="ts">  --health           </span><span class="tc">Composite 0-100 health score (grade A-D)</span></div>
       <div><span class="ts">  --suggest-tool     </span><span class="tc">Recommend fast/balanced/powerful model tier</span></div>
-      <div><span class="ts">  --track            </span><span class="tc">Log run metrics to .context-forge/runs.jsonl</span></div>
+      <div><span class="ts">  --track            </span><span class="tc">Log run metrics to .sigmap/runs.jsonl</span></div>
       <div><span class="ts">  --init             </span><span class="tc">Write gen-context.config.json.example</span></div>
       <div><span class="ts">  --version          </span><span class="tc">Print version string</span></div>
       <div><span class="ts">  --help             </span><span class="tc">Show this message</span></div>
@@ -477,8 +477,8 @@ footer{background:var(--s1);border-top:1px solid var(--line);padding:32px 24px}
     </a>
     <a class="next-card" href="repomix.html">
       <div class="next-card-ey">Integration guide</div>
-      <div class="next-card-title">Repomix + ContextForge</div>
-      <div class="next-card-desc">Stack both tools for the two-layer caching strategy. ContextForge for daily; Repomix for deep sessions.</div>
+      <div class="next-card-title">Repomix + SigMap</div>
+      <div class="next-card-desc">Stack both tools for the two-layer caching strategy. SigMap for daily; Repomix for deep sessions.</div>
     </a>
     <a class="next-card" href="roadmap.html">
       <div class="next-card-ey">v0.1 → v1.5</div>
@@ -490,21 +490,21 @@ footer{background:var(--s1);border-top:1px solid var(--line);padding:32px 24px}
 
 <footer>
   <div class="footer-inner">
-    <span class="footer-logo">context-forge v1.5.0</span>
+    <span class="footer-logo">sigmap v1.5.0</span>
     <div class="footer-links">
       <a href="strategies.html">Strategies</a>
       <a href="languages.html">Languages</a>
       <a href="roadmap.html">Roadmap</a>
       <a href="repomix.html">Repomix</a>
-      <a href="https://github.com/manojmallick/context-forge">GitHub</a>
-      <a href="https://github.com/manojmallick/context-forge/blob/main/CONTRIBUTING.md">Contributing</a>
-      <a href="https://github.com/manojmallick/context-forge/blob/main/CHANGELOG.md">Changelog</a>
+      <a href="https://github.com/manojmallick/sigmap">GitHub</a>
+      <a href="https://github.com/manojmallick/sigmap/blob/main/CONTRIBUTING.md">Contributing</a>
+      <a href="https://github.com/manojmallick/sigmap/blob/main/CHANGELOG.md">Changelog</a>
     </div>
     <span class="footer-mit">MIT © 2026 Manoj Mallick</span>
   </div>
 </footer>
 
-<!-- ContextForge docs search — v1.5 -->
+<!-- SigMap docs search — v1.5 -->
 <style>
 .cf-search-btn{background:none;border:1px solid var(--line2);border-radius:7px;padding:0 10px;height:32px;cursor:pointer;display:flex;align-items:center;gap:6px;color:var(--t2);font-size:12px;font-family:inherit;transition:.15s;flex-shrink:0}
 .cf-search-btn:hover{border-color:var(--p);color:var(--pd)}

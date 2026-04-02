@@ -1,6 +1,6 @@
 {
-  "name": "context-forge",
-  "displayName": "ContextForge",
+  "name": "sigmap",
+  "displayName": "SigMap",
   "description": "Zero-dependency AI context engine — keeps copilot-instructions.md fresh automatically.",
   "version": "1.5.0",
   "publisher": "manojmallick",
@@ -14,18 +14,18 @@
   "contributes": {
     "commands": [
       {
-        "command": "contextforge.regenerate",
-        "title": "ContextForge: Regenerate Context"
+        "command": "sigmap.regenerate",
+        "title": "SigMap: Regenerate Context"
       },
       {
-        "command": "contextforge.openContext",
-        "title": "ContextForge: Open Context File"
+        "command": "sigmap.openContext",
+        "title": "SigMap: Open Context File"
       }
     ],
     "configuration": {
-      "title": "ContextForge",
+      "title": "SigMap",
       "properties": {
-        "contextforge.scriptPath": {
+        "sigmap.scriptPath": {
           "type": "string",
           "default": "",
           "description": "Absolute path to gen-context.js. Leave empty to auto-detect from workspace root."
@@ -35,7 +35,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/manojmallick/context-forge.git"
+    "url": "https://github.com/manojmallick/sigmap.git"
   },
   "license": "MIT"
 }

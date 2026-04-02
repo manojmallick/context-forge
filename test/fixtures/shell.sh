@@ -1,5 +1,5 @@
 #!/bin/bash
-# Setup script for ContextForge
+# Setup script for SigMap
 
 set -e
 

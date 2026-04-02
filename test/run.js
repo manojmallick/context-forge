@@ -2,7 +2,7 @@
 'use strict';
 
 /**
- * ContextForge test runner — zero dependencies.
+ * SigMap test runner — zero dependencies.
  * Usage:
  *   node test/run.js           — run all extractor tests
  *   node test/run.js typescript — run one language

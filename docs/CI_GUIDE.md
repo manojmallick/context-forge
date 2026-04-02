@@ -2,11 +2,11 @@
 
 ## Overview
 
-ContextForge integrates into CI to keep your AI context fresh automatically.
+SigMap integrates into CI to keep your AI context fresh automatically.
 Run both tools on every push so Copilot and Claude always have an up-to-date
 understanding of your codebase.
 
-*"ContextForge for daily always-on context; Repomix for deep one-off sessions — use both."*
+*"SigMap for daily always-on context; Repomix for deep one-off sessions — use both."*
 
 ---
 
@@ -18,7 +18,7 @@ Copy `examples/github-action.yml` into `.github/workflows/contextforge.yml`:
 mkdir -p .github/workflows
 cp examples/github-action.yml .github/workflows/contextforge.yml
 git add .github/workflows/contextforge.yml
-git commit -m "ci: add ContextForge auto-update workflow"
+git commit -m "ci: add SigMap auto-update workflow"
 ```
 
 The workflow runs on every push to `main`/`master` and nightly at 02:00 UTC.
@@ -42,7 +42,7 @@ infinite loops.
 
 ### Auto-detection
 
-ContextForge v0.5+ automatically detects packages in standard monorepo layouts:
+SigMap v0.5+ automatically detects packages in standard monorepo layouts:
 
 ```
 packages/*/package.json    ← npm/yarn/pnpm workspaces
@@ -95,7 +95,7 @@ Add a `--monorepo` step to your workflow:
 
 ## Excluding files from context
 
-### `.contextignore` (ContextForge-specific)
+### `.contextignore` (SigMap-specific)
 
 ```gitignore
 # Exclude legacy and generated code
@@ -111,7 +111,7 @@ test/fixtures/large-*
 ### `.repomixignore` (shared with Repomix)
 
 ```gitignore
-# Works for both ContextForge and Repomix
+# Works for both SigMap and Repomix
 node_modules/
 dist/
 build/
@@ -187,7 +187,7 @@ bash scripts/ci-update.sh --format cache --json
 Add a health check step to catch degradation before it affects acceptance rate:
 
 ```yaml
-- name: ContextForge health check
+- name: SigMap health check
   run: node gen-context.js --health --json
   # Prints score/grade/staleness; use --json to capture for dashboards
 ```

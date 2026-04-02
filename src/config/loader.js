@@ -24,7 +24,7 @@ function loadConfig(cwd) {
     const raw = fs.readFileSync(configPath, 'utf8');
     userConfig = JSON.parse(raw);
   } catch (err) {
-    console.warn(`[context-forge] config parse error in ${configPath}: ${err.message}`);
+    console.warn(`[sigmap] config parse error in ${configPath}: ${err.message}`);
     return deepClone(DEFAULTS);
   }
 
@@ -32,7 +32,7 @@ function loadConfig(cwd) {
   for (const key of Object.keys(userConfig)) {
     if (key.startsWith('_')) continue; // allow _comment etc.
     if (!KNOWN_KEYS.has(key)) {
-      console.warn(`[context-forge] unknown config key: "${key}" (ignored)`);
+      console.warn(`[sigmap] unknown config key: "${key}" (ignored)`);
     }
   }
 

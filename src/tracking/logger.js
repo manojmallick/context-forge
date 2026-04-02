@@ -1,7 +1,7 @@
 'use strict';
 
 /**
- * ContextForge usage logger (v0.9)
+ * SigMap usage logger (v0.9)
  *
  * Writes an append-only newline-delimited JSON (NDJSON) log at
  *   .context/usage.ndjson
@@ -47,7 +47,7 @@ function logRun(entry, cwd) {
     fs.appendFileSync(logPath, JSON.stringify(record) + '\n', 'utf8');
   } catch (err) {
     // Never crash the main process — tracking is optional
-    process.stderr.write(`[context-forge] tracking: could not write log: ${err.message}\n`);
+    process.stderr.write(`[sigmap] tracking: could not write log: ${err.message}\n`);
   }
 }
 

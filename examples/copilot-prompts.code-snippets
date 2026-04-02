@@ -1,5 +1,5 @@
 {
-  "ContextForge: Start session": {
+  "SigMap: Start session": {
     "prefix": "cf-start",
     "body": [
       "I'm starting a new coding session on **${1:feature/bug/task}**.",
@@ -14,7 +14,7 @@
     "description": "Session start: load full context and get orientation"
   },
 
-  "ContextForge: Checkpoint": {
+  "SigMap: Checkpoint": {
     "prefix": "cf-checkpoint",
     "body": [
       "Create a session checkpoint using the `create_checkpoint` MCP tool with note: \"${1:brief description of current state}\".",
@@ -28,7 +28,7 @@
     "description": "Create a mid-session checkpoint with state summary"
   },
 
-  "ContextForge: Read full context": {
+  "SigMap: Read full context": {
     "prefix": "cf-context",
     "body": [
       "Use the `read_context` MCP tool (no arguments) to load all code signatures for this project.",
@@ -38,7 +38,7 @@
     "description": "Load the complete project signature context"
   },
 
-  "ContextForge: Read specific module": {
+  "SigMap: Read specific module": {
     "prefix": "cf-module",
     "body": [
       "Use the `read_context` MCP tool with `{ \"module\": \"${1:src/path/to/module}\" }` to load signatures for that module only.",
@@ -47,7 +47,7 @@
     "description": "Load context for a specific module or subdirectory"
   },
 
-  "ContextForge: Search signatures": {
+  "SigMap: Search signatures": {
     "prefix": "cf-search",
     "body": [
       "Use the `search_signatures` MCP tool with `{ \"query\": \"${1:function or class name}\" }` to find all matching signatures across the codebase.",
@@ -56,7 +56,7 @@
     "description": "Search for a function, class, or method by keyword"
   },
 
-  "ContextForge: Get import graph": {
+  "SigMap: Get import graph": {
     "prefix": "cf-map-imports",
     "body": [
       "Use the `get_map` MCP tool with `{ \"type\": \"imports\" }` to display the project dependency graph.",
@@ -66,7 +66,7 @@
     "description": "Show the import/dependency graph from PROJECT_MAP.md"
   },
 
-  "ContextForge: Get class hierarchy": {
+  "SigMap: Get class hierarchy": {
     "prefix": "cf-map-classes",
     "body": [
       "Use the `get_map` MCP tool with `{ \"type\": \"classes\" }` to display the class inheritance and implementation hierarchy.",
@@ -75,7 +75,7 @@
     "description": "Show class hierarchy (extends / implements) from PROJECT_MAP.md"
   },
 
-  "ContextForge: Get route table": {
+  "SigMap: Get route table": {
     "prefix": "cf-map-routes",
     "body": [
       "Use the `get_map` MCP tool with `{ \"type\": \"routes\" }` to display all HTTP routes defined in this project.",
@@ -84,7 +84,7 @@
     "description": "Show HTTP route table from PROJECT_MAP.md"
   },
 
-  "ContextForge: Debug session": {
+  "SigMap: Debug session": {
     "prefix": "cf-debug",
     "body": [
       "I'm debugging an issue in **${1:module/file}**.",
@@ -99,7 +99,7 @@
     "description": "Structured debug session with context loading"
   },
 
-  "ContextForge: Write PR description": {
+  "SigMap: Write PR description": {
     "prefix": "cf-pr",
     "body": [
       "Generate a pull request description for the changes I've made to **${1:list of files/modules}**.",
@@ -114,7 +114,7 @@
     "description": "Generate a PR description informed by context"
   },
 
-  "ContextForge: Write tests": {
+  "SigMap: Write tests": {
     "prefix": "cf-test",
     "body": [
       "Write unit tests for **${1:function or class name}** in `${2:file path}`.",
@@ -129,7 +129,7 @@
     "description": "Write tests for a function or class with context"
   },
 
-  "ContextForge: Refactor": {
+  "SigMap: Refactor": {
     "prefix": "cf-refactor",
     "body": [
       "I want to refactor **${1:function/class/module}** to improve ${2:readability/performance/testability}.",
@@ -143,7 +143,7 @@
     "description": "Context-aware refactoring session"
   },
 
-  "ContextForge: Code review": {
+  "SigMap: Code review": {
     "prefix": "cf-review",
     "body": [
       "Review the code I'm about to paste (or in `${1:file path}`) for:",
@@ -158,7 +158,7 @@
     "description": "Structured code review with OWASP and pattern checks"
   },
 
-  "ContextForge: New feature": {
+  "SigMap: New feature": {
     "prefix": "cf-feature",
     "body": [
       "I need to implement **${1:feature name}**.",
@@ -175,7 +175,7 @@
     "description": "Structured new feature implementation with context"
   },
 
-  "ContextForge: Performance audit": {
+  "SigMap: Performance audit": {
     "prefix": "cf-perf",
     "body": [
       "Audit `${1:module or function}` for performance issues.",
@@ -190,7 +190,7 @@
     "description": "Performance audit with context-informed analysis"
   },
 
-  "ContextForge: Security scan": {
+  "SigMap: Security scan": {
     "prefix": "cf-security",
     "body": [
       "Perform a security review of `${1:file or module}` focused on OWASP Top 10:",
@@ -207,7 +207,7 @@
     "description": "OWASP-structured security review"
   },
 
-  "ContextForge: Generate docs": {
+  "SigMap: Generate docs": {
     "prefix": "cf-docs",
     "body": [
       "Generate documentation for **${1:function/class/module}**.",
@@ -222,7 +222,7 @@
     "description": "Generate documentation from signatures"
   },
 
-  "ContextForge: Explain codebase": {
+  "SigMap: Explain codebase": {
     "prefix": "cf-explain",
     "body": [
       "Explain how **${1:module/system/flow}** works to someone who is new to this codebase.",
@@ -236,7 +236,7 @@
     "description": "Explain a part of the codebase to a newcomer"
   },
 
-  "ContextForge: Migration guide": {
+  "SigMap: Migration guide": {
     "prefix": "cf-migrate",
     "body": [
       "I need to migrate **${1:library/pattern/API}** from `${2:old version/approach}` to `${3:new version/approach}`.",
@@ -249,7 +249,7 @@
     "description": "Context-aware migration guide for library or API changes"
   },
 
-  "ContextForge: End session": {
+  "SigMap: End session": {
     "prefix": "cf-end",
     "body": [
       "Create a final session checkpoint using `create_checkpoint { \"note\": \"${1:session summary}\" }`.",

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# ci-update.sh — ContextForge CI helper
+# ci-update.sh — SigMap CI helper
 #
 # Regenerates AI context signatures and optionally fails the build if the
 # token budget is exceeded. Designed for use in CI pipelines.

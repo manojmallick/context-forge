@@ -8,7 +8,7 @@
 
 ## Overview
 
-ContextForge ships three observability features from v0.9:
+SigMap ships three observability features from v0.9:
 
 | Feature | Command | Output |
 |---|---|---|
@@ -77,7 +77,7 @@ jobs:
       - name: Upload context artifact
         uses: actions/upload-artifact@v4
         with:
-          name: context-forge-output
+          name: sigmap-output
           path: |
             .github/copilot-instructions.md
             .github/copilot-instructions.cache.json
@@ -146,7 +146,7 @@ grep '"overBudget":true' .context/usage.ndjson
 
 ```bash
 node gen-context.js --report --history
-# [context-forge] usage history:
+# [sigmap] usage history:
 #   total runs      : 42
 #   avg reduction   : 91.8%
 #   avg tokens out  : ~3280
@@ -176,7 +176,7 @@ To keep it local:
 ## 3 — GitHub Enterprise acceptance rate tracking
 
 GitHub Enterprise provides Copilot suggestion acceptance rates via the REST API.
-Use this to measure whether ContextForge is actually improving suggestions.
+Use this to measure whether SigMap is actually improving suggestions.
 
 ### Get acceptance rate via API
 
@@ -212,9 +212,9 @@ curl -s \
 
 | Scenario | Expected rate |
 |---|---|
-| Without ContextForge | ~26% |
-| With ContextForge (fresh context) | ≥32% |
-| With ContextForge + stale context (>1 week) | ~28% |
+| Without SigMap | ~26% |
+| With SigMap (fresh context) | ≥32% |
+| With SigMap + stale context (>1 week) | ~28% |
 
 If the rate drops below 30%, run `node gen-context.js` to regenerate context.
 
@@ -249,7 +249,7 @@ jobs:
               headers: {
                 'Authorization': 'Bearer ' + process.env.GITHUB_TOKEN,
                 'Accept': 'application/vnd.github+json',
-                'User-Agent': 'context-forge-ci'
+                'User-Agent': 'sigmap-ci'
               }
             };
             https.get(options, (res) => {
@@ -284,11 +284,11 @@ For air-gapped or on-premise environments:
 
 ```bash
 # Install on self-hosted runner (no npm needed)
-git clone https://github.com/your-org/context-forge /opt/context-forge
+git clone https://github.com/your-org/sigmap /opt/sigmap
 # Or copy just gen-context.js to the project
 
 # Add to runner environment
-echo 'alias gen-context="node /opt/context-forge/gen-context.js"' >> ~/.bashrc
+echo 'alias gen-context="node /opt/sigmap/gen-context.js"' >> ~/.bashrc
 
 # Pre-commit hook (global git config)
 git config --global core.hooksPath /opt/git-hooks
@@ -314,7 +314,7 @@ REPORT=$(node gen-context.js --report --json)
 FINAL_TOKENS=$(echo "$REPORT" | node -e "process.stdin.resume();let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>console.log(JSON.parse(d).finalTokens))")
 REDUCTION=$(echo "$REPORT" | node -e "process.stdin.resume();let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>console.log(JSON.parse(d).reductionPct))")
 
-cat <<PROM | curl --data-binary @- http://pushgateway:9091/metrics/job/context-forge
+cat <<PROM | curl --data-binary @- http://pushgateway:9091/metrics/job/sigmap
 # TYPE context_forge_final_tokens gauge
 context_forge_final_tokens{repo="${GITHUB_REPOSITORY}"} ${FINAL_TOKENS}
 # TYPE context_forge_reduction_pct gauge
@@ -344,7 +344,7 @@ node gen-context.js --health --json
 Add a health gate to CI to catch degradation early:
 
 ```yaml
-- name: ContextForge health check
+- name: SigMap health check
   run: |
     HEALTH=$(node gen-context.js --health --json)
     SCORE=$(echo "$HEALTH" | node -e "process.stdin.resume();let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>console.log(JSON.parse(d).score))")
@@ -373,4 +373,4 @@ See [examples/self-healing-github-action.yml](../examples/self-healing-github-ac
 - [docs/CI_GUIDE.md](CI_GUIDE.md) — CI integration and monorepo setup
 - [docs/SESSION_DISCIPLINE.md](SESSION_DISCIPLINE.md) — session workflow
 
-> *ContextForge for daily always-on context; Repomix for deep one-off sessions — use both.*
+> *SigMap for daily always-on context; Repomix for deep one-off sessions — use both.*

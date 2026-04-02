@@ -1,4 +1,4 @@
-# Contributing to ContextForge
+# Contributing to SigMap
 
 ## Adding a language extractor
 

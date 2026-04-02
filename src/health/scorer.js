@@ -1,7 +1,7 @@
 'use strict';
 
 /**
- * ContextForge health scorer.
+ * SigMap health scorer.
  *
  * Computes a composite 0-100 health score for the current project by combining:
  *   1. Days since context file was last regenerated  (staleness penalty ≤ 30 pts)

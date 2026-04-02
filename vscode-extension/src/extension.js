@@ -1,12 +1,12 @@
 'use strict';
 
 /**
- * ContextForge VS Code Extension
+ * SigMap VS Code Extension
  *
  * Features:
  *  - Status bar: shows health grade (A/B/C/D) and time since last regen
- *  - Command: ContextForge: Regenerate Context  (runs node gen-context.js)
- *  - Command: ContextForge: Open Context File
+ *  - Command: SigMap: Regenerate Context  (runs node gen-context.js)
+ *  - Command: SigMap: Open Context File
  *  - Notification: when copilot-instructions.md is > 24 h stale
  *
  * Zero runtime dependencies — uses only the VS Code API.
@@ -36,7 +36,7 @@ function workspaceRoot() {
 
 /**
  * Resolve the path to gen-context.js.
- * Uses contextforge.scriptPath setting if set; otherwise looks in workspace root.
+ * Uses sigmap.scriptPath setting if set; otherwise looks in workspace root.
  */
 function resolveScript(root) {
   const cfg = vscode.workspace.getConfiguration('contextforge');
@@ -104,8 +104,8 @@ function formatAge(daysSince) {
 
 function createStatusBarItem() {
   const item = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
-  item.command = 'contextforge.regenerate';
-  item.tooltip = 'ContextForge — click to regenerate context';
+  item.command = 'sigmap.regenerate';
+  item.tooltip = 'SigMap — click to regenerate context';
   return item;
 }
 
@@ -122,7 +122,7 @@ async function updateStatusBar(statusBar) {
 
   if (!status) {
     statusBar.text = '$(file-code) cf: no context';
-    statusBar.tooltip = 'ContextForge: no context file found. Run: node gen-context.js';
+    statusBar.tooltip = 'SigMap: no context file found. Run: node gen-context.js';
     statusBar.show();
     return;
   }
@@ -130,7 +130,7 @@ async function updateStatusBar(statusBar) {
   const icon = GRADE_ICONS[status.grade] || GRADE_ICONS.A;
   const age = formatAge(status.daysSince);
   statusBar.text = `$(file-code) cf: ${icon} ${age}`;
-  statusBar.tooltip = `ContextForge health: ${status.grade} (${status.score}/100)\nLast regenerated: ${age}\nClick to regenerate`;
+  statusBar.tooltip = `SigMap health: ${status.grade} (${status.score}/100)\nLast regenerated: ${age}\nClick to regenerate`;
   statusBar.show();
 }
 
@@ -157,7 +157,7 @@ async function checkStaleContext(context, root, scriptPath) {
 
   const daysOld = Math.round(hoursSince / 24);
   const choice = await vscode.window.showInformationMessage(
-    `ContextForge: context file is ${daysOld} day${daysOld !== 1 ? 's' : ''} old. Regenerate now?`,
+    `SigMap: context file is ${daysOld} day${daysOld !== 1 ? 's' : ''} old. Regenerate now?`,
     'Regenerate',
     'Not now',
     "Don't show again"
@@ -174,19 +174,19 @@ async function checkStaleContext(context, root, scriptPath) {
 
 async function runRegenerate(root, scriptPath) {
   if (!root) {
-    vscode.window.showWarningMessage('ContextForge: no workspace folder open.');
+    vscode.window.showWarningMessage('SigMap: no workspace folder open.');
     return;
   }
   if (!scriptPath) {
     vscode.window.showWarningMessage(
-      'ContextForge: gen-context.js not found. Set contextforge.scriptPath or copy gen-context.js to your project root.'
+      'SigMap: gen-context.js not found. Set sigmap.scriptPath or copy gen-context.js to your project root.'
     );
     return;
   }
 
-  const terminal = vscode.window.createTerminal({ name: 'ContextForge', cwd: root });
+  const terminal = vscode.window.createTerminal({ name: 'SigMap', cwd: root });
   terminal.show(true); // show but don't steal focus
-  terminal.sendText(`node "${scriptPath}" && echo "[ContextForge] done"`);
+  terminal.sendText(`node "${scriptPath}" && echo "[SigMap] done"`);
 }
 
 // ── Activation ────────────────────────────────────────────────────────────────
@@ -211,7 +211,7 @@ async function activate(context) {
 
   // Command: regenerate
   context.subscriptions.push(
-    vscode.commands.registerCommand('contextforge.regenerate', async () => {
+    vscode.commands.registerCommand('sigmap.regenerate', async () => {
       const root = workspaceRoot();
       const scriptPath = resolveScript(root);
       await runRegenerate(root, scriptPath);
@@ -220,15 +220,15 @@ async function activate(context) {
 
   // Command: open context file
   context.subscriptions.push(
-    vscode.commands.registerCommand('contextforge.openContext', async () => {
+    vscode.commands.registerCommand('sigmap.openContext', async () => {
       const root = workspaceRoot();
       if (!root) {
-        vscode.window.showWarningMessage('ContextForge: no workspace folder open.');
+        vscode.window.showWarningMessage('SigMap: no workspace folder open.');
         return;
       }
       const ctxPath = path.join(root, CONTEXT_FILE);
       if (!fs.existsSync(ctxPath)) {
-        vscode.window.showWarningMessage('ContextForge: no context file found. Run: node gen-context.js');
+        vscode.window.showWarningMessage('SigMap: no context file found. Run: node gen-context.js');
         return;
       }
       const uri = vscode.Uri.file(ctxPath);

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * ContextForge Slack context-bot — zero npm dependencies.
+ * SigMap Slack context-bot — zero npm dependencies.
  *
  * Posts a daily context-freshness reminder + checkpoint summary
  * to a Slack channel via an Incoming Webhook URL.
@@ -106,7 +106,7 @@ function buildPayload(ctx, git) {
     : '';
 
   const text = [
-    `${greeting}:brain: *ContextForge daily reminder* — *${PROJECT_NAME}*`,
+    `${greeting}:brain: *SigMap daily reminder* — *${PROJECT_NAME}*`,
     `>*Date:* ${today}`,
     `>*Branch:* \`${git.branch}\`  |  *Last commit:* ${git.lastCommit}`,
     uncommittedNote,

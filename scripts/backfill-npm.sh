@@ -25,7 +25,7 @@ set -euo pipefail
 
 # ── Configuration ─────────────────────────────────────────────────────────────
 
-PACKAGE_NAME="context-forge"
+PACKAGE_NAME="sigmap"
 LATEST_TAG="v1.5.0"    # The tag that should occupy the `latest` dist-tag
 
 # Tags in ascending order — adjust if you add more historical tags.
@@ -103,7 +103,7 @@ fi
 
 echo ""
 echo "╔══════════════════════════════════════════════════════════╗"
-echo "║        context-forge — npm backfill publisher            ║"
+echo "║        sigmap — npm backfill publisher            ║"
 echo "╚══════════════════════════════════════════════════════════╝"
 echo ""
 echo "  Package  : $PACKAGE_NAME"

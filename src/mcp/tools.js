@@ -1,7 +1,7 @@
 'use strict';
 
 /**
- * MCP tool definitions for ContextForge.
+ * MCP tool definitions for SigMap.
  * Three tools: read_context, search_signatures, get_map.
  */
 

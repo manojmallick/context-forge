@@ -1,8 +1,8 @@
 {
   "_comment": "Claude Code settings — both MCP servers configured. Copy to .claude/settings.json in your project root.",
   "mcpServers": {
-    "context-forge": {
-      "_comment": "ContextForge: fast always-on code signatures (~200-4K tokens per call)",
+    "sigmap": {
+      "_comment": "SigMap: fast always-on code signatures (~200-4K tokens per call)",
       "command": "node",
       "args": ["/absolute/path/to/your/project/gen-context.js", "--mcp"]
     },

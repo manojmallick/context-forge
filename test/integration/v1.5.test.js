@@ -35,21 +35,21 @@ function test(name, fn) {
 
 console.log('\nnpm package integrity\n');
 
-test('package.json has name "context-forge"', () => {
+test('package.json has name "sigmap"', () => {
   const pkg = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8'));
-  assert.strictEqual(pkg.name, 'context-forge');
+  assert.strictEqual(pkg.name, 'sigmap');
 });
 
-test('package.json bin includes "context-forge" and "gen-context" entries', () => {
+test('package.json bin includes "sigmap" and "gen-context" entries', () => {
   const pkg = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8'));
   assert.ok(pkg.bin, 'Should have bin field');
-  assert.ok(pkg.bin['context-forge'], 'Should have context-forge bin');
+  assert.ok(pkg.bin['sigmap'], 'Should have sigmap bin');
   assert.ok(pkg.bin['gen-context'], 'Should have gen-context bin');
 });
 
 test('package.json bin entries point to gen-context.js', () => {
   const pkg = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8'));
-  assert.ok(pkg.bin['context-forge'].includes('gen-context.js'), 'context-forge bin should point to gen-context.js');
+  assert.ok(pkg.bin['sigmap'].includes('gen-context.js'), 'sigmap bin should point to gen-context.js');
 });
 
 test('package.json has engines.node >= 18', () => {
@@ -122,7 +122,7 @@ test('vscode-extension/src/extension.js exists', () => {
 
 test('extension manifest has correct name', () => {
   const pkg = JSON.parse(fs.readFileSync(path.join(ROOT, 'vscode-extension', 'package.json'), 'utf8'));
-  assert.strictEqual(pkg.name, 'context-forge');
+  assert.strictEqual(pkg.name, 'sigmap');
 });
 
 test('extension manifest declares contextforge.regenerate command', () => {
@@ -248,7 +248,7 @@ test('docs search is zero external dependencies (no script src)', () => {
   DOC_PAGES.forEach((page) => {
     const content = fs.readFileSync(path.join(ROOT, page), 'utf8');
     // The search block should not load any external JS
-    const searchBlock = content.split('ContextForge docs search')[1] || '';
+    const searchBlock = content.split('SigMap docs search')[1] || '';
     const externalSrc = searchBlock.match(/<script[^>]*src=/);
     assert.ok(!externalSrc, `${page} search block should have no external script src`);
   });

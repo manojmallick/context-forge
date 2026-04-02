@@ -1,4 +1,4 @@
-name: ContextForge — Update AI Context
+name: SigMap — Update AI Context
 
 on:
   push:
@@ -11,10 +11,10 @@ on:
 
 jobs:
   # ─────────────────────────────────────────────────────────────────
-  # Job 1: ContextForge — generate always-on compact context
+  # Job 1: SigMap — generate always-on compact context
   # ─────────────────────────────────────────────────────────────────
   contextforge:
-    name: Generate ContextForge signatures
+    name: Generate SigMap signatures
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -72,7 +72,7 @@ jobs:
 
   # ─────────────────────────────────────────────────────────────────
   # Job 3: Repomix — deep context for complex sessions
-  # (Companion to ContextForge — see docs/REPOMIX_INTEGRATION.md)
+  # (Companion to SigMap — see docs/REPOMIX_INTEGRATION.md)
   # ─────────────────────────────────────────────────────────────────
   repomix:
     name: Generate Repomix compressed context

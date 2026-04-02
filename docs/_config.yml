@@ -1,10 +1,10 @@
 # GitHub Pages configuration
 # Jekyll is disabled via .nojekyll — this file provides explicit metadata only.
 
-title: ContextForge
+title: SigMap
 description: Zero-dependency AI context engine. 97% token reduction. 21 languages. node gen-context.js.
 url: https://manojmallick.github.io
-baseurl: /context-forge
+baseurl: /sigmap
 
 # Disable Jekyll theme — we serve pure HTML
 theme: ~

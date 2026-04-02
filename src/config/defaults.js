@@ -1,7 +1,7 @@
 'use strict';
 
 /**
- * Default configuration values for ContextForge.
+ * Default configuration values for SigMap.
  * All keys documented here. Override via gen-context.config.json.
  */
 const DEFAULTS = {

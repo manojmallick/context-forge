@@ -1,6 +1,6 @@
-# ContextForge — Context Strategies
+# SigMap — Context Strategies
 
-ContextForge supports three output strategies controlled by the `"strategy"` key in
+SigMap supports three output strategies controlled by the `"strategy"` key in
 `gen-context.config.json`. Each trades off token cost, context completeness, and MCP
 dependency differently. This guide explains when to use each one with concrete examples.
 
@@ -65,7 +65,7 @@ Injected every question:  ~3,980 tokens
 
 ### Reduce further without switching strategies
 
-Lower the budget and ContextForge will drop the lowest-priority files automatically:
+Lower the budget and SigMap will drop the lowest-priority files automatically:
 
 ```json
 {
@@ -408,7 +408,7 @@ All three strategies respect `secretScan`, `diffPriority`, `exclude`, and `.cont
 1. Ensure MCP is working: run `node gen-context.js --setup` to register the server
 2. Add `"strategy": "hot-cold"` and optionally `"hotCommits": 10` to config
 3. Run `node gen-context.js`
-4. Verify output: `[context-forge] hot-cold: hot X files ... cold Y files`
+4. Verify output: `[sigmap] hot-cold: hot X files ... cold Y files`
 5. Test MCP retrieval of cold context from your IDE
 
 ### Reverting to `full`

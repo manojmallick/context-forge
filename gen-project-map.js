@@ -2,7 +2,7 @@
 'use strict';
 
 /**
- * gen-project-map.js — ContextForge v0.4
+ * gen-project-map.js — SigMap v0.4
  * Generates PROJECT_MAP.md with import graph, class hierarchy, and route table.
  *
  * Usage:
@@ -31,7 +31,7 @@ if (args.includes('--version')) {
 
 if (args.includes('--help')) {
   console.log([
-    `gen-project-map.js v${VERSION} — ContextForge project map generator`,
+    `gen-project-map.js v${VERSION} — SigMap project map generator`,
     '',
     'Usage:',
     '  node gen-project-map.js           Generate PROJECT_MAP.md',
@@ -97,7 +97,7 @@ function runAnalyzer(name, files, cwd) {
     const mod = require(`./src/map/${name}`);
     return mod.analyze(files, cwd) || '';
   } catch (err) {
-    console.warn(`[context-forge] ${name} analyzer failed: ${err.message}`);
+    console.warn(`[sigmap] ${name} analyzer failed: ${err.message}`);
     return '';
   }
 }
@@ -141,14 +141,14 @@ function main() {
   const config = loadConfig(cwd);
   const { srcDirs, exclude, maxDepth } = config;
 
-  console.log(`[context-forge] scanning ${srcDirs.join(', ')} (maxDepth=${maxDepth}) …`);
+  console.log(`[sigmap] scanning ${srcDirs.join(', ')} (maxDepth=${maxDepth}) …`);
 
   const files = buildFileList(cwd, srcDirs, exclude, maxDepth);
 
   if (files.length === 0) {
-    console.warn(`[context-forge] no source files found — check srcDirs in gen-context.config.json`);
+    console.warn(`[sigmap] no source files found — check srcDirs in gen-context.config.json`);
   } else {
-    console.log(`[context-forge] found ${files.length} source files`);
+    console.log(`[sigmap] found ${files.length} source files`);
   }
 
   const sections = {
@@ -162,9 +162,9 @@ function main() {
 
   try {
     fs.writeFileSync(outPath, output, 'utf8');
-    console.log(`[context-forge] wrote ${OUTPUT_FILE} (${output.length} bytes)`);
+    console.log(`[sigmap] wrote ${OUTPUT_FILE} (${output.length} bytes)`);
   } catch (err) {
-    console.error(`[context-forge] failed to write ${OUTPUT_FILE}: ${err.message}`);
+    console.error(`[sigmap] failed to write ${OUTPUT_FILE}: ${err.message}`);
     process.exit(1);
   }
 }

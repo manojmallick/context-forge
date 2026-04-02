@@ -1,7 +1,7 @@
 'use strict';
 
 /**
- * ContextForge MCP server — zero npm dependencies.
+ * SigMap MCP server — zero npm dependencies.
  *
  * Wire protocol: JSON-RPC 2.0 over stdio.
  * One JSON object per line on both stdin and stdout.
@@ -17,9 +17,9 @@ const { TOOLS } = require('./tools');
 const { readContext, searchSignatures, getMap, createCheckpoint, getRouting, explainFile, listModules } = require('./handlers');
 
 const SERVER_INFO = {
-  name: 'context-forge',
+  name: 'sigmap',
   version: '1.0.0',
-  description: 'ContextForge MCP server — code signatures on demand',
+  description: 'SigMap MCP server — code signatures on demand',
 };
 
 // ---------------------------------------------------------------------------

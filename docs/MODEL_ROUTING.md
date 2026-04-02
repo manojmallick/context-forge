@@ -7,7 +7,7 @@
 
 ## The three-tier model
 
-ContextForge classifies every file in your codebase into one of three tiers.
+SigMap classifies every file in your codebase into one of three tiers.
 When you start a task, pick the tier that matches the *complexity of the task*,
 not just the file — see the decision flow below.
 
@@ -197,7 +197,7 @@ and fully documented.
 
 ## `--suggest-tool` — instant tier recommendation
 
-Instead of consulting the table manually, ask ContextForge:
+Instead of consulting the table manually, ask SigMap:
 
 ```bash
 node gen-context.js --suggest-tool "migrate from Passport.js v0.6 to v0.7"
@@ -213,4 +213,4 @@ Keyword matching covers the most common task patterns. When in doubt, start bala
 
 ---
 
-*ContextForge for daily always-on context; Repomix for deep one-off sessions — use both.*
+*SigMap for daily always-on context; Repomix for deep one-off sessions — use both.*

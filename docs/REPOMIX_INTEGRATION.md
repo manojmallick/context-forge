@@ -1,6 +1,6 @@
-# ContextForge + Repomix Integration Guide
+# SigMap + Repomix Integration Guide
 
-> **One sentence:** ContextForge for daily always-on context; Repomix for deep one-off sessions — use both.
+> **One sentence:** SigMap for daily always-on context; Repomix for deep one-off sessions — use both.
 
 ---
 
@@ -8,23 +8,23 @@
 
 | Tool | Best for | Token cost | When to use |
 |---|---|---|---|
-| **ContextForge** | Always-on signatures | ~500–4 K | Every open editor session |
+| **SigMap** | Always-on signatures | ~500–4 K | Every open editor session |
 | **[Repomix](https://github.com/yamadashy/repomix)** | Full file content dumps | 20 K–200 K | Deep refactors, onboarding, big-picture analysis |
 
-ContextForge never replaces Repomix. They solve different halves of the context problem:
+SigMap never replaces Repomix. They solve different halves of the context problem:
 
-- ContextForge extracts *structure* — function signatures, class hierarchies, type definitions. It answers "what exists?" in under 4 K tokens.
+- SigMap extracts *structure* — function signatures, class hierarchies, type definitions. It answers "what exists?" in under 4 K tokens.
 - Repomix packs *full content* — every file, every line. It answers "what does it do, exactly?" at the cost of many more tokens.
 
 For most agent sessions:
-1. ContextForge auto-generates on every commit → agent always has structure
+1. SigMap auto-generates on every commit → agent always has structure
 2. When you need to deep-dive, run Repomix → paste or attach the bundle
 
 ---
 
 ## Installation
 
-### ContextForge
+### SigMap
 
 ```bash
 node gen-context.js --setup   # installs post-commit hook + watcher
@@ -52,7 +52,7 @@ ln -s .contextignore .repomixignore
 cp .contextignore .repomixignore
 ```
 
-ContextForge reads `.contextignore` **and** `.repomixignore` automatically — you don't need to do anything if Repomix's ignore file already exists.
+SigMap reads `.contextignore` **and** `.repomixignore` automatically — you don't need to do anything if Repomix's ignore file already exists.
 
 Example `.contextignore` / `.repomixignore`:
 
@@ -106,8 +106,8 @@ jobs:
         with:
           node-version: '20'
 
-      # ContextForge — fast always-on signatures
-      - name: Generate ContextForge context
+      # SigMap — fast always-on signatures
+      - name: Generate SigMap context
         run: node gen-context.js
 
       # Repomix — full content bundle (stored as artifact, not committed)
@@ -121,7 +121,7 @@ jobs:
           path: repomix-output.xml
           retention-days: 7
 
-      # Commit updated ContextForge signatures
+      # Commit updated SigMap signatures
       - name: Commit updated context
         run: |
           git config user.name "github-actions[bot]"
@@ -135,19 +135,19 @@ jobs:
 
 ## Typical workflow
 
-### Daily work (ContextForge auto-runs)
+### Daily work (SigMap auto-runs)
 
 ```
 git commit -m "feat: add user auth"
 # post-commit hook fires:
-#   [context-forge] wrote .github/copilot-instructions.md (312 tokens)
+#   [sigmap] wrote .github/copilot-instructions.md (312 tokens)
 # Copilot/Claude now has fresh signatures automatically
 ```
 
 ### Deep refactor session (add Repomix)
 
 ```bash
-# 1. Get high-level structure (ContextForge, already up-to-date)
+# 1. Get high-level structure (SigMap, already up-to-date)
 cat .github/copilot-instructions.md   # ~300 tokens
 
 # 2. Pack the relevant subsystem for deep analysis
@@ -176,7 +176,7 @@ If using Claude Desktop or Cursor with MCP support, configure both servers:
 ```json
 {
   "mcpServers": {
-    "context-forge": {
+    "sigmap": {
       "command": "node",
       "args": ["/path/to/your/project/gen-context.js", "--mcp"]
     },
@@ -189,7 +189,7 @@ If using Claude Desktop or Cursor with MCP support, configure both servers:
 ```
 
 With both active:
-- `read_context` (ContextForge) → fast structure lookup in any session
+- `read_context` (SigMap) → fast structure lookup in any session
 - `pack_files` (Repomix) → full content when you need to go deep
 
 ---
@@ -198,12 +198,12 @@ With both active:
 
 | Scenario | Recommended | Reason |
 |---|---|---|
-| Routine coding session | ContextForge | Low tokens, always fresh |
+| Routine coding session | SigMap | Low tokens, always fresh |
 | Bug spanning 5+ files | Repomix (subset) | Need to see actual code |
 | Architecture review | Both | Structure overview + full content |
-| PR review assistant | ContextForge + git diff | Signatures + changed lines |
+| PR review assistant | SigMap + git diff | Signatures + changed lines |
 | New team member pair session | Repomix | Full codebase for orientation |
-| Token budget is tight (<8 K) | ContextForge only | Signatures fit, bodies don't |
+| Token budget is tight (<8 K) | SigMap only | Signatures fit, bodies don't |
 | Model needs to output exact code | Repomix for those files | Signatures not enough |
 
 ---
@@ -211,6 +211,6 @@ With both active:
 ## Resources
 
 - [Repomix on GitHub](https://github.com/yamadashy/repomix) — MIT, 15K+ stars
-- [ContextForge README](../README.md)
-- [ContextForge MCP setup](./MCP_SETUP.md)
+- [SigMap README](../README.md)
+- [SigMap MCP setup](./MCP_SETUP.md)
 - [SESSION_DISCIPLINE.md](./SESSION_DISCIPLINE.md) — how to structure agent sessions effectively

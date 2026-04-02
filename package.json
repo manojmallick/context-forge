@@ -1,11 +1,11 @@
 {
-  "name": "context-forge",
+  "name": "sigmap",
   "version": "1.5.0",
   "description": "Zero-dependency AI context engine — 97% token reduction. No npm install. Runs on Node 18+.",
   "main": "gen-context.js",
   "bin": {
+    "sigmap": "./gen-context.js",
     "gen-context": "./gen-context.js",
-    "context-forge": "./gen-context.js",
     "gen-project-map": "./gen-project-map.js"
   },
   "scripts": {
@@ -53,11 +53,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/manojmallick/context-forge.git"
+    "url": "https://github.com/manojmallick/sigmap.git"
   },
-  "homepage": "https://manojmallick.github.io/context-forge/",
+  "homepage": "https://manojmallick.github.io/sigmap/",
   "bugs": {
-    "url": "https://github.com/manojmallick/context-forge/issues"
+    "url": "https://github.com/manojmallick/sigmap/issues"
   },
   "license": "MIT",
   "engines": {

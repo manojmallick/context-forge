@@ -1,4 +1,4 @@
-"""Python fixture for ContextForge extractor test."""
+"""Python fixture for SigMap extractor test."""
 
 
 class UserService:

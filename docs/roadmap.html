@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Roadmap — ContextForge</title>
-<meta name="description" content="ContextForge shipped v0.1 through v1.5 — 16 versions, 97% token reduction, 274 tests. Full visual timeline from baseline to complete system.">
-<meta property="og:title" content="ContextForge Roadmap — v0.1 to v1.5 complete">
-<meta property="og:description" content="15 versions shipped. 97% token reduction. 274 tests. MIT license. See how ContextForge was built from first extractor to full enterprise system.">
-<meta property="og:url" content="https://manojmallick.github.io/context-forge/roadmap.html">
+<title>Roadmap — SigMap</title>
+<meta name="description" content="SigMap shipped v0.1 through v1.5 — 16 versions, 97% token reduction, 274 tests. Full visual timeline from baseline to complete system.">
+<meta property="og:title" content="SigMap Roadmap — v0.1 to v1.5 complete">
+<meta property="og:description" content="15 versions shipped. 97% token reduction. 274 tests. MIT license. See how SigMap was built from first extractor to full enterprise system.">
+<meta property="og:url" content="https://manojmallick.github.io/sigmap/roadmap.html">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="canonical" href="https://manojmallick.github.io/context-forge/roadmap.html">
+<link rel="canonical" href="https://manojmallick.github.io/sigmap/roadmap.html">
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=IBM+Plex+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <script>(function(){var r=document.documentElement;if(localStorage.getItem('cf-theme')==='light')r.classList.add('light');document.addEventListener('DOMContentLoaded',function(){document.querySelectorAll('.theme-toggle').forEach(function(b){b.addEventListener('click',function(){r.classList.toggle('light');localStorage.setItem('cf-theme',r.classList.contains('light')?'light':'dark');});});});})();</script>
 <style>
@@ -123,7 +123,7 @@ footer{background:var(--s1);border-top:1px solid var(--line);padding:32px 24px}
 <body>
 
 <nav>
-  <a class="nav-logo" href="index.html">context-forge</a>
+  <a class="nav-logo" href="index.html">sigmap</a>
   <div class="nav-links">
     <a href="quick-start.html" class="hide-sm">Quick start</a>
     <a href="strategies.html" class="hide-sm">Strategies</a>
@@ -134,7 +134,7 @@ footer{background:var(--s1);border-top:1px solid var(--line);padding:32px 24px}
       <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
       <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
     </button>
-    <a href="https://github.com/manojmallick/context-forge" class="nav-gh" target="_blank">★ GitHub</a>
+    <a href="https://github.com/manojmallick/sigmap" class="nav-gh" target="_blank">★ GitHub</a>
   </div>
 </nav>
 
@@ -373,7 +373,7 @@ footer{background:var(--s1);border-top:1px solid var(--line);padding:32px 24px}
           <span class="tl-name">Session discipline</span>
           <span class="tl-badge done">✓ Complete</span>
         </div>
-        <div class="tl-desc">A session compression guide (SESSION_DISCIPLINE.md) that codifies how agents should summarise conversations, checkpoint progress, and restart from a minimal state. The --track flag logs every run to .context-forge/runs.jsonl for monitoring. Reduces per-conversation token cost by 40%.</div>
+        <div class="tl-desc">A session compression guide (SESSION_DISCIPLINE.md) that codifies how agents should summarise conversations, checkpoint progress, and restart from a minimal state. The --track flag logs every run to .sigmap/runs.jsonl for monitoring. Reduces per-conversation token cost by 40%.</div>
         <div class="tl-tags">
           <span class="tl-tag">SESSION_DISCIPLINE.md</span>
           <span class="tl-tag">conversation checkpoints</span>
@@ -467,7 +467,7 @@ footer{background:var(--s1);border-top:1px solid var(--line);padding:32px 24px}
           <span class="tl-name">Full system</span>
           <span class="tl-badge done">✓ Complete — tagged v1.0.0</span>
         </div>
-        <div class="tl-desc">The complete ContextForge system. Self-healing CI auto-regenerates the context file when it drifts. The --health flag gives a composite 0–100 score for context freshness, reduction quality, and over-budget run rate. The --suggest-tool flag classifies any task description into fast / balanced / powerful model tiers. All 177 tests pass.</div>
+        <div class="tl-desc">The complete SigMap system. Self-healing CI auto-regenerates the context file when it drifts. The --health flag gives a composite 0–100 score for context freshness, reduction quality, and over-budget run rate. The --suggest-tool flag classifies any task description into fast / balanced / powerful model tiers. All 177 tests pass.</div>
         <div class="tl-tags">
           <span class="tl-tag">self-healing CI</span>
           <span class="tl-tag">--health</span>
@@ -514,9 +514,9 @@ footer{background:var(--s1);border-top:1px solid var(--line);padding:32px 24px}
           <span class="tl-name">npm alias + test hardening</span>
           <span class="tl-badge done">✓ Complete — tagged v1.2.0</span>
         </div>
-        <div class="tl-desc">Added <code>context-forge</code> npm binary alias alongside <code>gen-context</code> so <code>npx context-forge</code> works from any machine without cloning the repo. Improved <code>--init</code> to scaffold both <code>gen-context.config.json</code> and <code>.contextignore</code> in one step. Added 9 integration tests covering per-module and hot-cold strategy edge cases.</div>
+        <div class="tl-desc">Added <code>sigmap</code> npm binary alias alongside <code>gen-context</code> so <code>npx sigmap</code> works from any machine without cloning the repo. Improved <code>--init</code> to scaffold both <code>gen-context.config.json</code> and <code>.contextignore</code> in one step. Added 9 integration tests covering per-module and hot-cold strategy edge cases.</div>
         <div class="tl-tags">
-          <span class="tl-tag">npx context-forge</span>
+          <span class="tl-tag">npx sigmap</span>
           <span class="tl-tag">--init .contextignore</span>
           <span class="tl-tag">strategy tests</span>
           <span class="tl-tag">9 new tests</span>
@@ -586,7 +586,7 @@ footer{background:var(--s1);border-top:1px solid var(--line);padding:32px 24px}
           <span class="tl-name">VS Code extension + npm publish</span>
           <span class="tl-badge done">✓ Complete — tagged v1.5.0</span>
         </div>
-        <div class="tl-desc">A zero-dependency VS Code extension shows a status bar item displaying the health grade and time since last regeneration (refreshes every 60 s). It warns when context is stale (&gt;24 h), adds <strong>Regenerate Context</strong> and <strong>Open Context File</strong> commands, and supports a configurable script path. All six HTML documentation pages gained client-side keyword search (press <kbd>/</kbd> to open). A proper <code>.npmignore</code> prepares the package for npm publish — <code>npx context-forge</code> resolves to the runtime-only artifact.</div>
+        <div class="tl-desc">A zero-dependency VS Code extension shows a status bar item displaying the health grade and time since last regeneration (refreshes every 60 s). It warns when context is stale (&gt;24 h), adds <strong>Regenerate Context</strong> and <strong>Open Context File</strong> commands, and supports a configurable script path. All six HTML documentation pages gained client-side keyword search (press <kbd>/</kbd> to open). A proper <code>.npmignore</code> prepares the package for npm publish — <code>npx sigmap</code> resolves to the runtime-only artifact.</div>
         <div class="tl-tags">
           <span class="tl-tag">VS Code extension</span>
           <span class="tl-tag">status bar</span>
@@ -630,27 +630,27 @@ footer{background:var(--s1);border-top:1px solid var(--line);padding:32px 24px}
 
   <div style="text-align:center">
     <a href="quick-start.html" style="background:var(--p);color:#fff;padding:12px 28px;border-radius:9px;font-size:14px;font-weight:600;text-decoration:none;display:inline-block;margin-right:12px">Get started in 90 seconds</a>
-    <a href="https://github.com/manojmallick/context-forge" style="background:transparent;color:var(--t1);border:1px solid var(--line2);padding:12px 24px;border-radius:9px;font-size:14px;font-weight:500;text-decoration:none;display:inline-block">★ Star on GitHub</a>
+    <a href="https://github.com/manojmallick/sigmap" style="background:transparent;color:var(--t1);border:1px solid var(--line2);padding:12px 24px;border-radius:9px;font-size:14px;font-weight:500;text-decoration:none;display:inline-block">★ Star on GitHub</a>
   </div>
 </section>
 
 <footer>
   <div class="footer-inner">
-    <span class="footer-logo">context-forge v1.5.0</span>
+    <span class="footer-logo">sigmap v1.5.0</span>
     <div class="footer-links">
       <a href="quick-start.html">Quick start</a>
       <a href="strategies.html">Strategies</a>
       <a href="languages.html">Languages</a>
       <a href="repomix.html">Repomix</a>
-      <a href="https://github.com/manojmallick/context-forge">GitHub</a>
-      <a href="https://github.com/manojmallick/context-forge/blob/main/CONTRIBUTING.md">Contributing</a>
-      <a href="https://github.com/manojmallick/context-forge/blob/main/CHANGELOG.md">Changelog</a>
+      <a href="https://github.com/manojmallick/sigmap">GitHub</a>
+      <a href="https://github.com/manojmallick/sigmap/blob/main/CONTRIBUTING.md">Contributing</a>
+      <a href="https://github.com/manojmallick/sigmap/blob/main/CHANGELOG.md">Changelog</a>
     </div>
     <span class="footer-mit">MIT © 2026 Manoj Mallick</span>
   </div>
 </footer>
 
-<!-- ContextForge docs search — v1.5 -->
+<!-- SigMap docs search — v1.5 -->
 <style>
 .cf-search-btn{background:none;border:1px solid var(--line2);border-radius:7px;padding:0 10px;height:32px;cursor:pointer;display:flex;align-items:center;gap:6px;color:var(--t2);font-size:12px;font-family:inherit;transition:.15s;flex-shrink:0}
 .cf-search-btn:hover{border-color:var(--p);color:var(--pd)}

@@ -1,6 +1,6 @@
 <div align="center">
 
-<h1>⚡ ContextForge</h1>
+<h1>⚡ SigMap</h1>
 
 <p><strong>Zero-dependency AI context engine — 97% token reduction</strong></p>
 
@@ -10,19 +10,19 @@
 </p>
 
 <!-- Status -->
-[![GitHub release](https://img.shields.io/github/v/release/manojmallick/context-forge?color=7c6af7&label=latest)](https://github.com/manojmallick/context-forge/releases)
-[![Tests](https://img.shields.io/badge/tests-274%20passing-22c55e)](https://github.com/manojmallick/context-forge/tree/main/test)
+[![GitHub release](https://img.shields.io/github/v/release/manojmallick/sigmap?color=7c6af7&label=latest)](https://github.com/manojmallick/sigmap/releases)
+[![Tests](https://img.shields.io/badge/tests-274%20passing-22c55e)](https://github.com/manojmallick/sigmap/tree/main/test)
 [![Zero deps](https://img.shields.io/badge/dependencies-zero-22c55e)](package.json)
-[![Last commit](https://img.shields.io/github/last-commit/manojmallick/context-forge?color=7c6af7)](https://github.com/manojmallick/context-forge/commits/main)
+[![Last commit](https://img.shields.io/github/last-commit/manojmallick/sigmap?color=7c6af7)](https://github.com/manojmallick/sigmap/commits/main)
 
 <!-- Meta -->
 [![License: MIT](https://img.shields.io/badge/License-MIT-7c6af7.svg)](LICENSE)
 [![Node.js](https://img.shields.io/badge/node-%3E%3D18-brightgreen)](https://nodejs.org)
-[![npm](https://img.shields.io/badge/npm-context--forge-cb3837?logo=npm)](https://www.npmjs.com/package/context-forge)
-[![GitHub Stars](https://img.shields.io/github/stars/manojmallick/context-forge?style=flat&color=f59e0b&logo=github)](https://github.com/manojmallick/context-forge/stargazers)
+[![npm](https://img.shields.io/badge/npm-context--forge-cb3837?logo=npm)](https://www.npmjs.com/package/sigmap)
+[![GitHub Stars](https://img.shields.io/github/stars/manojmallick/sigmap?style=flat&color=f59e0b&logo=github)](https://github.com/manojmallick/sigmap/stargazers)
 
 <!-- Links -->
-[![Docs](https://img.shields.io/badge/docs-live-7c6af7?logo=github-pages)](https://manojmallick.github.io/context-forge)
+[![Docs](https://img.shields.io/badge/docs-live-7c6af7?logo=github-pages)](https://manojmallick.github.io/sigmap)
 [![Changelog](https://img.shields.io/badge/changelog-CHANGELOG.md-blue)](CHANGELOG.md)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 [![VS Code](https://img.shields.io/badge/VS%20Code-extension-0078d4?logo=visual-studio-code)](vscode-extension/)
@@ -52,7 +52,7 @@
 
 ## 🔍 What it does
 
-ContextForge scans your source files and extracts only the **function and class signatures** — no bodies, no imports, no comments — then writes a compact context file that Copilot, Claude, Cursor, and Windsurf read automatically. Every session starts with full codebase awareness at a fraction of the token cost.
+SigMap scans your source files and extracts only the **function and class signatures** — no bodies, no imports, no comments — then writes a compact context file that Copilot, Claude, Cursor, and Windsurf read automatically. Every session starts with full codebase awareness at a fraction of the token cost.
 
 ```
 Your codebase
@@ -73,8 +73,8 @@ AI agent session starts with full context
 |---|---:|---:|
 | Raw source files | ~80,000 | — |
 | Repomix compressed | ~8,000 | 90% |
-| **ContextForge signatures** | **~4,000** | **95%** |
-| ContextForge + MCP (`hot-cold`) | ~200 | **99.75%** |
+| **SigMap signatures** | **~4,000** | **95%** |
+| SigMap + MCP (`hot-cold`) | ~200 | **99.75%** |
 
 > **97% fewer tokens. The same codebase understanding.**
 
@@ -86,7 +86,7 @@ AI agent session starts with full context
 
 ```bash
 # 1. Copy gen-context.js into your project root
-curl -O https://raw.githubusercontent.com/manojmallick/context-forge/main/gen-context.js
+curl -O https://raw.githubusercontent.com/manojmallick/sigmap/main/gen-context.js
 
 # 2. Generate your context file
 node gen-context.js
@@ -98,9 +98,9 @@ node gen-context.js
 Or via npm (globally):
 
 ```bash
-npx context-forge          # run once without installing
-npm install -g context-forge   # install globally
-context-forge              # then use anywhere
+npx sigmap          # run once without installing
+npm install -g sigmap   # install globally
+sigmap              # then use anywhere
 ```
 
 ### Common workflows
@@ -117,11 +117,11 @@ node gen-context.js --mcp        # start MCP server on stdio
 
 ### Companion tool: Repomix
 
-ContextForge and [Repomix](https://github.com/yamadashy/repomix) are **complementary, not competing**:
+SigMap and [Repomix](https://github.com/yamadashy/repomix) are **complementary, not competing**:
 
 | Tool | When to use |
 |---|---|
-| **ContextForge** | Always-on, git hooks, daily signature index (~4K tokens) |
+| **SigMap** | Always-on, git hooks, daily signature index (~4K tokens) |
 | **Repomix** | On-demand deep sessions, full file content, broader language support |
 
 ```bash
@@ -129,7 +129,7 @@ node gen-context.js --setup    # always-on context
 npx repomix --compress         # deep dive sessions
 ```
 
-*"ContextForge for daily always-on context; Repomix for deep one-off sessions — use both."*
+*"SigMap for daily always-on context; Repomix for deep one-off sessions — use both."*
 
 ---
 
@@ -143,8 +143,8 @@ The `vscode-extension/` directory contains a first-party VS Code extension that 
 |---|---|
 | **Status bar item** | Shows health grade (`A`/`B`/`C`/`D`) + time since last regen; refreshes every 60 s |
 | **Stale notification** | Warns when `copilot-instructions.md` is > 24 h old; one-click regeneration |
-| **Regenerate command** | `ContextForge: Regenerate Context` — runs `node gen-context.js` in the integrated terminal |
-| **Open context command** | `ContextForge: Open Context File` — opens `.github/copilot-instructions.md` |
+| **Regenerate command** | `SigMap: Regenerate Context` — runs `node gen-context.js` in the integrated terminal |
+| **Open context command** | `SigMap: Open Context File` — opens `.github/copilot-instructions.md` |
 | **Script path setting** | `contextforge.scriptPath` — override when `gen-context.js` is not at the project root |
 
 Activate on startup (`onStartupFinished`) — loads within 3 s, never blocks editor startup.
@@ -311,7 +311,7 @@ Tiers: `fast` (config/markup/typos) · `balanced` (features/tests/debug) · `pow
 
 ## 🔒 Security scanning
 
-ContextForge automatically redacts secrets from all extracted signatures. Ten patterns are checked on every file:
+SigMap automatically redacts secrets from all extracted signatures. Ten patterns are checked on every file:
 
 | Pattern | Example match |
 |---|---|
@@ -392,7 +392,7 @@ Copy `examples/self-healing-github-action.yml` to `.github/workflows/` to auto-r
 - Copilot acceptance rate drops below 30% (requires `COPILOT_API_TOKEN` — GitHub Enterprise)
 
 ```yaml
-- name: ContextForge health check
+- name: SigMap health check
   run: node gen-context.js --health --json
 - name: Regenerate context
   run: node gen-context.js
@@ -453,7 +453,7 @@ npm pack --dry-run
 ## 📁 Project structure
 
 ```
-context-forge/
+sigmap/
 │
 ├── gen-context.js               ← PRIMARY ENTRY POINT — single file, zero deps
 ├── gen-project-map.js           ← import graph, class hierarchy, route table
@@ -508,7 +508,7 @@ context-forge/
 | **Zero npm dependencies** | `node gen-context.js` on a blank machine with Node 18+ — nothing else required |
 | **Never throw** | All extractors return `[]` on any error — the run always completes |
 | **Deterministic** | No AI or LLM involved in extraction — only regex + Node built-ins |
-| **Repomix is a companion** | Use both tools; ContextForge never replaces Repomix |
+| **Repomix is a companion** | Use both tools; SigMap never replaces Repomix |
 | **No telemetry** | Never phones home; all state is files in your repo |
 | **Local-first** | No cloud service, no database, no accounts |
 
@@ -524,7 +524,7 @@ Releases are published automatically via GitHub Actions whenever a version tag i
 
 2. **Generate an npm access token**:
    - npmjs.com → Account → Access Tokens → Generate New Token → **Granular Access Token** (or Classic Automation token)
-   - Scope: `context-forge` package, permission: **Read and Write**
+   - Scope: `sigmap` package, permission: **Read and Write**
 
 3. **Add the secret to GitHub**:
    ```
@@ -565,7 +565,7 @@ export NPM_TOKEN=npm_xxxxxxxxxxxx
 ./scripts/backfill-npm.sh --publish --from v0.5.0
 ```
 
-The script assigns `dist-tag: legacy` to all versions except `v1.5.0` (which gets `latest`), so `npm install context-forge` always resolves to the current release.
+The script assigns `dist-tag: legacy` to all versions except `v1.5.0` (which gets `latest`), so `npm install sigmap` always resolves to the current release.
 
 ---
 
@@ -594,8 +594,8 @@ MIT © 2026 [Manoj Mallick](https://github.com/manojmallick)
 
 <div align="center">
 
-If ContextForge saves you time — a ⭐ on [GitHub](https://github.com/manojmallick/context-forge) helps others find it.
+If SigMap saves you time — a ⭐ on [GitHub](https://github.com/manojmallick/sigmap) helps others find it.
 
-**[Docs](https://manojmallick.github.io/context-forge) · [Changelog](CHANGELOG.md) · [Roadmap](docs/roadmap.html) · [Repomix](https://github.com/yamadashy/repomix)**
+**[Docs](https://manojmallick.github.io/sigmap) · [Changelog](CHANGELOG.md) · [Roadmap](docs/roadmap.html) · [Repomix](https://github.com/yamadashy/repomix)**
 
 </div>

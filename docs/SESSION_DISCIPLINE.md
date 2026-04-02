@@ -1,4 +1,4 @@
-# Session Discipline with ContextForge
+# Session Discipline with SigMap
 
 > **Goal:** Every coding session starts with full context and ends with a clean handoff.
 > No more "where was I?" — every session is a continuation, not a restart.
@@ -14,7 +14,7 @@ AI coding assistants have a fixed context window. Without structure:
 - PR descriptions miss important context
 - The next session starts cold
 
-ContextForge solves the first problem (the assistant always has your code signatures).
+SigMap solves the first problem (the assistant always has your code signatures).
 Session discipline solves the rest.
 
 ---
@@ -147,7 +147,7 @@ cf-module → packages/api
 
 ## Git hook integration
 
-ContextForge can regenerate context automatically on every commit:
+SigMap can regenerate context automatically on every commit:
 
 ```bash
 node gen-context.js --setup
@@ -228,4 +228,4 @@ cf-start             (every ~30 min)       git push
 
 ---
 
-*ContextForge for daily always-on context; Repomix for deep one-off sessions — use both.*
+*SigMap for daily always-on context; Repomix for deep one-off sessions — use both.*

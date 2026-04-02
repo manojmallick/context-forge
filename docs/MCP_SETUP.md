@@ -1,6 +1,6 @@
-# ContextForge MCP Server Setup
+# SigMap MCP Server Setup
 
-ContextForge ships a zero-dependency [MCP](https://modelcontextprotocol.io) server that exposes your project's code signatures to any MCP-compatible AI tool — Claude Code, Cursor, Windsurf, and others.
+SigMap ships a zero-dependency [MCP](https://modelcontextprotocol.io) server that exposes your project's code signatures to any MCP-compatible AI tool — Claude Code, Cursor, Windsurf, and others.
 
 ---
 
@@ -24,7 +24,7 @@ The server runs on **stdio** — the MCP host manages the process lifecycle. You
 
 ### 3. Auto-register during setup
 
-When you run `--setup`, ContextForge automatically detects and updates `.claude/settings.json` and `.cursor/mcp.json` if they exist:
+When you run `--setup`, SigMap automatically detects and updates `.claude/settings.json` and `.cursor/mcp.json` if they exist:
 
 ```bash
 node gen-context.js --setup
@@ -43,7 +43,7 @@ Add to `.claude/settings.json` (project-level) or `~/.claude/settings.json` (glo
 ```json
 {
   "mcpServers": {
-    "context-forge": {
+    "sigmap": {
       "command": "node",
       "args": ["/absolute/path/to/your/project/gen-context.js", "--mcp"]
     }
@@ -58,7 +58,7 @@ Add to `.cursor/mcp.json` in your project root:
 ```json
 {
   "mcpServers": {
-    "context-forge": {
+    "sigmap": {
       "command": "node",
       "args": ["/absolute/path/to/your/project/gen-context.js", "--mcp"]
     }
@@ -66,7 +66,7 @@ Add to `.cursor/mcp.json` in your project root:
 }
 ```
 
-### Both servers (ContextForge + Repomix)
+### Both servers (SigMap + Repomix)
 
 See [examples/claude-code-settings.json](../examples/claude-code-settings.json) for a ready-to-use config with both servers configured.
 

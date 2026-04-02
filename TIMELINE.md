@@ -1,4 +1,4 @@
-# ContextForge — TIMELINE.md
+# SigMap — TIMELINE.md
 # Version-wise committing plan with validation gates
 # Every version is independently deployable and testable.
 
@@ -42,7 +42,7 @@ A version is NOT done until its validation gate is 100% green.
 ## v0.0 — Repomix baseline
 **Status: Available now. Zero build time.**
 
-This version is Repomix, not ContextForge. Document it as the starting point.
+This version is Repomix, not SigMap. Document it as the starting point.
 
 ### What to do
 ```bash
@@ -358,7 +358,7 @@ echo '{"jsonrpc":"2.0","method":"tools/call","id":4,"params":{"name":"read_conte
 # Expected: only signatures from src/ directory
 
 # Gate 5: Claude Code integration
-cat .claude/settings.json | grep "context-forge"
+cat .claude/settings.json | grep "sigmap"
 # Expected: MCP server entry exists after --setup
 ```
 
@@ -555,7 +555,7 @@ npx repomix --compress -o /tmp/repomix-out.txt
 wc -c /tmp/repomix-out.txt
 # Record: repomix chars / 4 = repomix tokens
 
-# ContextForge
+# SigMap
 node /path/to/gen-context.js --generate
 wc -c .github/copilot-instructions.md
 # Record: contextforge chars / 4 = contextforge tokens
@@ -897,13 +897,13 @@ node test/run.js
 ### What ships
 - `vscode-extension/` — VS Code extension (published to Marketplace)
   - Status bar item: shows health score grade + last-regen timestamp
-  - Command palette: `ContextForge: Regenerate Context` (runs `node gen-context.js`)
-  - Command palette: `ContextForge: Open Context File`
+  - Command palette: `SigMap: Regenerate Context` (runs `node gen-context.js`)
+  - Command palette: `SigMap: Open Context File`
   - Notification when context file is > 24h stale
   - Settings: `contextforge.scriptPath` — path to `gen-context.js`
-- `npm publish` — package published as `context-forge` on npm
-  - `npx context-forge` — works as a zero-install drop-in
-  - `npx context-forge --init` bootstraps new projects in one command
+- `npm publish` — package published as `sigmap` on npm
+  - `npx sigmap` — works as a zero-install drop-in
+  - `npx sigmap --init` bootstraps new projects in one command
   - Zero runtime deps preserved — only `devDependencies` for publishing tooling
 - Docs site search — lightweight client-side keyword search on all 6 HTML pages
   - No external library — pure JS, searches `innerText` of all content sections
@@ -914,10 +914,10 @@ node test/run.js
 ```bash
 # Commit 1 — npm package setup
 git add package.json .npmignore
-git commit -m "chore(npm): configure package for npm publish as context-forge
+git commit -m "chore(npm): configure package for npm publish as sigmap
 
-- name: 'context-forge'
-- bin: { 'context-forge': './gen-context.js' }
+- name: 'sigmap'
+- bin: { 'sigmap': './gen-context.js' }
 - .npmignore: excludes test/, docs/, .claude/, .github/workflows/
 - engines: { node: '>=18' }
 - keywords: copilot, ai-context, token-reduction, code-signatures
@@ -929,7 +929,7 @@ git commit -m "chore(core): add #!/usr/bin/env node shebang for npx compatibilit
 
 - Adds shebang as first line of gen-context.js
 - chmod +x in package.json postinstall removed (bin field handles it)
-- npx context-forge --init now works on fresh machines"
+- npx sigmap --init now works on fresh machines"
 
 # Commit 3 — VS Code extension scaffold
 git add vscode-extension/
@@ -938,8 +938,8 @@ git commit -m "feat(vscode): add VS Code extension scaffold
 - vscode-extension/package.json with activationEvents and commands
 - Extension activates on workspace open if gen-context.js found
 - Status bar: shows grade (A/B/C/D) and regen time
-- Command: ContextForge.regenerate runs node gen-context.js
-- Command: ContextForge.openContext opens .github/copilot-instructions.md"
+- Command: SigMap.regenerate runs node gen-context.js
+- Command: SigMap.openContext opens .github/copilot-instructions.md"
 
 # Commit 4 — stale context notification
 git add vscode-extension/src/extension.js
@@ -962,7 +962,7 @@ git commit -m "feat(docs): add client-side keyword search to all 6 pages
 - Zero external dependencies — 60 lines of inline JS"
 
 # Commit 6 — publish + Marketplace
-git commit -m "chore: publish context-forge@1.1.0 to npm + VS Code Marketplace
+git commit -m "chore: publish sigmap@1.1.0 to npm + VS Code Marketplace
 
 - npm publish --access public
 - vsce publish (VS Code Marketplace)
@@ -975,10 +975,10 @@ git push origin main --tags
 ### Validation gate v1.5
 ```bash
 # Gate 1: npx works
-npx context-forge --version
+npx sigmap --version
 # Expected: 1.1.0 (or current version)
 
-npx context-forge --init
+npx sigmap --init
 ls gen-context.config.json .contextignore
 # Expected: both files created
 
@@ -988,9 +988,9 @@ npm pack --dry-run
 # Expected: no test/, docs/, .claude/, secrets
 
 # Gate 3: VS Code extension loads
-# Open VS Code in context-forge project
+# Open VS Code in sigmap project
 # Expected: status bar shows health grade within 5s of window open
-# Expected: Cmd+Shift+P → 'ContextForge' → two commands visible
+# Expected: Cmd+Shift+P → 'SigMap' → two commands visible
 
 # Gate 4: stale notification
 # Manually set copilot-instructions.md mtime to 2 days ago
@@ -1012,7 +1012,7 @@ node test/run.js
 ```
 
 ### Definition of done
-- `npx context-forge` works on a brand new machine with no prior setup
+- `npx sigmap` works on a brand new machine with no prior setup
 - VS Code extension is listed on the Marketplace with >0 installs
 - Any developer on the docs site can find "Python" or "hot-cold" via keyboard search in < 3 seconds
 

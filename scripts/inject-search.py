@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Inject ContextForge docs search into all 6 HTML pages."""
+"""Inject SigMap docs search into all 6 HTML pages."""
 import sys
 
-SEARCH_BLOCK = r"""<!-- ContextForge docs search — v1.5 -->
+SEARCH_BLOCK = r"""<!-- SigMap docs search — v1.5 -->
 <style>
 .cf-search-btn{background:none;border:1px solid var(--line2);border-radius:7px;padding:0 10px;height:32px;cursor:pointer;display:flex;align-items:center;gap:6px;color:var(--t2);font-size:12px;font-family:inherit;transition:.15s;flex-shrink:0}
 .cf-search-btn:hover{border-color:var(--p);color:var(--pd)}

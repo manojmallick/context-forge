@@ -1,4 +1,4 @@
-// JavaScript fixture for ContextForge extractor test
+// JavaScript fixture for SigMap extractor test
 
 class EventEmitter {
   constructor() {

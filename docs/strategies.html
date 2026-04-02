@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Context Strategies — ContextForge</title>
-<meta name="description" content="Choose the right ContextForge strategy: full, per-module, or hot-cold. Detailed examples, decision tree, token trade-offs, and MCP vs non-MCP workflows.">
-<meta property="og:title" content="ContextForge strategies: full vs per-module vs hot-cold">
+<title>Context Strategies — SigMap</title>
+<meta name="description" content="Choose the right SigMap strategy: full, per-module, or hot-cold. Detailed examples, decision tree, token trade-offs, and MCP vs non-MCP workflows.">
+<meta property="og:title" content="SigMap strategies: full vs per-module vs hot-cold">
 <meta property="og:description" content="Detailed case-by-case guide to reduce tokens without losing context. Learn when to use each strategy and how to configure it.">
-<meta property="og:url" content="https://manojmallick.github.io/context-forge/strategies.html">
+<meta property="og:url" content="https://manojmallick.github.io/sigmap/strategies.html">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="canonical" href="https://manojmallick.github.io/context-forge/strategies.html">
+<link rel="canonical" href="https://manojmallick.github.io/sigmap/strategies.html">
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=IBM+Plex+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <script>(function(){var r=document.documentElement;if(localStorage.getItem('cf-theme')==='light')r.classList.add('light');document.addEventListener('DOMContentLoaded',function(){document.querySelectorAll('.theme-toggle').forEach(function(b){b.addEventListener('click',function(){r.classList.toggle('light');localStorage.setItem('cf-theme',r.classList.contains('light')?'light':'dark');});});});})();</script>
 <style>
@@ -108,7 +108,7 @@ footer{background:var(--s1);border-top:1px solid var(--line);padding:32px 24px}
 <body>
 
 <nav>
-  <a class="nav-logo" href="index.html">context-forge</a>
+  <a class="nav-logo" href="index.html">sigmap</a>
   <div class="nav-links">
     <a href="quick-start.html" class="hide-sm">Quick start</a>
     <a href="strategies.html" class="hide-sm active">Strategies</a>
@@ -119,7 +119,7 @@ footer{background:var(--s1);border-top:1px solid var(--line);padding:32px 24px}
       <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
       <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
     </button>
-    <a href="https://github.com/manojmallick/context-forge" class="nav-gh" target="_blank">★ GitHub</a>
+    <a href="https://github.com/manojmallick/sigmap" class="nav-gh" target="_blank">★ GitHub</a>
   </div>
 </nav>
 
@@ -127,7 +127,7 @@ footer{background:var(--s1);border-top:1px solid var(--line);padding:32px 24px}
   <div class="hero-inner">
     <div class="hero-badge">strategy guide — current as of v1.5</div>
     <h1>Choose the right context strategy</h1>
-    <p class="hero-sub">ContextForge supports three modes: full, per-module, and hot-cold. This page shows exactly when to use each one, what token cost to expect, and how MCP changes the decision.</p>
+    <p class="hero-sub">SigMap supports three modes: full, per-module, and hot-cold. This page shows exactly when to use each one, what token cost to expect, and how MCP changes the decision.</p>
   </div>
 </div>
 
@@ -281,30 +281,30 @@ footer{background:var(--s1);border-top:1px solid var(--line);padding:32px 24px}
   <p class="section-sub">For complete migration steps, compatibility matrix, and advanced examples, use the full Markdown guide.</p>
   <div class="list">
     <ol>
-      <li>Detailed guide in repository: <a href="https://github.com/manojmallick/context-forge/blob/main/docs/CONTEXT_STRATEGIES.md" style="color:var(--pd)">docs/CONTEXT_STRATEGIES.md</a></li>
+      <li>Detailed guide in repository: <a href="https://github.com/manojmallick/sigmap/blob/main/docs/CONTEXT_STRATEGIES.md" style="color:var(--pd)">docs/CONTEXT_STRATEGIES.md</a></li>
       <li>CLI reference and setup: <a href="quick-start.html" style="color:var(--pd)">Quick Start</a></li>
-      <li>MCP setup: <a href="https://github.com/manojmallick/context-forge/blob/main/docs/MCP_SETUP.md" style="color:var(--pd)">docs/MCP_SETUP.md</a></li>
+      <li>MCP setup: <a href="https://github.com/manojmallick/sigmap/blob/main/docs/MCP_SETUP.md" style="color:var(--pd)">docs/MCP_SETUP.md</a></li>
     </ol>
   </div>
 </section>
 
 <footer>
   <div class="footer-inner">
-    <span class="footer-logo">context-forge v1.5.0</span>
+    <span class="footer-logo">sigmap v1.5.0</span>
     <div class="footer-links">
       <a href="quick-start.html">Quick start</a>
       <a href="languages.html">Languages</a>
       <a href="roadmap.html">Roadmap</a>
       <a href="repomix.html">Repomix</a>
-      <a href="https://github.com/manojmallick/context-forge">GitHub</a>
-      <a href="https://github.com/manojmallick/context-forge/blob/main/CONTRIBUTING.md">Contributing</a>
-      <a href="https://github.com/manojmallick/context-forge/blob/main/CHANGELOG.md">Changelog</a>
+      <a href="https://github.com/manojmallick/sigmap">GitHub</a>
+      <a href="https://github.com/manojmallick/sigmap/blob/main/CONTRIBUTING.md">Contributing</a>
+      <a href="https://github.com/manojmallick/sigmap/blob/main/CHANGELOG.md">Changelog</a>
     </div>
     <span class="footer-mit">MIT © 2026 Manoj Mallick</span>
   </div>
 </footer>
 
-<!-- ContextForge docs search — v1.5 -->
+<!-- SigMap docs search — v1.5 -->
 <style>
 .cf-search-btn{background:none;border:1px solid var(--line2);border-radius:7px;padding:0 10px;height:32px;cursor:pointer;display:flex;align-items:center;gap:6px;color:var(--t2);font-size:12px;font-family:inherit;transition:.15s;flex-shrink:0}
 .cf-search-btn:hover{border-color:var(--p);color:var(--pd)}

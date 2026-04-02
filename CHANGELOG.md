@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to ContextForge are documented here.
+All notable changes to SigMap are documented here.
 
 Format: [Semantic Versioning](https://semver.org/)
 
@@ -11,8 +11,8 @@ Format: [Semantic Versioning](https://semver.org/)
 ### Added
 - **VS Code extension** (`vscode-extension/`) — zero-dependency extension for VS Code / VS Code-compatible editors:
   - **Status bar item** — shows health grade (A/B/C/D) and time since last regeneration; refreshes every 60 s and immediately on file-system change to `copilot-instructions.md`.
-  - **`ContextForge: Regenerate Context`** command — runs `node gen-context.js` in an integrated terminal from the workspace root.
-  - **`ContextForge: Open Context File`** command — opens `.github/copilot-instructions.md` in the editor.
+  - **`SigMap: Regenerate Context`** command — runs `node gen-context.js` in an integrated terminal from the workspace root.
+  - **`SigMap: Open Context File`** command — opens `.github/copilot-instructions.md` in the editor.
   - **Stale context notification** — warns when `copilot-instructions.md` is > 24 h old; offers one-click regeneration or "Don't show again" suppression per workspace.
   - **`contextforge.scriptPath` setting** — override the path to `gen-context.js` when it is not at the project root.
   - `onStartupFinished` activation — loads within 3 s of VS Code opening, does not block startup.
@@ -126,7 +126,7 @@ Format: [Semantic Versioning](https://semver.org/)
   - `per-module`: asserts one `context-<module>.md` per `srcDir`, overview file references all modules, cross-module signature isolation
   - `hot-cold`: asserts `context-cold.md` is created, primary output contains only hot files, `hotCommits` config controls the boundary
   - Both strategies: fallback behaviour when `srcDir` is missing or repo has no git history
-- **`context-forge` npm binary alias** — `package.json` `bin` now exposes both `gen-context` (existing) and `context-forge` (new alias), making `npx context-forge` work ahead of full npm publish in v1.5
+- **`sigmap` npm binary alias** — `package.json` `bin` now exposes both `gen-context` (existing) and `sigmap` (new alias), making `npx sigmap` work ahead of full npm publish in v1.5
 - **`--diff` and `--diff --staged` listed in `--help`** — help text documents the upcoming flags so tooling auto-complete picks them up
 
 ### Changed
@@ -237,7 +237,7 @@ Format: [Semantic Versioning](https://semver.org/)
 - **`--format cache` CLI flag** — alongside the standard markdown output, writes `.github/copilot-instructions.cache.json`, a single Anthropic content block with `cache_control: { type: "ephemeral" }` ready for direct use in Anthropic API calls
 - **`src/format/cache.js`** — zero-dependency formatter; exports `formatCache(content) → JSON string` (single content block) and `formatCachePayload(content, model) → JSON string` (full messages API payload with system array)
 - **`format: 'default'` config key** — set `"format": "cache"` in `gen-context.config.json` to always write the cache JSON file on every run; default is `'default'` (markdown only)
-- **`docs/REPOMIX_CACHE.md`** — full prompt cache strategy: two-layer design (Repomix as stable cached prefix + ContextForge as dynamic segment), cost calculations (~60% reduction), API call examples, CI integration, cache warm-up strategy
+- **`docs/REPOMIX_CACHE.md`** — full prompt cache strategy: two-layer design (Repomix as stable cached prefix + SigMap as dynamic segment), cost calculations (~60% reduction), API call examples, CI integration, cache warm-up strategy
 - Integration test: `test/integration/cache.test.js` — 20 tests covering `formatCache()`, `formatCachePayload()`, CLI `--format cache` flag, config-driven mode, and absence of cache file when flag is not set
 
 ### Changed
@@ -292,7 +292,7 @@ Format: [Semantic Versioning](https://semver.org/)
 
 ### Validation gate
 - 94/94 tests pass (21 extractor + 73 integration)
-- `create_checkpoint` MCP tool returns JSON with `# ContextForge Checkpoint` header
+- `create_checkpoint` MCP tool returns JSON with `# SigMap Checkpoint` header
 - `create_checkpoint` with `note` param includes note in output
 - `tools/list` returns 4 tools including `create_checkpoint`
 - VS Code snippets file has JSON-valid syntax; `cf-` prefix on all 20 snippets
@@ -306,7 +306,7 @@ Format: [Semantic Versioning](https://semver.org/)
 - Manifest detection covers `package.json`, `Cargo.toml`, `go.mod`, `pyproject.toml`, `pom.xml`, `build.gradle`
 - `config.monorepo: true` triggers monorepo mode without the CLI flag
 - **Git-diff priority output ordering** — recently committed files now appear first in the generated output (not just protected from token-budget drops)
-- `examples/github-action.yml` — ready-to-use 4-job CI workflow: ContextForge, gen-project-map, Repomix, test suite (Node 18/20/22 matrix)
+- `examples/github-action.yml` — ready-to-use 4-job CI workflow: SigMap, gen-project-map, Repomix, test suite (Node 18/20/22 matrix)
 - `docs/CI_GUIDE.md` — full CI setup guide, monorepo config, `.contextignore` patterns, token report in CI
 - Integration test: `test/integration/monorepo.test.js` — 8 tests (packages/, apps/, services/, multi-manifest, 5-package smoke)
 - Integration test: `test/integration/contextignore.test.js` — 7 tests (patterns, wildcards, comments, union of both ignore files)
@@ -345,7 +345,7 @@ Format: [Semantic Versioning](https://semver.org/)
 - `src/mcp/handlers.js` — tool implementations; reads context files from disk on every call (no in-memory state)
 - `--mcp` CLI flag — starts MCP server on stdio
 - MCP auto-registration in `.claude/settings.json` and `.cursor/mcp.json` via `--setup`
-- `examples/claude-code-settings.json` — pre-configured entry for both ContextForge and Repomix MCP servers
+- `examples/claude-code-settings.json` — pre-configured entry for both SigMap and Repomix MCP servers
 - `docs/MCP_SETUP.md` — full MCP setup guide with both Claude Code and Cursor examples
 - Integration test: `test/integration/mcp-server.test.js` — 11 tests
 

@@ -1,4 +1,4 @@
-// TypeScript fixture for ContextForge extractor test
+// TypeScript fixture for SigMap extractor test
 
 export interface UserService {
   getUser(id: string): Promise<User>;

@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>ContextForge — Zero-dependency AI context engine</title>
+<title>SigMap — Zero-dependency AI context engine</title>
 <meta name="description" content="Reduce AI coding agent token consumption by 97%. Extracts signatures from 21 languages, writes copilot-instructions.md automatically. Zero npm install.">
-<meta property="og:title" content="ContextForge — 97% token reduction for AI coding agents">
+<meta property="og:title" content="SigMap — 97% token reduction for AI coding agents">
 <meta property="og:description" content="node gen-context.js — that's the entire install. Reduces Copilot sessions from 80K to 4K tokens automatically.">
-<meta property="og:url" content="https://manojmallick.github.io/context-forge">
+<meta property="og:url" content="https://manojmallick.github.io/sigmap">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="canonical" href="https://manojmallick.github.io/context-forge">
+<link rel="canonical" href="https://manojmallick.github.io/sigmap">
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=IBM+Plex+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <script>(function(){var r=document.documentElement;if(localStorage.getItem('cf-theme')==='light')r.classList.add('light');document.addEventListener('DOMContentLoaded',function(){document.querySelectorAll('.theme-toggle').forEach(function(b){b.addEventListener('click',function(){r.classList.toggle('light');localStorage.setItem('cf-theme',r.classList.contains('light')?'light':'dark');});});});})();</script>
 <style>
@@ -165,7 +165,7 @@ footer{background:var(--s1);border-top:1px solid var(--line);padding:32px 24px;t
 
 <!-- NAV -->
 <nav>
-  <a class="nav-logo" href="/">context-forge</a>
+  <a class="nav-logo" href="/">sigmap</a>
   <div class="nav-links">
     <a href="quick-start.html" class="hide-sm">Quick start</a>
     <a href="strategies.html" class="hide-sm">Strategies</a>
@@ -176,7 +176,7 @@ footer{background:var(--s1);border-top:1px solid var(--line);padding:32px 24px;t
       <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
       <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
     </button>
-    <a href="https://github.com/manojmallick/context-forge" class="nav-gh" target="_blank">★ GitHub</a>
+    <a href="https://github.com/manojmallick/sigmap" class="nav-gh" target="_blank">★ GitHub</a>
   </div>
 </nav>
 
@@ -185,10 +185,10 @@ footer{background:var(--s1);border-top:1px solid var(--line);padding:32px 24px;t
   <div class="hero-inner">
     <div class="hero-badge"><span class="dot"></span>MIT open source · Zero npm install</div>
     <h1>97% fewer tokens.<br>Better AI suggestions.</h1>
-    <p class="hero-sub">ContextForge extracts function signatures from your codebase and writes a context file that Copilot, Claude, Cursor, and Windsurf read automatically. Every session starts informed.</p>
+    <p class="hero-sub">SigMap extracts function signatures from your codebase and writes a context file that Copilot, Claude, Cursor, and Windsurf read automatically. Every session starts informed.</p>
     <div class="hero-cta">
       <a class="btn-primary" href="#quick-start">Get started in 60 seconds</a>
-      <a class="btn-secondary" href="https://github.com/manojmallick/context-forge" target="_blank">View on GitHub →</a>
+      <a class="btn-secondary" href="https://github.com/manojmallick/sigmap" target="_blank">View on GitHub →</a>
     </div>
     <div class="terminal">
       <div class="term-bar">
@@ -199,11 +199,11 @@ footer{background:var(--s1);border-top:1px solid var(--line);padding:32px 24px;t
       </div>
       <div class="term-body">
         <div><span class="tc">$</span> <span class="tk">node</span> gen-context.js <span class="tw">--report</span></div>
-        <div style="margin-top:8px;color:var(--t3)">ContextForge token report</div>
+        <div style="margin-top:8px;color:var(--t3)">SigMap token report</div>
         <div style="color:var(--line2)">──────────────────────────────</div>
         <div>Raw source files <span style="float:right"><span class="tr">~80,000 tokens</span></span></div>
         <div>Repomix compressed <span style="float:right"><span class="tw">~8,000 tokens</span></span></div>
-        <div>ContextForge <span style="float:right"><span class="ts">~4,000 tokens</span> <span class="tc">−97%</span></span></div>
+        <div>SigMap <span style="float:right"><span class="ts">~4,000 tokens</span> <span class="tc">−97%</span></span></div>
         <div style="color:var(--line2)">──────────────────────────────</div>
         <div style="margin-top:4px"><span class="tc">$</span> <span class="tc"># Copilot now knows your codebase.</span></div>
       </div>
@@ -225,7 +225,7 @@ footer{background:var(--s1);border-top:1px solid var(--line);padding:32px 24px;t
 <section class="section" id="how-it-works">
   <div class="section-ey">How it works</div>
   <h2>Three steps. No configuration required.</h2>
-  <p class="section-sub">ContextForge scans your source files, strips function bodies and comments, and writes a compact signature index your AI tools read automatically.</p>
+  <p class="section-sub">SigMap scans your source files, strips function bodies and comments, and writes a compact signature index your AI tools read automatically.</p>
 
   <div class="steps">
     <div class="step-card">
@@ -269,13 +269,13 @@ footer{background:var(--s1);border-top:1px solid var(--line);padding:32px 24px;t
           <td class="good">~$0.024</td>
         </tr>
         <tr>
-          <td><strong>ContextForge</strong></td>
+          <td><strong>SigMap</strong></td>
           <td><div class="bar-cell"><div class="mini-bar"><div class="mini-fill" style="width:5%;background:var(--g)"></div></div><span class="best">~4,000</span></div></td>
           <td class="best">−97%</td>
           <td class="best">~$0.012</td>
         </tr>
         <tr>
-          <td>ContextForge + MCP (v0.3)</td>
+          <td>SigMap + MCP (v0.3)</td>
           <td><div class="bar-cell"><div class="mini-bar"><div class="mini-fill" style="width:0.5%;background:var(--gd)"></div></div><span class="best">~200–2K</span></div></td>
           <td class="best">−99%</td>
           <td class="best">~$0.001</td>
@@ -320,11 +320,11 @@ footer{background:var(--s1);border-top:1px solid var(--line);padding:32px 24px;t
 <section class="section" style="padding-top:0">
   <div class="section-ey">Companion tool</div>
   <h2>Works perfectly with Repomix</h2>
-  <p class="section-sub">ContextForge and Repomix are complementary. Use both — they solve different parts of the context problem.</p>
+  <p class="section-sub">SigMap and Repomix are complementary. Use both — they solve different parts of the context problem.</p>
 
   <div class="duo">
     <div class="duo-card cf">
-      <h3>⚡ ContextForge</h3>
+      <h3>⚡ SigMap</h3>
       <p>Always-on. Runs automatically on every save and commit. Produces a compact signature index — 4K tokens for daily Copilot use.</p>
       <ul>
         <li>Auto-updates on save + git commit</li>
@@ -353,7 +353,7 @@ footer{background:var(--s1);border-top:1px solid var(--line);padding:32px 24px;t
       <span class="term-title">combined workflow</span>
     </div>
     <div class="term-body">
-      <div><span class="tc"># Always-on context (ContextForge)</span></div>
+      <div><span class="tc"># Always-on context (SigMap)</span></div>
       <div><span class="tc">$</span> <span class="tk">node</span> gen-context.js <span class="tw">--setup</span></div>
       <div style="margin-top:12px"><span class="tc"># Before a deep refactor session (Repomix)</span></div>
       <div><span class="tc">$</span> <span class="tk">npx</span> repomix <span class="tw">--compress</span></div>
@@ -373,7 +373,7 @@ footer{background:var(--s1);border-top:1px solid var(--line);padding:32px 24px;t
       <div class="qs-body">
         <h4>Download gen-context.js</h4>
         <p>One file, no install required. Drop it in your project root or download globally.</p>
-        <code>curl -O https://raw.githubusercontent.com/manojmallick/context-forge/main/gen-context.js</code>
+        <code>curl -O https://raw.githubusercontent.com/manojmallick/sigmap/main/gen-context.js</code>
       </div>
     </div>
     <div class="qs-step">
@@ -424,30 +424,30 @@ footer{background:var(--s1);border-top:1px solid var(--line);padding:32px 24px;t
   <h2>Built for the community</h2>
   <p>Free forever. Zero telemetry. Runs locally. Adding a language extractor is 80 lines of code — contributions welcome.</p>
   <div style="display:flex;justify-content:center;gap:12px;flex-wrap:wrap">
-    <a class="btn-primary" href="https://github.com/manojmallick/context-forge" target="_blank">★ Star on GitHub</a>
-    <a class="btn-secondary" href="https://github.com/manojmallick/context-forge/blob/main/CONTRIBUTING.md" target="_blank">Contribute</a>
+    <a class="btn-primary" href="https://github.com/manojmallick/sigmap" target="_blank">★ Star on GitHub</a>
+    <a class="btn-secondary" href="https://github.com/manojmallick/sigmap/blob/main/CONTRIBUTING.md" target="_blank">Contribute</a>
   </div>
 </div>
 
 <!-- FOOTER -->
 <footer>
   <div class="footer-inner">
-    <span class="footer-logo">context-forge v1.5.0</span>
+    <span class="footer-logo">sigmap v1.5.0</span>
     <div class="footer-links">
       <a href="quick-start.html">Quick start</a>
       <a href="strategies.html">Strategies</a>
       <a href="languages.html">Languages</a>
       <a href="roadmap.html">Roadmap</a>
       <a href="repomix.html">Repomix</a>
-      <a href="https://github.com/manojmallick/context-forge">GitHub</a>
-      <a href="https://github.com/manojmallick/context-forge/blob/main/CONTRIBUTING.md">Contributing</a>
-      <a href="https://github.com/manojmallick/context-forge/blob/main/CHANGELOG.md">Changelog</a>
+      <a href="https://github.com/manojmallick/sigmap">GitHub</a>
+      <a href="https://github.com/manojmallick/sigmap/blob/main/CONTRIBUTING.md">Contributing</a>
+      <a href="https://github.com/manojmallick/sigmap/blob/main/CHANGELOG.md">Changelog</a>
     </div>
     <span class="footer-mit">MIT © 2026 Manoj Mallick</span>
   </div>
 </footer>
 
-<!-- ContextForge docs search — v1.5 -->
+<!-- SigMap docs search — v1.5 -->
 <style>
 .cf-search-btn{background:none;border:1px solid var(--line2);border-radius:7px;padding:0 10px;height:32px;cursor:pointer;display:flex;align-items:center;gap:6px;color:var(--t2);font-size:12px;font-family:inherit;transition:.15s;flex-shrink:0}
 .cf-search-btn:hover{border-color:var(--p);color:var(--pd)}

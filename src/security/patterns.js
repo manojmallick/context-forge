@@ -1,7 +1,7 @@
 'use strict';
 
 /**
- * Secret detection patterns for ContextForge scanner.
+ * Secret detection patterns for SigMap scanner.
  * Each pattern has a name and a regex tested against signature strings.
  */
 const PATTERNS = [

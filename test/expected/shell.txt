@@ -1,4 +1,4 @@
-# Setup script for ContextForge
+# Setup script for SigMap
 function install_hooks()
 function generate_context()
 function check_node_version()
