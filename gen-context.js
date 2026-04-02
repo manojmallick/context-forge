@@ -62,6 +62,9 @@ __factories["./src/config/defaults"] = function(module, exports) {
     // Sort recently git-committed files higher in output
     diffPriority: true,
   
+    // Debounce delay (ms) between file-system events and regeneration in watch mode
+    watchDebounce: 300,
+  
     // Append model routing hints section to the context output
     // Routes files to fast/balanced/powerful model tiers based on complexity
     routing: false,
@@ -1581,6 +1584,9 @@ __factories["./src/health/scorer"] = function(module, exports) {
    *   2. Average token reduction percentage             (low-reduction penalty 20 pts)
    *   3. Over-budget run rate                           (budget penalty 20 pts)
    *
+   * Strategy-aware: thresholds adjust based on the active strategy so that
+   * hot-cold (90% reduction intentional) is not penalized as 'low reduction'.
+   *
    * Grade scale:  A ≥ 90  |  B ≥ 75  |  C ≥ 60  |  D < 60
    *
    * Never throws — returns graceful result with nulls for unavailable metrics.
@@ -1589,8 +1595,10 @@ __factories["./src/health/scorer"] = function(module, exports) {
    * @returns {{
    *   score: number,
    *   grade: 'A'|'B'|'C'|'D',
+   *   strategy: string,
    *   tokenReductionPct: number|null,
    *   daysSinceRegen: number|null,
+   *   strategyFreshnessDays: number|null,
    *   totalRuns: number,
    *   overBudgetRuns: number,
    * }}
@@ -1601,30 +1609,52 @@ __factories["./src/health/scorer"] = function(module, exports) {
   
     let tokenReductionPct = null;
     let daysSinceRegen = null;
+    let strategyFreshnessDays = null;
     let overBudgetRuns = 0;
     let totalRuns = 0;
+  
+    // ── Detect active strategy ──────────────────────────────────────────────
+    let strategy = 'full';
+    try {
+      const cfgPath = path.join(cwd, 'gen-context.config.json');
+      if (fs.existsSync(cfgPath)) {
+        const cfg = JSON.parse(fs.readFileSync(cfgPath, 'utf8'));
+        strategy = cfg.strategy || 'full';
+      }
+    } catch (_) {}
   
     // ── Read usage log via tracking logger ──────────────────────────────────
     try {
       const { readLog, summarize } = __require('./src/tracking/logger');
       const entries = readLog(cwd);
       const s = summarize(entries);
-      tokenReductionPct = s.avgReductionPct;
+      // Only set tokenReductionPct when there is actual history; a brand-new/
+      // untracked project should not be penalised for "0% reduction".
+      if (s.totalRuns > 0) tokenReductionPct = s.avgReductionPct;
       overBudgetRuns = s.overBudgetRuns;
       totalRuns = s.totalRuns;
     } catch (_) {
       // No usage log yet — proceed with nulls
     }
   
-    // ── Days since context file was last regenerated ─────────────────────────
+    // ── Days since primary context file was last regenerated ─────────────────
     try {
       const ctxFile = path.join(cwd, '.github', 'copilot-instructions.md');
       if (fs.existsSync(ctxFile)) {
         const mtime = fs.statSync(ctxFile).mtimeMs;
         daysSinceRegen = parseFloat(((Date.now() - mtime) / (1000 * 60 * 60 * 24)).toFixed(1));
       }
-    } catch (_) {
-      // File not found or stat failed — leave as null
+    } catch (_) {}
+  
+    // ── Strategy freshness: context-cold.md age (hot-cold only) ─────────────
+    if (strategy === 'hot-cold') {
+      try {
+        const coldFile = path.join(cwd, '.github', 'context-cold.md');
+        if (fs.existsSync(coldFile)) {
+          const mtime = fs.statSync(coldFile).mtimeMs;
+          strategyFreshnessDays = parseFloat(((Date.now() - mtime) / (1000 * 60 * 60 * 24)).toFixed(1));
+        }
+      } catch (_) {}
     }
   
     // ── Compute composite score ───────────────────────────────────────────────
@@ -1635,9 +1665,18 @@ __factories["./src/health/scorer"] = function(module, exports) {
       points -= Math.min(30, Math.floor((daysSinceRegen - 7) * 4));
     }
   
-    // Low-reduction penalty: context is barely smaller than the raw source (-20)
-    if (tokenReductionPct !== null && tokenReductionPct < 60) {
+    // Low-reduction penalty — threshold depends on strategy:
+    // - hot-cold: primary output tiny by design; use cold freshness instead
+    // - per-module: per-file budgets; global < 60% is expected, no penalty
+    // - full: standard 60% threshold
+    const reductionThreshold = (strategy === 'full') ? 60 : 0;
+    if (tokenReductionPct !== null && tokenReductionPct < reductionThreshold) {
       points -= 20;
+    }
+  
+    // hot-cold strategy freshness penalty: context-cold.md older than 1 day (-10 pts)
+    if (strategy === 'hot-cold' && strategyFreshnessDays !== null && strategyFreshnessDays > 1) {
+      points -= Math.min(10, Math.floor(strategyFreshnessDays - 1) * 3);
     }
   
     // Over-budget penalty: more than 20% of runs exceeded the token budget (-20)
@@ -1654,7 +1693,7 @@ __factories["./src/health/scorer"] = function(module, exports) {
     else if (points >= 60) grade = 'C';
     else grade = 'D';
   
-    return { score: points, grade, tokenReductionPct, daysSinceRegen, totalRuns, overBudgetRuns };
+    return { score: points, grade, strategy, tokenReductionPct, daysSinceRegen, strategyFreshnessDays, totalRuns, overBudgetRuns };
   }
   
   module.exports = { score };
@@ -2327,7 +2366,156 @@ __factories["./src/mcp/handlers"] = function(module, exports) {
     }
   }
   
-  module.exports = { readContext, searchSignatures, getMap, createCheckpoint, getRouting };
+  function explainFile(args, cwd) {
+    if (!args || !args.path) return 'Missing required argument: path';
+  
+    const targetRel = args.path.replace(/\\/g, '/').replace(/^\//, '');
+    const targetAbs = path.resolve(cwd, targetRel);
+    const contextPath = path.join(cwd, CONTEXT_FILE);
+  
+    const lines = ['# explain_file: ' + targetRel, ''];
+  
+    lines.push('## Signatures');
+    let indexedFiles = [];
+  
+    if (fs.existsSync(contextPath)) {
+      const ctxContent = fs.readFileSync(contextPath, 'utf8');
+      const ctxLines = ctxContent.split('\n');
+      let capturing = false;
+      const sigLines = [];
+  
+      for (const line of ctxLines) {
+        if (line.startsWith('### ')) {
+          if (capturing) break;
+          const rel = line.slice(4).trim().replace(/\\/g, '/');
+          capturing = rel === targetRel || rel.endsWith('/' + targetRel) || targetRel.endsWith('/' + rel);
+          if (capturing) continue;
+        } else if (capturing) {
+          sigLines.push(line);
+        }
+      }
+  
+      const sigs = sigLines.filter((l) => l !== '```' && l.trim() !== '');
+      if (sigs.length > 0) {
+        lines.push(...sigs);
+      } else {
+        lines.push('_No signatures indexed for this file. Run: node gen-context.js_');
+      }
+  
+      indexedFiles = ctxContent
+        .split('\n')
+        .filter((l) => l.startsWith('### '))
+        .map((l) => path.resolve(cwd, l.slice(4).trim()));
+    } else {
+      lines.push('_No context file found. Run: node gen-context.js_');
+    }
+  
+    if (!fs.existsSync(targetAbs)) {
+      lines.push('');
+      lines.push('> File not found on disk: ' + targetRel);
+      return lines.join('\n');
+    }
+  
+    lines.push('');
+  
+    lines.push('## Imports (direct dependencies)');
+    try {
+      const { extractImports } = __require('./src/map/import-graph');
+      const fileContent = fs.readFileSync(targetAbs, 'utf8');
+      const fileSet = new Set(indexedFiles);
+      fileSet.add(targetAbs);
+      const imports = extractImports(targetAbs, fileContent, fileSet);
+      if (imports.length > 0) {
+        for (const imp of imports) lines.push('- ' + path.relative(cwd, imp).replace(/\\/g, '/'));
+      } else {
+        lines.push('_No resolvable relative imports found._');
+      }
+    } catch (err) {
+      lines.push('_Could not analyze imports: ' + err.message + '_');
+    }
+  
+    lines.push('');
+  
+    lines.push('## Callers (files that import this file)');
+    try {
+      const { extractImports } = __require('./src/map/import-graph');
+      const fileSet = new Set(indexedFiles);
+      fileSet.add(targetAbs);
+      const callers = [];
+      for (const f of indexedFiles) {
+        if (f === targetAbs || !fs.existsSync(f)) continue;
+        try {
+          const fc = fs.readFileSync(f, 'utf8');
+          const imps = extractImports(f, fc, fileSet);
+          if (imps.includes(targetAbs)) callers.push(path.relative(cwd, f).replace(/\\/g, '/'));
+        } catch (_) {}
+      }
+      if (callers.length > 0) {
+        for (const c of callers) lines.push('- ' + c);
+      } else {
+        lines.push('_No indexed files import this file._');
+      }
+    } catch (err) {
+      lines.push('_Could not analyze callers: ' + err.message + '_');
+    }
+  
+    return lines.join('\n');
+  }
+  
+  function listModules(args, cwd) {
+    const contextPath = path.join(cwd, CONTEXT_FILE);
+    if (!fs.existsSync(contextPath)) {
+      return 'No context file found. Run: node gen-context.js';
+    }
+  
+    const content = fs.readFileSync(contextPath, 'utf8');
+    const ctxLines = content.split('\n');
+    const groups = {};
+    let currentGroup = null;
+    let blockBuf = [];
+  
+    function flushBlock() {
+      if (currentGroup === null || blockBuf.length === 0) return;
+      if (!groups[currentGroup]) groups[currentGroup] = { fileCount: 0, tokenCount: 0 };
+      groups[currentGroup].fileCount++;
+      groups[currentGroup].tokenCount += Math.ceil(blockBuf.join('\n').length / 4);
+      blockBuf = [];
+    }
+  
+    for (const line of ctxLines) {
+      if (line.startsWith('### ')) {
+        flushBlock();
+        const rel = line.slice(4).trim().replace(/\\/g, '/');
+        const parts = rel.split('/');
+        currentGroup = parts.length > 1 ? parts[0] : '.';
+      } else if (currentGroup !== null) {
+        blockBuf.push(line);
+      }
+    }
+    flushBlock();
+  
+    const sorted = Object.entries(groups)
+      .map(([mod, data]) => ({ module: mod, fileCount: data.fileCount, tokenCount: data.tokenCount }))
+      .sort((a, b) => b.tokenCount - a.tokenCount);
+  
+    if (sorted.length === 0) return 'No modules found in context file.';
+  
+    const total = sorted.reduce((s, m) => s + m.tokenCount, 0);
+  
+    return [
+      '# Modules',
+      '',
+      '| Module | Files | Tokens |',
+      '|--------|-------|--------|',
+      ...sorted.map((m) => `| ${m.module} | ${m.fileCount} | ~${m.tokenCount} |`),
+      '',
+      `**Total context tokens: ~${total}**`,
+      '',
+      '_Use `read_context({ module: "name" })` to get signatures for a specific module._',
+    ].join('\n');
+  }
+  
+  module.exports = { readContext, searchSignatures, getMap, createCheckpoint, getRouting, explainFile, listModules };
 };
 
 // ── ./src/mcp/server ──
@@ -2347,11 +2535,11 @@ __factories["./src/mcp/server"] = function(module, exports) {
   
   const readline = require('readline');
   const { TOOLS } = __require('./src/mcp/tools');
-  const { readContext, searchSignatures, getMap, createCheckpoint, getRouting } = __require('./src/mcp/handlers');
+  const { readContext, searchSignatures, getMap, createCheckpoint, getRouting, explainFile, listModules } = __require('./src/mcp/handlers');
   
   const SERVER_INFO = {
     name: 'context-forge',
-    version: '1.3.0',
+    version: '1.4.0',
     description: 'ContextForge MCP server — code signatures on demand',
   };
   
@@ -2404,6 +2592,8 @@ __factories["./src/mcp/server"] = function(module, exports) {
         else if (name === 'get_map') text = getMap(args, cwd);
         else if (name === 'create_checkpoint') text = createCheckpoint(args, cwd);
         else if (name === 'get_routing') text = getRouting(args, cwd);
+        else if (name === 'explain_file') text = explainFile(args, cwd);
+        else if (name === 'list_modules') text = listModules(args, cwd);
         else {
           respondError(id, -32601, `Unknown tool: ${name}`);
           return;
@@ -2545,6 +2735,38 @@ __factories["./src/mcp/tools"] = function(module, exports) {
         'Get model routing hints for this project — which files belong to which complexity ' +
         'tier (fast/balanced/powerful) and which AI model to use for each type of task. ' +
         'Helps reduce API costs by 40–80% by routing simple tasks to cheaper models.',
+      inputSchema: {
+        type: 'object',
+        properties: {},
+        required: [],
+      },
+    },
+    {
+      name: 'explain_file',
+      description:
+        'Explain a specific file: returns its extracted signatures, direct imports ' +
+        '(files it depends on), and callers (files that import it). ' +
+        'Ideal for understanding a file in isolation without reading raw source. ' +
+        'Requires the context file to have been generated first.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          path: {
+            type: 'string',
+            description:
+              'Relative path from the project root (e.g. "src/services/auth.ts"). ' +
+              'Use the paths shown in read_context output.',
+          },
+        },
+        required: ['path'],
+      },
+    },
+    {
+      name: 'list_modules',
+      description:
+        'List all top-level modules (srcDirs) present in the context file, ' +
+        'sorted by token count descending. Use this to decide which module to ' +
+        'pass to read_context before querying a specific area of the codebase.',
       inputSchema: {
         type: 'object',
         properties: {},
@@ -2997,7 +3219,7 @@ const path = require('path');
 const os = require('os');
 const { execSync } = require('child_process');
 
-const VERSION = '1.3.0';
+const VERSION = '1.4.0';
 const MARKER = '\n\n## Auto-generated signatures\n<!-- Updated by gen-context.js -->\n';
 
 // ---------------------------------------------------------------------------
@@ -4004,8 +4226,12 @@ function main() {
     } else {
       console.log('[context-forge] health:');
       console.log(`  score           : ${result.score}/100 (grade ${result.grade})`);
+      console.log(`  strategy        : ${result.strategy}`);
       console.log(`  token reduction : ${result.tokenReductionPct !== null ? result.tokenReductionPct + '%' : 'no history'}`);
       console.log(`  days since regen: ${result.daysSinceRegen !== null ? result.daysSinceRegen : 'context file not found'}`);
+      if (result.strategyFreshnessDays !== null) {
+        console.log(`  cold freshness  : ${result.strategyFreshnessDays} day(s)`);
+      }
       console.log(`  total runs      : ${result.totalRuns}`);
       console.log(`  over-budget runs: ${result.overBudgetRuns}`);
     }
