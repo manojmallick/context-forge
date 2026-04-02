@@ -514,6 +514,61 @@ context-forge/
 
 ---
 
+## 📦 Publishing to npm
+
+Releases are published automatically via GitHub Actions whenever a version tag is pushed.
+
+### One-time setup
+
+1. **Create an npm account** at [npmjs.com](https://www.npmjs.com) (if you haven't already).
+
+2. **Generate an npm access token**:
+   - npmjs.com → Account → Access Tokens → Generate New Token → **Granular Access Token** (or Classic Automation token)
+   - Scope: `context-forge` package, permission: **Read and Write**
+
+3. **Add the secret to GitHub**:
+   ```
+   GitHub repo → Settings → Secrets and variables → Actions → New repository secret
+   Name:  NPM_TOKEN
+   Value: <paste token>
+   ```
+
+### Releasing a new version
+
+```bash
+# 1. Bump version in package.json
+npm version patch   # or minor / major
+
+# 2. Push the commit AND the new tag
+git push && git push --tags
+```
+
+The [npm-publish workflow](.github/workflows/npm-publish.yml) will:
+1. Run the full test suite
+2. Verify `package.json` version matches the pushed tag
+3. Publish to npm with provenance attestation
+4. Create a GitHub Release with auto-generated notes
+
+### Backfilling historical versions
+
+Tags that existed before the workflow was set up can be published retroactively:
+
+```bash
+# Dry run first — see what would be published
+./scripts/backfill-npm.sh
+
+# Actually publish all historical tags
+export NPM_TOKEN=npm_xxxxxxxxxxxx
+./scripts/backfill-npm.sh --publish
+
+# Start from a specific tag
+./scripts/backfill-npm.sh --publish --from v0.5.0
+```
+
+The script assigns `dist-tag: legacy` to all versions except `v1.5.0` (which gets `latest`), so `npm install context-forge` always resolves to the current release.
+
+---
+
 ## 🤝 Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for how to add a language extractor or new feature.
