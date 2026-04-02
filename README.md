@@ -87,7 +87,7 @@ npx repomix --compress         # deep dive sessions
 
 ## CLI reference
 
-> **Note:** `node gen-context.js`, `--watch`, `--setup`, `--report`, `--mcp`, `--routing`, `--diff`, and `--init` are live in v1.2.
+> **Note:** `node gen-context.js`, `--watch`, `--setup`, `--report`, `--mcp`, `--routing`, `--diff`, and `--init` are live in v1.3.
 > Features marked `(v0.x)` or `(v1.x)` were added incrementally — see [CHANGELOG.md](CHANGELOG.md) for when each shipped.
 
 ```

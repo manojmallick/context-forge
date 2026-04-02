@@ -700,7 +700,7 @@ node test/run.js
 ---
 
 ## v1.3 — `--diff` flag + watch debounce
-**Status: 📋 PLANNED**
+**Status: ✅ SHIPPED — v1.3.0**
 **Duration: 2 days | Owner: Platform**
 
 ### What ships

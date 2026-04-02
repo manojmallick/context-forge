@@ -6,6 +6,38 @@ Format: [Semantic Versioning](https://semver.org/)
 
 ---
 
+## [1.3.0] — 2026-04-03
+
+### Added
+- **`--diff` CLI flag** — generates context only for files changed in the current git working tree (`git diff HEAD --name-only`). Useful in CI and pre-review workflows where you only want signatures for files you've touched.
+- **`--diff --staged` variant** — restricts context to files in the git staging area only (`git diff --cached --name-only`). Ideal as a pre-commit check.
+- **Smart fallback** — both `--diff` modes automatically fall back to a full `runGenerate` when: outside a git repo, no changed files, or all changed files are outside tracked `srcDirs`. No silent failures.
+- **`--diff --report`** — when both flags are used together, prints a side-by-side comparison of diff-mode vs full-mode token counts and savings.
+- **`watchDebounce` config key** — new key in `gen-context.config.json` (default: `300`) controls the debounce delay (ms) between file-system events and regeneration in watch mode. Configurable per project.
+- **`test/integration/diff.test.js`** — 6 integration tests covering all diff-mode scenarios:
+  - Diff-only output excludes unchanged files
+  - `--staged` excludes unstaged modifications
+  - Empty diff fallback to full generate
+  - Non-git-repo fallback
+  - Changed files outside srcDirs fallback
+  - Multiple changed files all appear in output
+
+### Changed
+- Watch mode debounce reduced from **500 ms → 300 ms** (default). Now reads `config.watchDebounce || 300` — fully configurable.
+- `gen-context.js` VERSION bumped to `1.3.0`
+- MCP server version bumped to `1.3.0`
+- `package.json` version bumped to `1.3.0`
+- `src/config/defaults.js` — added `watchDebounce: 300` key
+
+### Validation gate
+- `node gen-context.js --version` → `1.3.0` ✔
+- `node gen-context.js --diff` on a repo with changes → output contains only changed-file sigs ✔
+- `node gen-context.js --diff --staged` → output contains only staged-file sigs ✔
+- `node test/integration/diff.test.js` → 6/6 pass ✔
+- `node test/run.js` → 21/21 extractor tests pass ✔
+
+---
+
 ## [1.2.0] — 2026-04-02
 
 ### Added
