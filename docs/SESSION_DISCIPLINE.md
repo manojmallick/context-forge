@@ -26,7 +26,7 @@ Session discipline solves the rest.
 **Before writing any code:**
 
 ```
-1. Run: node gen-context.js --generate     (or the watcher is running)
+1. Run: node gen-context.js     (or the watcher is running)
 2. In Copilot Chat: type cf-start → Tab
 3. Specify your task for the session
 4. Wait for the assistant to confirm it has loaded context
@@ -151,7 +151,7 @@ ContextForge can regenerate context automatically on every commit:
 
 ```bash
 node gen-context.js --setup
-# Installs: .git/hooks/post-commit → runs gen-context.js --generate
+# Installs: .git/hooks/post-commit → runs gen-context.js on every commit
 ```
 
 With the hook in place, the context file is always in sync with HEAD. Context drift between commits becomes impossible.
@@ -160,7 +160,7 @@ With the hook in place, the context file is always in sync with HEAD. Context dr
 
 ```bash
 cat .git/hooks/post-commit
-# Should contain: node /path/to/gen-context.js --generate
+# Should contain: node /path/to/gen-context.js
 ```
 
 ---

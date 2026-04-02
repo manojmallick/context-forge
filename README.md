@@ -282,6 +282,24 @@ Copy `gen-context.config.json.example` to `gen-context.config.json`:
 }
 ```
 
+### Output targets
+
+The `outputs` array controls which files are written. Each maps to the path an
+AI tool reads automatically:
+
+| Target | Output path | Read by |
+|---|---|---|
+| `copilot` (default) | `.github/copilot-instructions.md` | GitHub Copilot in VS Code |
+| `claude` | `CLAUDE.md` | Claude Code |
+| `cursor` | `.cursor/rules` | Cursor IDE |
+| `windsurf` | `.windsurf/rules` | Windsurf IDE |
+
+Write to multiple targets at once:
+
+```json
+{ "outputs": ["copilot", "claude", "cursor"] }
+```
+
 Exclusions go in `.contextignore` (gitignore syntax). Also reads `.repomixignore` if present.
 
 ---
@@ -319,28 +337,50 @@ sleep 2
 ## Project structure
 
 ```
-gen-context.js                ← single-file entry point
+gen-context.js                ← standalone bundle (generated from src/ — do not edit directly)
 gen-project-map.js            ← import graph, class hierarchy, route table
+scripts/bundle.js             ← bundles src/ into gen-context.js
+src/config/                   ← config loader + defaults
 src/extractors/               ← 21 language extractors
 src/format/cache.js           ← Anthropic prompt-cache JSON formatter (v0.8)
-src/routing/                  ← model routing hints (v0.7)
-src/tracking/logger.js        ← NDJSON usage log (v0.9)
 src/health/scorer.js          ← composite health score (v1.0)
+src/map/                      ← import graph, class hierarchy, route table (used by gen-project-map.js)
 src/mcp/                      ← MCP stdio server (v0.3)
+src/routing/                  ← model routing hints (v0.7)
 src/security/                 ← secret scanner (v0.2)
-src/config/                   ← config loader + defaults
+src/tracking/logger.js        ← NDJSON usage log (v0.9)
 test/fixtures/                ← one fixture per language
 test/expected/                ← expected extractor output
 test/run.js                   ← zero-dep test runner
+docs/ARCHITECTURE.md          ← internal design, data flow, module map
 docs/CONTEXT_STRATEGIES.md    ← full/per-module/hot-cold strategy guide (v1.1)
 docs/ENTERPRISE_SETUP.md      ← enterprise & CI observability guide (v0.9)
+docs/MCP_SETUP.md             ← MCP server setup for Claude Code, Cursor, Windsurf
 docs/REPOMIX_CACHE.md         ← prompt cache strategy guide (v0.8)
 docs/MODEL_ROUTING.md         ← model routing guide (v0.7)
+docs/SESSION_DISCIPLINE.md    ← session lifecycle and token hygiene guide
+docs/CI_GUIDE.md              ← CI/CD integration and monorepo setup
 examples/self-healing-github-action.yml  ← auto-regeneration CI workflow (v1.0)
 scripts/ci-update.sh          ← CI helper for pipelines (v1.0)
 .contextignore.example        ← exclusion template
 gen-context.config.json.example ← annotated config reference
 ```
+
+---
+
+## Docs
+
+| Guide | Description |
+|---|---|
+| [ARCHITECTURE.md](docs/ARCHITECTURE.md) | Internal design, data flow, module map, bundle system |
+| [CONTEXT_STRATEGIES.md](docs/CONTEXT_STRATEGIES.md) | full / per-module / hot-cold strategy guide |
+| [MCP_SETUP.md](docs/MCP_SETUP.md) | MCP server for Claude Code, Cursor, Windsurf |
+| [MODEL_ROUTING.md](docs/MODEL_ROUTING.md) | Model tier routing and `--suggest-tool` |
+| [SESSION_DISCIPLINE.md](docs/SESSION_DISCIPLINE.md) | Session lifecycle and token hygiene |
+| [CI_GUIDE.md](docs/CI_GUIDE.md) | GitHub Actions, monorepo, health gates |
+| [ENTERPRISE_SETUP.md](docs/ENTERPRISE_SETUP.md) | Observability, Prometheus/Grafana, self-healing CI |
+| [REPOMIX_CACHE.md](docs/REPOMIX_CACHE.md) | Prompt caching with Anthropic API |
+| [REPOMIX_INTEGRATION.md](docs/REPOMIX_INTEGRATION.md) | Using ContextForge + Repomix together |
 
 ---
 

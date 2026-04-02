@@ -66,6 +66,21 @@ Add to `.cursor/mcp.json` in your project root:
 }
 ```
 
+### Windsurf
+
+Add to `.windsurf/mcp_config.json` in your project root:
+
+```json
+{
+  "mcpServers": {
+    "context-forge": {
+      "command": "node",
+      "args": ["/absolute/path/to/your/project/gen-context.js", "--mcp"]
+    }
+  }
+}
+```
+
 ### Both servers (ContextForge + Repomix)
 
 See [examples/claude-code-settings.json](../examples/claude-code-settings.json) for a ready-to-use config with both servers configured.
@@ -129,6 +144,42 @@ get_map(type="routes")
 ```
 
 **Returns:** The import graph, class hierarchy, or route table section from `PROJECT_MAP.md`. Returns a helpful error message if the file doesn't exist yet.
+
+---
+
+### `create_checkpoint`
+
+Creates a session snapshot for handoffs or periodic saves during long coding sessions.
+
+| Argument | Type | Required | Description |
+|---|---|---|---|
+| `note` | string | No | Free-text note about what you were working on |
+
+**Example:**
+
+```
+create_checkpoint(note="finished auth middleware, starting token refresh")
+```
+
+**Returns:** Recent git commits, active branch, token count, modules indexed, and a compact snapshot of current context. Copy the output into your session notes, PR description, or a `NOTES.md` in the repo root.
+
+---
+
+### `get_routing`
+
+Returns model routing hints for the project — which files belong to which complexity tier and which AI model to use for each task type.
+
+| Argument | Type | Required | Description |
+|---|---|---|---|
+| _(none)_ | — | — | — |
+
+**Example:**
+
+```
+get_routing()
+```
+
+**Returns:** Per-file tier assignments (`fast` / `balanced` / `powerful`) and model recommendations. Use this to route simple tasks to cheaper models and reduce API costs by 40–80%.
 
 ---
 
