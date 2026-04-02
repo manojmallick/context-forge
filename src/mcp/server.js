@@ -14,7 +14,7 @@
 
 const readline = require('readline');
 const { TOOLS } = require('./tools');
-const { readContext, searchSignatures, getMap, createCheckpoint, getRouting } = require('./handlers');
+const { readContext, searchSignatures, getMap, createCheckpoint, getRouting, explainFile, listModules } = require('./handlers');
 
 const SERVER_INFO = {
   name: 'context-forge',
@@ -71,6 +71,8 @@ function dispatch(msg, cwd) {
       else if (name === 'get_map') text = getMap(args, cwd);
       else if (name === 'create_checkpoint') text = createCheckpoint(args, cwd);
       else if (name === 'get_routing') text = getRouting(args, cwd);
+      else if (name === 'explain_file') text = explainFile(args, cwd);
+      else if (name === 'list_modules') text = listModules(args, cwd);
       else {
         respondError(id, -32601, `Unknown tool: ${name}`);
         return;

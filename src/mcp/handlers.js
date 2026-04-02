@@ -265,4 +265,169 @@ function getRouting(args, cwd) {
   }
 }
 
-module.exports = { readContext, searchSignatures, getMap, createCheckpoint, getRouting };
+/**
+ * explain_file({ path }) → string
+ *
+ * Returns a file's signatures, its direct imports, and files that import it.
+ * path: relative path from project root (e.g. 'src/services/auth.ts')
+ */
+function explainFile(args, cwd) {
+  if (!args || !args.path) return 'Missing required argument: path';
+
+  const targetRel = args.path.replace(/\\/g, '/').replace(/^\//, '');
+  const targetAbs = path.resolve(cwd, targetRel);
+  const contextPath = path.join(cwd, CONTEXT_FILE);
+
+  const lines = ['# explain_file: ' + targetRel, ''];
+
+  // ── Signatures (from context file) ─────────────────────────────────────
+  lines.push('## Signatures');
+  let indexedFiles = [];
+
+  if (fs.existsSync(contextPath)) {
+    const ctxContent = fs.readFileSync(contextPath, 'utf8');
+    const ctxLines = ctxContent.split('\n');
+    let capturing = false;
+    const sigLines = [];
+
+    for (const line of ctxLines) {
+      if (line.startsWith('### ')) {
+        if (capturing) break; // already collected our block
+        const rel = line.slice(4).trim().replace(/\\/g, '/');
+        capturing = rel === targetRel || rel.endsWith('/' + targetRel) || targetRel.endsWith('/' + rel);
+        if (capturing) continue;
+      } else if (capturing) {
+        sigLines.push(line);
+      }
+    }
+
+    const sigs = sigLines.filter((l) => l !== '```' && l.trim() !== '');
+    if (sigs.length > 0) {
+      lines.push(...sigs);
+    } else {
+      lines.push('_No signatures indexed for this file. Run: node gen-context.js_');
+    }
+
+    indexedFiles = ctxContent
+      .split('\n')
+      .filter((l) => l.startsWith('### '))
+      .map((l) => path.resolve(cwd, l.slice(4).trim()));
+  } else {
+    lines.push('_No context file found. Run: node gen-context.js_');
+  }
+
+  if (!fs.existsSync(targetAbs)) {
+    lines.push('');
+    lines.push('> File not found on disk: ' + targetRel);
+    return lines.join('\n');
+  }
+
+  lines.push('');
+
+  // ── Direct imports ────────────────────────────────────────────────────────
+  lines.push('## Imports (direct dependencies)');
+  try {
+    const { extractImports } = require('../map/import-graph');
+    const fileContent = fs.readFileSync(targetAbs, 'utf8');
+    const fileSet = new Set(indexedFiles);
+    fileSet.add(targetAbs);
+    const imports = extractImports(targetAbs, fileContent, fileSet);
+    if (imports.length > 0) {
+      for (const imp of imports) lines.push('- ' + path.relative(cwd, imp).replace(/\\/g, '/'));
+    } else {
+      lines.push('_No resolvable relative imports found._');
+    }
+  } catch (err) {
+    lines.push('_Could not analyze imports: ' + err.message + '_');
+  }
+
+  lines.push('');
+
+  // ── Callers (reverse-import lookup) ──────────────────────────────────────
+  lines.push('## Callers (files that import this file)');
+  try {
+    const { extractImports } = require('../map/import-graph');
+    const fileSet = new Set(indexedFiles);
+    fileSet.add(targetAbs);
+    const callers = [];
+    for (const f of indexedFiles) {
+      if (f === targetAbs || !fs.existsSync(f)) continue;
+      try {
+        const fc = fs.readFileSync(f, 'utf8');
+        const imps = extractImports(f, fc, fileSet);
+        if (imps.includes(targetAbs)) callers.push(path.relative(cwd, f).replace(/\\/g, '/'));
+      } catch (_) {}
+    }
+    if (callers.length > 0) {
+      for (const c of callers) lines.push('- ' + c);
+    } else {
+      lines.push('_No indexed files import this file._');
+    }
+  } catch (err) {
+    lines.push('_Could not analyze callers: ' + err.message + '_');
+  }
+
+  return lines.join('\n');
+}
+
+/**
+ * list_modules({}) → string
+ *
+ * Lists all srcDir modules present in the context file, sorted by token count
+ * descending. Helps agents decide which module to query with read_context.
+ */
+function listModules(args, cwd) {
+  const contextPath = path.join(cwd, CONTEXT_FILE);
+  if (!fs.existsSync(contextPath)) {
+    return 'No context file found. Run: node gen-context.js';
+  }
+
+  const content = fs.readFileSync(contextPath, 'utf8');
+  const ctxLines = content.split('\n');
+
+  const groups = {}; // key: top-level dir, value: { fileCount, tokenCount }
+  let currentGroup = null;
+  let blockBuf = [];
+
+  function flushBlock() {
+    if (currentGroup === null || blockBuf.length === 0) return;
+    if (!groups[currentGroup]) groups[currentGroup] = { fileCount: 0, tokenCount: 0 };
+    groups[currentGroup].fileCount++;
+    groups[currentGroup].tokenCount += Math.ceil(blockBuf.join('\n').length / 4);
+    blockBuf = [];
+  }
+
+  for (const line of ctxLines) {
+    if (line.startsWith('### ')) {
+      flushBlock();
+      const rel = line.slice(4).trim().replace(/\\/g, '/');
+      const parts = rel.split('/');
+      currentGroup = parts.length > 1 ? parts[0] : '.';
+    } else if (currentGroup !== null) {
+      blockBuf.push(line);
+    }
+  }
+  flushBlock();
+
+  const sorted = Object.entries(groups)
+    .map(([mod, data]) => ({ module: mod, fileCount: data.fileCount, tokenCount: data.tokenCount }))
+    .sort((a, b) => b.tokenCount - a.tokenCount);
+
+  if (sorted.length === 0) return 'No modules found in context file.';
+
+  const total = sorted.reduce((s, m) => s + m.tokenCount, 0);
+
+  return [
+    '# Modules',
+    '',
+    '| Module | Files | Tokens |',
+    '|--------|-------|--------|',
+    ...sorted.map((m) => `| ${m.module} | ${m.fileCount} | ~${m.tokenCount} |`),
+    '',
+    `**Total context tokens: ~${total}**`,
+    '',
+    '_Use `read_context({ module: "name" })` to get signatures for a specific module._',
+  ].join('\n');
+}
+
+module.exports = { readContext, searchSignatures, getMap, createCheckpoint, getRouting, explainFile, listModules };

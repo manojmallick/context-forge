@@ -88,6 +88,38 @@ const TOOLS = [
       required: [],
     },
   },
+  {
+    name: 'explain_file',
+    description:
+      'Explain a specific file: returns its extracted signatures, direct imports ' +
+      '(files it depends on), and callers (files that import it). ' +
+      'Ideal for understanding a file in isolation without reading raw source. ' +
+      'Requires the context file to have been generated first.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        path: {
+          type: 'string',
+          description:
+            'Relative path from the project root (e.g. "src/services/auth.ts"). ' +
+            'Use the paths shown in read_context output.',
+        },
+      },
+      required: ['path'],
+    },
+  },
+  {
+    name: 'list_modules',
+    description:
+      'List all top-level modules (srcDirs) present in the context file, ' +
+      'sorted by token count descending. Use this to decide which module to ' +
+      'pass to read_context before querying a specific area of the codebase.',
+    inputSchema: {
+      type: 'object',
+      properties: {},
+      required: [],
+    },
+  },
 ];
 
 module.exports = { TOOLS };
