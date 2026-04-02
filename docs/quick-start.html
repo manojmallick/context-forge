@@ -437,7 +437,7 @@ footer{background:var(--s1);border-top:1px solid var(--line);padding:32px 24px}
       <span class="term-title">node gen-context.js --help</span>
     </div>
     <div class="term-body">
-      <div><span class="tp">ContextForge v1.0.0</span></div>
+      <div><span class="tp">ContextForge v1.5.0</span></div>
       <div>&nbsp;</div>
       <div><span class="tc">Usage:</span> <span class="tw">node gen-context.js [flag]</span></div>
       <div>&nbsp;</div>
@@ -447,8 +447,10 @@ footer{background:var(--s1);border-top:1px solid var(--line);padding:32px 24px}
       <div><span class="ts">  --mcp              </span><span class="tc">Start MCP server on stdio</span></div>
       <div><span class="ts">  --report           </span><span class="tc">Print token reduction stats to stdout</span></div>
       <div><span class="ts">  --report --json    </span><span class="tc">Token report as JSON (for CI pipelines)</span></div>
-      <div><span class="ts">  --health           </span><span class="tc">Run all 21 extractor health checks</span></div>
-      <div><span class="ts">  --suggest-tool     </span><span class="tc">Recommend MCP tool for current task context</span></div>
+      <div><span class="ts">  --diff             </span><span class="tc">Generate context for git-changed files only</span></div>
+      <div><span class="ts">  --diff --staged    </span><span class="tc">Generate context for staged files only</span></div>
+      <div><span class="ts">  --health           </span><span class="tc">Composite 0-100 health score (grade A-D)</span></div>
+      <div><span class="ts">  --suggest-tool     </span><span class="tc">Recommend fast/balanced/powerful model tier</span></div>
       <div><span class="ts">  --track            </span><span class="tc">Log run metrics to .context-forge/runs.jsonl</span></div>
       <div><span class="ts">  --init             </span><span class="tc">Write gen-context.config.json.example</span></div>
       <div><span class="ts">  --version          </span><span class="tc">Print version string</span></div>
@@ -479,16 +481,16 @@ footer{background:var(--s1);border-top:1px solid var(--line);padding:32px 24px}
       <div class="next-card-desc">Stack both tools for the two-layer caching strategy. ContextForge for daily; Repomix for deep sessions.</div>
     </a>
     <a class="next-card" href="roadmap.html">
-      <div class="next-card-ey">v0.1 → v1.1</div>
+      <div class="next-card-ey">v0.1 → v1.5</div>
       <div class="next-card-title">Full roadmap</div>
-      <div class="next-card-desc">All 12 versions shipped. 97% token reduction. 177 tests. MIT license.</div>
+      <div class="next-card-desc">All 16 versions shipped. 97% token reduction. 274 tests. MIT license.</div>
     </a>
   </div>
 </section>
 
 <footer>
   <div class="footer-inner">
-    <span class="footer-logo">context-forge v1.1.0</span>
+    <span class="footer-logo">context-forge v1.5.0</span>
     <div class="footer-links">
       <a href="strategies.html">Strategies</a>
       <a href="languages.html">Languages</a>

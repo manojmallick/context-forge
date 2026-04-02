@@ -317,7 +317,7 @@ node test/run.js --update   # regenerate expected outputs
 ```bash
 # Gate 1: all tests pass
 node test/run.js
-# Expected: 177/177 PASS (21 extractor + 156 integration)
+# Expected: 274/274 PASS (21 extractor + 253 integration)
 
 # Gate 2: no external imports
 grep "require(" gen-context.js | grep -v "^.*//.*require"
@@ -342,9 +342,10 @@ src/format/cache.js           ← Anthropic prompt-cache JSON formatter (v0.8)
 src/routing/                  ← model routing hints (v0.7)
 src/tracking/logger.js        ← NDJSON usage log (v0.9)
 src/health/scorer.js          ← composite health score (v1.0)
-src/mcp/                      ← MCP stdio server (v0.3)
+src/mcp/                      ← MCP stdio server (v0.3); 7 tools
 src/security/                 ← secret scanner (v0.2)
 src/config/                   ← config loader + defaults
+vscode-extension/             ← VS Code extension — status bar, commands, stale alert (v1.5)
 test/fixtures/                ← one fixture per language
 test/expected/                ← expected extractor output
 test/run.js                   ← zero-dep test runner
@@ -354,6 +355,7 @@ docs/REPOMIX_CACHE.md         ← prompt cache strategy guide (v0.8)
 docs/MODEL_ROUTING.md         ← model routing guide (v0.7)
 examples/self-healing-github-action.yml  ← auto-regeneration CI workflow (v1.0)
 scripts/ci-update.sh          ← CI helper for pipelines (v1.0)
+scripts/inject-search.py      ← one-time migration: adds search to docs HTML (v1.5)
 .contextignore.example        ← exclusion template
 gen-context.config.json.example ← annotated config reference
 ```
