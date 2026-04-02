@@ -1,15 +1,35 @@
 {
   "name": "sigmap",
-  "displayName": "SigMap",
-  "description": "Zero-dependency AI context engine — keeps copilot-instructions.md fresh automatically.",
-  "version": "1.5.2",
+  "displayName": "SigMap — AI Context Engine",
+  "description": "97% token reduction for Copilot, Claude & Cursor. Extracts code signatures from 21 languages into copilot-instructions.md automatically.",
+  "version": "1.5.3",
   "publisher": "manojmallick",
   "engines": {
     "vscode": "^1.85.0"
   },
   "icon": "icon.png",
-  "categories": ["Other", "AI", "Machine Learning"],
-  "keywords": ["copilot", "ai-context", "token-reduction", "code-signatures", "claude", "cursor", "sigmap", "context", "llm", "zero-dependency", "mcp"],
+  "categories": ["AI", "Other"],
+  "keywords": [
+    "copilot",
+    "github copilot",
+    "claude",
+    "cursor",
+    "ai context",
+    "token reduction",
+    "code signatures",
+    "sigmap",
+    "context",
+    "llm",
+    "zero-dependency",
+    "mcp",
+    "copilot-instructions",
+    "windsurf",
+    "gemini",
+    "codebase context",
+    "typescript",
+    "python",
+    "go"
+  ],
   "galleryBanner": {
     "color": "#1e1e2e",
     "theme": "dark"
