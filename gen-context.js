@@ -3224,7 +3224,7 @@ const path = require('path');
 const os = require('os');
 const { execSync } = require('child_process');
 
-const VERSION = '1.5.1';
+const VERSION = '1.5.2';
 const MARKER = '\n\n## Auto-generated signatures\n<!-- Updated by gen-context.js -->\n';
 
 // ---------------------------------------------------------------------------
