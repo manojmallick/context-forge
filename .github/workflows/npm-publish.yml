@@ -124,8 +124,28 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Build .vsix for release attachment
+        run: |
+          npm install -g @vscode/vsce
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          node -e "
+            const fs = require('fs');
+            const pkg = JSON.parse(fs.readFileSync('vscode-extension/package.json', 'utf8'));
+            pkg.version = process.env.TAG_VERSION;
+            fs.writeFileSync('vscode-extension/package.json', JSON.stringify(pkg, null, 2) + '\n');
+          "
+          cd vscode-extension && vsce package --no-dependencies
+        env:
+          TAG_VERSION: ${{ github.ref_name }}
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           generate_release_notes: true
           make_latest: true
+          files: vscode-extension/*.vsix
