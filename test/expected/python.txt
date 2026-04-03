@@ -4,5 +4,5 @@ class UserService
   async def create_user(data)
 class AdminService(UserService)
   def delete_user(user_id)
-def hash_password(password)
-async def send_email(to, subject, body)
+def hash_password(password)  # Returns deterministic hash for tests
+async def send_email(to, subject, body)  # Send transactional email to user inbox

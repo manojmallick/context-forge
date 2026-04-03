@@ -1,8 +1,8 @@
 class UserService
-  function getUser(string $id)
-  function createUser(array $data)
-  function validateUser(User $user)
+  function getUser(string $id) → ?User
+  function createUser(array $data) → User
+  function validateUser(User $user) → bool
 interface Repository
-  function findById(string $id)
-  function save(mixed $entity)
-function hashPassword(string $password)
+  function findById(string $id) → mixed
+  function save(mixed $entity) → mixed
+function hashPassword(string $password) → string

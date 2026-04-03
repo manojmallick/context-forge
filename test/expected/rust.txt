@@ -2,7 +2,7 @@ pub struct UserService
 pub enum UserRole
 pub trait Repository
 impl UserService
-  pub fn new(repo: Box<dyn Repository>)
-  pub fn get_user(&self, id: &str)
-  pub async fn create_user(&self, data: CreateUserDto)
-pub fn hash_password(password: &str)
+  pub fn new(repo: Box<dyn Repository>) → Self
+  pub fn get_user(&self, id: &str) → Option<User>
+  pub async fn create_user(&self, data: CreateUserDto) → Result<User, Box<dyn Error>>
+pub fn hash_password(password: &str) → String

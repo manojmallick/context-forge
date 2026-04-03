@@ -25,10 +25,12 @@ function extract(src) {
     for (const method of extractInterfaceMethods(block)) sigs.push(`  ${method}`);
   }
 
-  // Functions and methods
-  for (const m of stripped.matchAll(/^func\s+(?:\((\w+)\s+[\w*]+\)\s+)?(\w+)\s*\(([^)]*)\)(?:\s*[\w*()\[\],\s]+)?\s*\{/gm)) {
+  // Functions and methods — capture return type between ) and {
+  for (const m of stripped.matchAll(/^func\s+(?:\((\w+)\s+[\w*]+\)\s+)?(\w+)\s*\(([^)]*)\)([^{]*)\{/gm)) {
     const receiver = m[1] ? `(${m[1]}) ` : '';
-    sigs.push(`func ${receiver}${m[2]}(${normalizeParams(m[3])})`);
+    const retType = m[4] ? m[4].trim().replace(/\s+/g, ' ') : '';
+    const retStr = retType ? ` \u2192 ${retType.slice(0, 30)}` : '';
+    sigs.push(`func ${receiver}${m[2]}(${normalizeParams(m[3])})${retStr}`);
   }
 
   return sigs.slice(0, 25);
@@ -47,8 +49,10 @@ function extractBlock(src, startIndex) {
 
 function extractInterfaceMethods(block) {
   const methods = [];
-  for (const m of block.matchAll(/^\s+(\w+)\s*\(([^)]*)\)/gm)) {
-    methods.push(`${m[1]}(${normalizeParams(m[2])})`);
+  for (const m of block.matchAll(/^\s+(\w+)\s*\(([^)]*)\)([^\n]*)/gm)) {
+    const retType = m[3] ? m[3].trim().replace(/\s+/g, ' ') : '';
+    const retStr = retType ? ` \u2192 ${retType.slice(0, 30)}` : '';
+    methods.push(`${m[1]}(${normalizeParams(m[2])})${retStr}`);
   }
   return methods.slice(0, 8);
 }

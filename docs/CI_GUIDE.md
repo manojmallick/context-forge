@@ -12,12 +12,12 @@ understanding of your codebase.
 
 ## Quick start — single repo
 
-Copy `examples/github-action.yml` into `.github/workflows/contextforge.yml`:
+Copy `examples/github-action.yml` into `.github/workflows/sigmap.yml`:
 
 ```bash
 mkdir -p .github/workflows
-cp examples/github-action.yml .github/workflows/contextforge.yml
-git add .github/workflows/contextforge.yml
+cp examples/github-action.yml .github/workflows/sigmap.yml
+git add .github/workflows/sigmap.yml
 git commit -m "ci: add SigMap auto-update workflow"
 ```
 
@@ -31,7 +31,7 @@ infinite loops.
 
 | Job | Tool | Output | When |
 |-----|------|--------|------|
-| `contextforge` | `gen-context.js` | `.github/copilot-instructions.md` | every push + nightly |
+| `sigmap` | `gen-context.js` | `.github/copilot-instructions.md` | every push + nightly |
 | `project-map`  | `gen-project-map.js` | `PROJECT_MAP.md` | every push + nightly |
 | `repomix`      | `repomix --compress` | `.context/repomix-compressed.md` | every push + nightly |
 | `test`         | `node test/run.js` | pass/fail on Node 18/20/22 | every push + PR |
@@ -158,7 +158,7 @@ Use `--report --json` to capture token metrics as structured output:
 JSON schema:
 ```json
 {
-  "version": "1.0.0",
+  "version": "2.0.0",
   "timestamp": "2026-04-01T09:00:00.000Z",
   "rawTokens": 42000,
   "finalTokens": 2800,

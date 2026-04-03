@@ -95,12 +95,13 @@ test('Unknown config keys are ignored', () => {
 
 // --- Config does not mutate DEFAULTS ---
 test('loadConfig does not mutate DEFAULTS singleton', () => {
+  const originalSrcDirs = JSON.parse(JSON.stringify(DEFAULTS.srcDirs));
   withTempDir((dir) => {
     fs.writeFileSync(path.join(dir, 'gen-context.config.json'), JSON.stringify({
       srcDirs: ['custom'],
     }));
     loadConfig(dir);
-    assert.deepStrictEqual(DEFAULTS.srcDirs, ['src', 'app', 'lib', 'packages', 'services', 'api']);
+    assert.deepStrictEqual(DEFAULTS.srcDirs, originalSrcDirs);
   });
 });
 

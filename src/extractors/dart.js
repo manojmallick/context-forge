@@ -21,10 +21,11 @@ function extract(src) {
     for (const meth of extractMembers(block)) sigs.push(`  ${meth}`);
   }
 
-  // Top-level functions
-  for (const m of stripped.matchAll(/^(?:Future|void|[\w<>?]+)\s+(\w+)\s*\(([^)]*)\)/gm)) {
-    if (m[1].startsWith('_')) continue;
-    sigs.push(`${m[1]}(${normalizeParams(m[2])})`);
+  // Top-level functions — capture return type (prefix before name) and show as suffix
+  for (const m of stripped.matchAll(/^((?:Future<[\w<>?,\s]*>|[\w<>?]+))\s+(\w+)\s*\(([^)]*)\)/gm)) {
+    if (m[2].startsWith('_')) continue;
+    const retStr = (m[1] && m[1] !== 'void') ? ` \u2192 ${m[1].replace(/\s+/g, '').slice(0, 25)}` : '';
+    sigs.push(`${m[2]}(${normalizeParams(m[3])})${retStr}`);
   }
 
   return sigs.slice(0, 25);
@@ -43,9 +44,10 @@ function extractBlock(src, startIndex) {
 
 function extractMembers(block) {
   const members = [];
-  for (const m of block.matchAll(/^\s+(?:@override\s+)?(?:Future|void|[\w<>?]+)\s+(\w+)\s*\(([^)]*)\)/gm)) {
-    if (m[1].startsWith('_')) continue;
-    members.push(`${m[1]}(${normalizeParams(m[2])})`);
+  for (const m of block.matchAll(/^\s+(?:@override\s+)?(?:@\w+\s+)*((?:Future<[\w<>?,\s]*>|[\w<>?]+))\s+(\w+)\s*\(([^)]*)\)/gm)) {
+    if (m[2].startsWith('_')) continue;
+    const retStr = (m[1] && m[1] !== 'void') ? ` \u2192 ${m[1].replace(/\s+/g, '').slice(0, 25)}` : '';
+    members.push(`${m[2]}(${normalizeParams(m[3])})${retStr}`);
   }
   return members.slice(0, 8);
 }

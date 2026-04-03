@@ -45,6 +45,15 @@ const DEFAULTS = {
   // Sort recently git-committed files higher in output
   diffPriority: true,
 
+  // Context strategy controls how the output is split and injected.
+  // 'full'       -> single context file (default)
+  // 'per-module' -> one context-<module>.md per top-level srcDir + thin overview
+  // 'hot-cold'   -> recent files in primary output, older files in context-cold.md
+  strategy: 'full',
+
+  // For hot-cold strategy: how many recent git commits count as "hot"
+  hotCommits: 10,
+
   // Debounce delay (ms) between file-system events and regeneration in watch mode
   watchDebounce: 300,
 
@@ -62,6 +71,27 @@ const DEFAULTS = {
   mcp: {
     autoRegister: true,
   },
+
+  // Include a compact import dependency map at top of output
+  depMap: true,
+
+  // Include TODO/FIXME/HACK/XXX comments as compact section
+  todos: true,
+
+  // Include compact recent git changes section
+  changes: true,
+
+  // Number of commits used for changes section
+  changesCommits: 5,
+
+  // Add test coverage markers to extracted function signatures (opt-in)
+  testCoverage: false,
+
+  // Directories scanned for tests when testCoverage is enabled
+  testDirs: ['tests', 'test', '__tests__', 'spec'],
+
+  // Add reverse dependency usage hints on file headings (opt-in)
+  impactRadius: false,
 };
 
 module.exports = { DEFAULTS };

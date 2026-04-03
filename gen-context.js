@@ -200,9 +200,11 @@ __factories["./src/extractors/cpp"] = function(module, exports) {
     }
   
     // Top-level function declarations/definitions (not inside a class)
-    for (const m of stripped.matchAll(/^(?!class|struct|if|for|while|switch)[\w:*&<> ]+\s+(\w+)\s*\(([^)]*)\)\s*(?:const\s*)?\{/gm)) {
-      if (m[1].startsWith('_')) continue;
-      sigs.push(`${m[1]}(${normalizeParams(m[2])})`);
+    for (const m of stripped.matchAll(/^(?!class|struct|if|for|while|switch)([\w:*&<> ]+?)\s+(\w+)\s*\(([^)]*)\)\s*(?:const\s*)?\{/gm)) {
+      if (m[2].startsWith('_')) continue;
+      const ret = normalizeType(m[1]);
+      const retStr = ret ? ` \u2192 ${ret}` : '';
+      sigs.push(`${m[2]}(${normalizeParams(m[3])})${retStr}`);
     }
   
     return sigs.slice(0, 25);
@@ -221,10 +223,12 @@ __factories["./src/extractors/cpp"] = function(module, exports) {
   
   function extractMembers(block) {
     const members = [];
-    const methodRe = /^\s+(?:virtual\s+|static\s+|inline\s+)?(?!private:|protected:|public:)[\w:*&<> ]+\s+(\w+)\s*\(([^)]*)\)\s*(?:const\s*)?(?:override\s*)?(?:=\s*0\s*)?;/gm;
+    const methodRe = /^\s+(?:virtual\s+|static\s+|inline\s+)?(?!private:|protected:|public:)([\w:*&<> ]+?)\s+(\w+)\s*\(([^)]*)\)\s*(?:const\s*)?(?:override\s*)?(?:=\s*0\s*)?;/gm;
     for (const m of block.matchAll(methodRe)) {
-      if (m[1].startsWith('_')) continue;
-      members.push(`${m[1]}(${normalizeParams(m[2])})`);
+      if (m[2].startsWith('_')) continue;
+      const ret = normalizeType(m[1]);
+      const retStr = ret ? ` \u2192 ${ret}` : '';
+      members.push(`${m[2]}(${normalizeParams(m[3])})${retStr}`);
     }
     return members.slice(0, 8);
   }
@@ -232,6 +236,11 @@ __factories["./src/extractors/cpp"] = function(module, exports) {
   function normalizeParams(params) {
     if (!params) return '';
     return params.trim().replace(/\s+/g, ' ');
+  }
+
+  function normalizeType(type) {
+    if (!type) return '';
+    return type.trim().replace(/\s+/g, ' ').slice(0, 30);
   }
   
   module.exports = { extract };
@@ -278,12 +287,23 @@ __factories["./src/extractors/csharp"] = function(module, exports) {
   
   function extractMembers(block) {
     const members = [];
-    const methodRe = /^\s+(?:public|internal|protected)\s+(?:static\s+|virtual\s+|override\s+|async\s+)*(?:[\w<>\[\]?]+\s+)+(\w+)\s*\(([^)]*)\)/gm;
+    const methodRe = /^\s+(?:public|internal|protected)\s+(?:static\s+|virtual\s+|override\s+|async\s+)*(?:where\s+\w+\s*:\s*[^\n]+\s+)?([\w<>\[\]?., ]+)\s+(\w+)\s*\(([^)]*)\)/gm;
     for (const m of block.matchAll(methodRe)) {
-      const sig = m[0].trim().split('{')[0].trim();
-      members.push(sig);
+      const ret = normalizeType(m[1]);
+      const retStr = ret ? ` \u2192 ${ret}` : '';
+      members.push(`${m[2]}(${normalizeParams(m[3])})${retStr}`);
     }
     return members.slice(0, 8);
+  }
+
+  function normalizeParams(params) {
+    if (!params) return '';
+    return params.trim().replace(/\s+/g, ' ');
+  }
+
+  function normalizeType(type) {
+    if (!type) return '';
+    return type.trim().replace(/\s+/g, ' ').slice(0, 30);
   }
   
   module.exports = { extract };
@@ -370,9 +390,11 @@ __factories["./src/extractors/dart"] = function(module, exports) {
     }
   
     // Top-level functions
-    for (const m of stripped.matchAll(/^(?:Future|void|[\w<>?]+)\s+(\w+)\s*\(([^)]*)\)/gm)) {
-      if (m[1].startsWith('_')) continue;
-      sigs.push(`${m[1]}(${normalizeParams(m[2])})`);
+    // Top-level functions — capture return type (prefix before name) and show as suffix
+    for (const m of stripped.matchAll(/^((?:Future<[\w<>?,\s]*>|[\w<>?]+))\s+(\w+)\s*\(([^)]*)\)/gm)) {
+      if (m[2].startsWith('_')) continue;
+      const retStr = (m[1] && m[1] !== 'void') ? ` \u2192 ${m[1].replace(/\s+/g, '').slice(0, 25)}` : '';
+      sigs.push(`${m[2]}(${normalizeParams(m[3])})${retStr}`);
     }
   
     return sigs.slice(0, 25);
@@ -391,9 +413,10 @@ __factories["./src/extractors/dart"] = function(module, exports) {
   
   function extractMembers(block) {
     const members = [];
-    for (const m of block.matchAll(/^\s+(?:@override\s+)?(?:Future|void|[\w<>?]+)\s+(\w+)\s*\(([^)]*)\)/gm)) {
-      if (m[1].startsWith('_')) continue;
-      members.push(`${m[1]}(${normalizeParams(m[2])})`);
+    for (const m of block.matchAll(/^\s+(?:@override\s+)?(?:@\w+\s+)*((?:Future<[\w<>?,\s]*>|[\w<>?]+))\s+(\w+)\s*\(([^)]*)\)/gm)) {
+      if (m[2].startsWith('_')) continue;
+      const retStr = (m[1] && m[1] !== 'void') ? ` \u2192 ${m[1].replace(/\s+/g, '').slice(0, 25)}` : '';
+      members.push(`${m[2]}(${normalizeParams(m[3])})${retStr}`);
     }
     return members.slice(0, 8);
   }
@@ -489,9 +512,12 @@ __factories["./src/extractors/go"] = function(module, exports) {
     }
   
     // Functions and methods
-    for (const m of stripped.matchAll(/^func\s+(?:\((\w+)\s+[\w*]+\)\s+)?(\w+)\s*\(([^)]*)\)(?:\s*[\w*()\[\],\s]+)?\s*\{/gm)) {
+    // Functions and methods — capture return type between ) and {
+    for (const m of stripped.matchAll(/^func\s+(?:\((\w+)\s+[\w*]+\)\s+)?(\w+)\s*\(([^)]*)\)([^{]*)\{/gm)) {
       const receiver = m[1] ? `(${m[1]}) ` : '';
-      sigs.push(`func ${receiver}${m[2]}(${normalizeParams(m[3])})`);
+      const retType = m[4] ? m[4].trim().replace(/\s+/g, ' ') : '';
+      const retStr = retType ? ` \u2192 ${retType.slice(0, 30)}` : '';
+      sigs.push(`func ${receiver}${m[2]}(${normalizeParams(m[3])})${retStr}`);
     }
   
     return sigs.slice(0, 25);
@@ -510,8 +536,10 @@ __factories["./src/extractors/go"] = function(module, exports) {
   
   function extractInterfaceMethods(block) {
     const methods = [];
-    for (const m of block.matchAll(/^\s+(\w+)\s*\(([^)]*)\)/gm)) {
-      methods.push(`${m[1]}(${normalizeParams(m[2])})`);
+    for (const m of block.matchAll(/^\s+(\w+)\s*\(([^)]*)\)([^\n]*)/gm)) {
+      const retType = m[3] ? m[3].trim().replace(/\s+/g, ' ') : '';
+      const retStr = retType ? ` \u2192 ${retType.slice(0, 30)}` : '';
+      methods.push(`${m[1]}(${normalizeParams(m[2])})${retStr}`);
     }
     return methods.slice(0, 8);
   }
@@ -609,12 +637,23 @@ __factories["./src/extractors/java"] = function(module, exports) {
   
   function extractMembers(block) {
     const members = [];
-    const methodRe = /^\s+(?:public|protected)\s+(?:static\s+)?(?:final\s+)?(?:[\w<>\[\]]+\s+)+(\w+)\s*\(([^)]*)\)/gm;
+    const methodRe = /^\s+(?:public|protected)\s+(?:static\s+)?(?:final\s+)?(?:synchronized\s+)?(?:<[^>]+>\s+)?([\w<>\[\], ?.]+)\s+(\w+)\s*\(([^)]*)\)/gm;
     for (const m of block.matchAll(methodRe)) {
-      const sig = m[0].trim().split('{')[0].trim();
-      members.push(sig);
+      const ret = normalizeType(m[1]);
+      const retStr = ret ? ` \u2192 ${ret}` : '';
+      members.push(`${m[2]}(${normalizeParams(m[3])})${retStr}`);
     }
     return members.slice(0, 8);
+  }
+
+  function normalizeParams(params) {
+    if (!params) return '';
+    return params.trim().replace(/\s+/g, ' ');
+  }
+
+  function normalizeType(type) {
+    if (!type) return '';
+    return type.trim().replace(/\s+/g, ' ').slice(0, 30);
   }
   
   module.exports = { extract };
@@ -632,6 +671,7 @@ __factories["./src/extractors/javascript"] = function(module, exports) {
   function extract(src) {
     if (!src || typeof src !== 'string') return [];
     const sigs = [];
+    const returnHints = buildReturnHints(src);
   
     const stripped = src
       .replace(/\/\/.*$/gm, '')
@@ -643,19 +683,21 @@ __factories["./src/extractors/javascript"] = function(module, exports) {
       const prefix = m[1] ? m[1].trim() + ' ' : '';
       sigs.push(`${prefix}class ${m[2]}`);
       const block = extractBlock(stripped, m.index + m[0].length);
-      for (const meth of extractClassMembers(block)) sigs.push(`  ${meth}`);
+      for (const meth of extractClassMembers(block, returnHints)) sigs.push(`  ${meth}`);
     }
   
     // Exported named functions
     for (const m of stripped.matchAll(/^export\s+(?:async\s+)?function\s+(\w+)\s*\(([^)]*)\)/gm)) {
       const asyncKw = /export\s+async/.test(m[0]) ? 'async ' : '';
-      sigs.push(`export ${asyncKw}function ${m[1]}(${normalizeParams(m[2])})`);
+      const retStr = formatReturnHint(returnHints.get(m[1]));
+      sigs.push(`export ${asyncKw}function ${m[1]}(${normalizeParams(m[2])})${retStr}`);
     }
   
     // Exported arrow functions
     for (const m of stripped.matchAll(/^export\s+const\s+(\w+)\s*=\s*(?:async\s+)?\(([^)]*)\)\s*=>/gm)) {
       const asyncKw = m[0].includes('async') ? 'async ' : '';
-      sigs.push(`export const ${m[1]} = ${asyncKw}(${normalizeParams(m[2])}) =>`);
+      const retStr = formatReturnHint(returnHints.get(m[1]));
+      sigs.push(`export const ${m[1]} = ${asyncKw}(${normalizeParams(m[2])}) =>${retStr}`);
     }
   
     // module.exports = { ... }
@@ -668,7 +710,8 @@ __factories["./src/extractors/javascript"] = function(module, exports) {
     // Top-level named functions (non-exported)
     for (const m of stripped.matchAll(/^(?:async\s+)?function\s+(\w+)\s*\(([^)]*)\)/gm)) {
       const asyncKw = m[0].startsWith('async') ? 'async ' : '';
-      sigs.push(`${asyncKw}function ${m[1]}(${normalizeParams(m[2])})`);
+      const retStr = formatReturnHint(returnHints.get(m[1]));
+      sigs.push(`${asyncKw}function ${m[1]}(${normalizeParams(m[2])})${retStr}`);
     }
   
     return sigs.slice(0, 25);
@@ -686,16 +729,40 @@ __factories["./src/extractors/javascript"] = function(module, exports) {
     return src.slice(startIndex, i - 1);
   }
   
-  function extractClassMembers(block) {
+  function extractClassMembers(block, returnHints) {
     const members = [];
     for (const m of block.matchAll(/^\s+(?:static\s+|async\s+|get\s+|set\s+)*(\w+)\s*\(([^)]*)\)\s*\{/gm)) {
       if (/^_/.test(m[1])) continue;
       if (m[1] === 'constructor') { members.push(`constructor(${normalizeParams(m[2])})`); continue; }
       const isAsync = m[0].includes('async ') ? 'async ' : '';
       const isStatic = m[0].includes('static ') ? 'static ' : '';
-      members.push(`${isStatic}${isAsync}${m[1]}(${normalizeParams(m[2])})`);
+      const retStr = formatReturnHint(returnHints.get(m[1]));
+      members.push(`${isStatic}${isAsync}${m[1]}(${normalizeParams(m[2])})${retStr}`);
     }
     return members.slice(0, 8);
+  }
+
+  function buildReturnHints(src) {
+    const hints = new Map();
+    for (const m of src.matchAll(/\/\*\*[\s\S]*?@returns?\s+\{([^}]+)\}[\s\S]*?\*\/\s*(?:export\s+)?(?:async\s+)?function\s+(\w+)\s*\(/g)) {
+      hints.set(m[2], normalizeType(m[1]));
+    }
+    for (const m of src.matchAll(/\/\*\*[\s\S]*?@returns?\s+\{([^}]+)\}[\s\S]*?\*\/\s*export\s+const\s+(\w+)\s*=\s*(?:async\s+)?\(/g)) {
+      hints.set(m[2], normalizeType(m[1]));
+    }
+    for (const m of src.matchAll(/\/\*\*[\s\S]*?@returns?\s+\{([^}]+)\}[\s\S]*?\*\/\s*(?:static\s+|async\s+|get\s+|set\s+)*(\w+)\s*\(/g)) {
+      hints.set(m[2], normalizeType(m[1]));
+    }
+    return hints;
+  }
+
+  function normalizeType(type) {
+    if (!type) return '';
+    return type.trim().replace(/\s+/g, ' ').slice(0, 25);
+  }
+
+  function formatReturnHint(type) {
+    return type ? ` \u2192 ${type}` : '';
   }
   
   function normalizeParams(params) {
@@ -731,9 +798,12 @@ __factories["./src/extractors/kotlin"] = function(module, exports) {
     }
   
     // Top-level functions
-    for (const m of stripped.matchAll(/^(?:public\s+|internal\s+)?(?:suspend\s+)?fun\s+(\w+)\s*(?:<[^(]*>)?\s*\(([^)]*)\)/gm)) {
+    // Top-level functions — capture `: RetType` after params
+    for (const m of stripped.matchAll(/^(?:public\s+|internal\s+)?(?:suspend\s+)?fun\s+(\w+)\s*(?:<[^(]*>)?\s*\(([^)]*)\)(?:\s*:\s*([^\n{=]+))?/gm)) {
       const suspend = m[0].includes('suspend') ? 'suspend ' : '';
-      sigs.push(`${suspend}fun ${m[1]}(${normalizeParams(m[2])})`);
+      const retType = m[3] ? m[3].trim().replace(/\s+/g, ' ') : '';
+      const retStr = retType ? ` \u2192 ${retType.slice(0, 25)}` : '';
+      sigs.push(`${suspend}fun ${m[1]}(${normalizeParams(m[2])})${retStr}`);
     }
   
     return sigs.slice(0, 25);
@@ -752,10 +822,12 @@ __factories["./src/extractors/kotlin"] = function(module, exports) {
   
   function extractMembers(block) {
     const members = [];
-    for (const m of block.matchAll(/^\s+(?:public\s+|internal\s+|override\s+)?(?:suspend\s+)?fun\s+(\w+)\s*(?:<[^(]*>)?\s*\(([^)]*)\)/gm)) {
+    for (const m of block.matchAll(/^\s+(?:public\s+|internal\s+|override\s+)?(?:suspend\s+)?fun\s+(\w+)\s*(?:<[^(]*>)?\s*\(([^)]*)\)(?:\s*:\s*([^\n{=]+))?/gm)) {
       if (m[1].startsWith('_')) continue;
       const suspend = m[0].includes('suspend') ? 'suspend ' : '';
-      members.push(`${suspend}fun ${m[1]}(${normalizeParams(m[2])})`);
+      const retType = m[3] ? m[3].trim().replace(/\s+/g, ' ') : '';
+      const retStr = retType ? ` \u2192 ${retType.slice(0, 25)}` : '';
+      members.push(`${suspend}fun ${m[1]}(${normalizeParams(m[2])})${retStr}`);
     }
     return members.slice(0, 8);
   }
@@ -801,8 +873,10 @@ __factories["./src/extractors/php"] = function(module, exports) {
     }
   
     // Top-level functions
-    for (const m of stripped.matchAll(/^function\s+(\w+)\s*\(([^)]*)\)/gm)) {
-      sigs.push(`function ${m[1]}(${normalizeParams(m[2])})`);
+    for (const m of stripped.matchAll(/^function\s+(\w+)\s*\(([^)]*)\)\s*(?::\s*([^\n{]+))?/gm)) {
+      const ret = normalizeType(m[3]);
+      const retStr = ret ? ` \u2192 ${ret}` : '';
+      sigs.push(`function ${m[1]}(${normalizeParams(m[2])})${retStr}`);
     }
   
     return sigs.slice(0, 25);
@@ -821,11 +895,13 @@ __factories["./src/extractors/php"] = function(module, exports) {
   
   function extractMembers(block) {
     const members = [];
-    const methodRe = /^\s+(?:public|protected)\s+(?:static\s+)?function\s+(\w+)\s*\(([^)]*)\)/gm;
+    const methodRe = /^\s+(?:public|protected)\s+(?:static\s+)?function\s+(\w+)\s*\(([^)]*)\)\s*(?::\s*([^\n{]+))?/gm;
     for (const m of block.matchAll(methodRe)) {
       if (m[1].startsWith('_')) continue;
       const isStatic = m[0].includes('static ') ? 'static ' : '';
-      members.push(`${isStatic}function ${m[1]}(${normalizeParams(m[2])})`);
+      const ret = normalizeType(m[3]);
+      const retStr = ret ? ` \u2192 ${ret}` : '';
+      members.push(`${isStatic}function ${m[1]}(${normalizeParams(m[2])})${retStr}`);
     }
     return members.slice(0, 8);
   }
@@ -833,6 +909,11 @@ __factories["./src/extractors/php"] = function(module, exports) {
   function normalizeParams(params) {
     if (!params) return '';
     return params.trim().replace(/\s+/g, ' ');
+  }
+
+  function normalizeType(type) {
+    if (!type) return '';
+    return type.trim().replace(/[;\s]+$/g, '').replace(/\s+/g, ' ').slice(0, 25);
   }
   
   module.exports = { extract };
@@ -851,60 +932,174 @@ __factories["./src/extractors/python"] = function(module, exports) {
     if (!src || typeof src !== 'string') return [];
     const sigs = [];
   
-    // Strip comments and docstrings (simple approach)
-    const stripped = src
-      .replace(/#.*$/gm, '')
+    // noComments: strip only # comments, keep docstrings (needed for @decorator detection)
+    const noComments = src.replace(/#.*$/gm, '');
+    // stripped: also strip docstrings (safe for regex matching)
+    const stripped = noComments
       .replace(/"""[\s\S]*?"""/g, '')
       .replace(/'''[\s\S]*?'''/g, '');
   
     // Classes
     for (const m of stripped.matchAll(/^class\s+(\w+)(?:\s*\(([^)]*)\))?\s*:/gm)) {
-      const base = m[2] ? `(${m[2].trim()})` : '';
-      sigs.push(`class ${m[1]}${base}`);
-      // Get class body methods
+      const className = m[1];
+      const baseName = m[2] ? m[2].trim() : '';
       const bodyStart = m.index + m[0].length;
+  
+      // Try @dataclass collapse
+      const dcFields = tryExtractDataclassFields(stripped, m.index);
+      if (dcFields !== null) {
+        sigs.push(`@dataclass ${className}(${dcFields})`);
+        continue;
+      }
+  
+      // Try BaseModel/BaseSettings collapse
+      if (/(BaseModel|BaseSettings)/.test(baseName)) {
+        const bmFields = tryExtractBaseModelFields(stripped, bodyStart);
+        if (bmFields) {
+          sigs.push(`class ${className}(${baseName}) ${bmFields}`);
+          continue;
+        }
+      }
+  
+      const baseStr = baseName ? `(${baseName})` : '';
+      sigs.push(`class ${className}${baseStr}`);
+  
+      // Class-level ALL_CAPS constants
+      for (const c of extractClassConstants(stripped, bodyStart)) {
+        sigs.push(`  ${c}`);
+      }
+  
+      // Methods
       const methods = extractClassMethods(stripped, bodyStart);
       for (const meth of methods) sigs.push(`  ${meth}`);
     }
   
     // Top-level functions
-    for (const m of stripped.matchAll(/^(?:async\s+)?def\s+(\w+)\s*\(([^)]*)\)/gm)) {
-      if (/^_/.test(m[1])) continue; // skip private
-      const asyncKw = m[0].trimStart().startsWith('async') ? 'async ' : '';
-      const params = normalizeParams(m[2]);
-      sigs.push(`${asyncKw}def ${m[1]}(${params})`);
+    for (const m of stripped.matchAll(/^((?:async\s+)?def\s+(\w+)\s*\(([^)]*)\)(?:\s*->\s*[^:]+)?)\s*:/gm)) {
+      if (/^_/.test(m[2])) continue;
+      const asyncKw = m[1].trimStart().startsWith('async') ? 'async ' : '';
+      const params = normalizeParams(m[3]);
+      const retType = extractReturnType(m[1] + ':');
+      const retStr = retType ? ` \u2192 ${retType}` : '';
+      sigs.push(`${asyncKw}def ${m[2]}(${params})${retStr}`);
+    }
+
+    // FastAPI router endpoints: @router.METHOD("path") + async def name(...)
+    const lines = noComments.split('\n');
+    for (let i = 0; i < lines.length - 1; i++) {
+      const decLine = lines[i].trim();
+      const rm = decLine.match(/^@\w+\.(get|post|put|patch|delete|head)\s*\(\s*['"]([^'"]+)['"]/);
+      if (!rm) continue;
+      // Find the next non-empty, non-decorator line that starts the function
+      for (let j = i + 1; j < Math.min(i + 6, lines.length); j++) {
+        const fl = lines[j].trim();
+        const fm = fl.match(/^(?:async\s+)?def\s+(\w+)/);
+        if (fm) {
+          sigs.push(`${rm[1].toUpperCase()} ${rm[2]}  →  ${fm[1]}()`);
+          break;
+        }
+        if (fl && !fl.startsWith('@') && !fl.startsWith('#')) break;
+      }
     }
   
-    return sigs.slice(0, 25);
+    return sigs.slice(0, 30);
   }
   
-  function extractClassMethods(src, startIndex) {
+  function extractClassMethods(stripped, startIndex) {
     const methods = [];
-    // Extract indented block
-    const lines = src.slice(startIndex).split('\n');
+    const lines = stripped.slice(startIndex).split('\n');
     for (const line of lines) {
       if (line.trim() === '') continue;
-      // End of class body: line with no leading indent that is not blank
       const indent = line.match(/^(\s+)/);
       if (!indent) break;
-      const m = line.match(/^\s+(?:async\s+)?def\s+(\w+)\s*\(([^)]*)\)/);
+      const m = line.match(/^\s+(?:async\s+)?def\s+(\w+)\s*\(([^)]*)\)(?:\s*->\s*([^:]+))?\s*:/);
       if (m) {
         if (m[1].startsWith('__') && m[1] !== '__init__') continue;
         if (m[1].startsWith('_') && !m[1].startsWith('__')) continue;
         const asyncKw = line.trimStart().startsWith('async') ? 'async ' : '';
-        const params = normalizeParams(m[2]).replace(/^self,?\s*/, '');
-        methods.push(`${asyncKw}def ${m[1]}(${params})`);
+        const params = normalizeParams(m[2]).replace(/^self,?\s*/, '').replace(/^cls,?\s*/, '');
+        const retType = m[3] ? m[3].trim().replace(/Optional\[([^\]]+)\]/, '$1|None').slice(0, 30) : '';
+        const retStr = retType ? ` \u2192 ${retType}` : '';
+        methods.push(`${asyncKw}def ${m[1]}(${params})${retStr}`);
       }
     }
     return methods.slice(0, 8);
+  }
+  
+  function tryExtractDataclassFields(stripped, classIndex) {
+    const before = stripped.slice(Math.max(0, classIndex - 120), classIndex);
+    if (!/@dataclass/.test(before)) return null;
+    const lines = stripped.slice(classIndex).split('\n');
+    const fields = [];
+    for (const line of lines.slice(1)) {
+      if (line.trim() === '') continue;
+      if (!line.match(/^\s+/)) break;
+      const f = line.match(/^\s+(\w+)\s*:\s*([^=\n]+?)(?:\s*=.*)?$/);
+      if (!f) break;
+      const isOptional = f[2].includes('Optional') || /=\s*None/.test(line);
+      fields.push(isOptional ? `${f[1]}?` : f[1]);
+    }
+    return fields.length ? fields.join(', ') : null;
+  }
+  
+  function tryExtractBaseModelFields(stripped, bodyStart) {
+    const lines = stripped.slice(bodyStart, bodyStart + 800).split('\n');
+    const fields = [];
+    let foundFirst = false;
+    for (const line of lines) {
+      if (line.trim() === '') continue;
+      if (foundFirst && !/^\s/.test(line)) break;
+      if (!line.match(/^\s{4}\w/)) continue;
+      foundFirst = true;
+      const f = line.match(/^\s{4}(\w+)\s*(?::\s*([^=\n]+?))?(?:\s*=\s*(.*))?$/);
+      if (!f || f[1].startsWith('_') || f[1] === 'class' || f[1] === 'def') continue;
+      const isOptional = (f[2] || '').includes('Optional') || f[3] !== undefined;
+      fields.push(isOptional ? `${f[1]}?` : `${f[1]}*`);
+    }
+    return fields.length ? `{${fields.slice(0, 6).join(', ')}}` : null;
+  }
+  
+  function extractClassConstants(stripped, startIndex) {
+    const lines = stripped.slice(startIndex).split('\n');
+    const consts = [];
+    for (const line of lines) {
+      if (!line.match(/^\s+/)) break;
+      const c = line.match(/^\s+([A-Z][A-Z0-9_]{2,})\s*=\s*(.+)/);
+      if (!c) continue;
+      let val = c[2].trim();
+      const items = (val.match(/"([^"]+)"/g) || val.match(/'([^']+)'/g) || []);
+      if (items.length > 3) val = `[${items[0].replace(/['"]/g, '')}..${items[items.length - 1].replace(/['"]/g, '')}]`;
+      if (val.length > 40) val = val.slice(0, 37) + '...';
+      consts.push(`${c[1]}=${val}`);
+    }
+    return consts.slice(0, 3);
+  }
+  
+  function extractReturnType(sigLine) {
+    const m = sigLine.match(/->\s*([^:]+):/);
+    if (!m) return '';
+    let rt = m[1].trim();
+    rt = rt.replace(/Optional\[([^\]]+)\]/, '$1|None');
+    return rt.length > 30 ? rt.slice(0, 27) + '...' : rt;
   }
   
   function normalizeParams(params) {
     if (!params) return '';
     return params.trim()
       .split(',')
-      .map((p) => p.trim().split(':')[0].split('=')[0].trim())
-      .filter(Boolean)
+      .map((p) => {
+        const part = p.trim();
+        if (!part) return '';
+        const stars = part.match(/^(\*{1,2})/)?.[1] || '';
+        const rest = part.slice(stars.length);
+        const eqIdx = rest.indexOf('=');
+        const noDefault = eqIdx !== -1 ? rest.slice(0, eqIdx).trim() : rest.trim();
+        const clean = noDefault
+          .replace(/Optional\[([^\]]+)\]/, '$1?')
+          .replace(/Union\[([^\]]+),\s*None\]/, '$1?');
+        return stars + clean;
+      })
+      .filter((p) => p && p !== 'self' && p !== 'cls')
       .join(', ');
   }
   
@@ -937,14 +1132,16 @@ __factories["./src/extractors/ruby"] = function(module, exports) {
       if (m[1].startsWith('_')) continue;
       const params = m[2] ? `(${normalizeParams(m[2])})` : '';
       const selfPrefix = m[0].includes('self.') ? 'self.' : '';
-      sigs.push(`  def ${selfPrefix}${m[1]}${params}`);
+      const retStr = extractReturnHint(stripped, m.index);
+      sigs.push(`  def ${selfPrefix}${m[1]}${params}${retStr}`);
     }
   
     // Top-level def
     for (const m of stripped.matchAll(/^def\s+(\w+)(?:\s*\(([^)]*)\))?/gm)) {
       if (m[1].startsWith('_')) continue;
       const params = m[2] ? `(${normalizeParams(m[2])})` : '';
-      sigs.push(`def ${m[1]}${params}`);
+      const retStr = extractReturnHint(stripped, m.index);
+      sigs.push(`def ${m[1]}${params}${retStr}`);
     }
   
     return sigs.slice(0, 25);
@@ -953,6 +1150,15 @@ __factories["./src/extractors/ruby"] = function(module, exports) {
   function normalizeParams(params) {
     if (!params) return '';
     return params.trim().replace(/\s+/g, ' ');
+  }
+
+  function extractReturnHint(stripped, index) {
+    const start = Math.max(0, index - 180);
+    const before = stripped.slice(start, index);
+    const m = before.match(/sig\s*\{[\s\S]*?returns\(([^)]+)\)[\s\S]*?\}\s*$/);
+    if (!m) return '';
+    const type = m[1].trim().replace(/\s+/g, ' ').slice(0, 25);
+    return type ? ` \u2192 ${type}` : '';
   }
   
   module.exports = { extract };
@@ -998,9 +1204,11 @@ __factories["./src/extractors/rust"] = function(module, exports) {
     }
   
     // Top-level pub fns
-    for (const m of stripped.matchAll(/^pub(?:\s+async)?\s+fn\s+(\w+)(?:<[^(]*>)?\s*\(([^)]*)\)/gm)) {
+    // Top-level pub fns — capture everything after ) up to { or ; for return type
+    for (const m of stripped.matchAll(/^pub(?:\s+async)?\s+fn\s+(\w+)(?:<[^(]*>)?\s*\(([^)]*)\)([^{;]*)/gm)) {
       const asyncKw = m[0].includes('async') ? 'async ' : '';
-      sigs.push(`pub ${asyncKw}fn ${m[1]}(${normalizeParams(m[2])})`);
+      const retStr = extractReturnType(m[3]);
+      sigs.push(`pub ${asyncKw}fn ${m[1]}(${normalizeParams(m[2])})${retStr}`);
     }
   
     return sigs.slice(0, 25);
@@ -1019,9 +1227,10 @@ __factories["./src/extractors/rust"] = function(module, exports) {
   
   function extractMethods(block) {
     const methods = [];
-    for (const m of block.matchAll(/^\s+pub(?:\s+async)?\s+fn\s+(\w+)(?:<[^(]*>)?\s*\(([^)]*)\)/gm)) {
+    for (const m of block.matchAll(/^\s+pub(?:\s+async)?\s+fn\s+(\w+)(?:<[^(]*>)?\s*\(([^)]*)\)([^{;]*)/gm)) {
       const asyncKw = m[0].includes('async') ? 'async ' : '';
-      methods.push(`pub ${asyncKw}fn ${m[1]}(${normalizeParams(m[2])})`);
+      const retStr = extractReturnType(m[3]);
+      methods.push(`pub ${asyncKw}fn ${m[1]}(${normalizeParams(m[2])})${retStr}`);
     }
     return methods.slice(0, 8);
   }
@@ -1031,6 +1240,14 @@ __factories["./src/extractors/rust"] = function(module, exports) {
     return params.trim().replace(/\s+/g, ' ');
   }
   
+    function extractReturnType(afterParen) {
+      if (!afterParen) return '';
+      const m = afterParen.match(/->\s*([^{;]+)/);
+      if (!m) return '';
+      const rt = m[1].trim().replace(/\s+/g, ' ');
+      return ` \u2192 ${rt.length > 30 ? rt.slice(0, 27) + '...' : rt}`;
+    }
+
   module.exports = { extract };
   
 };
@@ -1063,10 +1280,12 @@ __factories["./src/extractors/scala"] = function(module, exports) {
     }
   
     // Top-level defs
-    for (const m of stripped.matchAll(/^def\s+(\w+)(?:\[[\w, ]+\])?\s*(?:\(([^)]*)\))?/gm)) {
+    for (const m of stripped.matchAll(/^def\s+(\w+)(?:\[[\w, ]+\])?\s*(?:\(([^)]*)\))?(?:\s*:\s*([^=\n{]+))?/gm)) {
       if (m[1].startsWith('_')) continue;
       const params = m[2] ? `(${normalizeParams(m[2])})` : '';
-      sigs.push(`def ${m[1]}${params}`);
+      const ret = normalizeType(m[3]);
+      const retStr = ret ? ` \u2192 ${ret}` : '';
+      sigs.push(`def ${m[1]}${params}${retStr}`);
     }
   
     return sigs.slice(0, 25);
@@ -1085,10 +1304,12 @@ __factories["./src/extractors/scala"] = function(module, exports) {
   
   function extractMembers(block) {
     const members = [];
-    for (const m of block.matchAll(/^\s+def\s+(\w+)(?:\[[\w, ]+\])?\s*(?:\(([^)]*)\))?/gm)) {
+    for (const m of block.matchAll(/^\s+def\s+(\w+)(?:\[[\w, ]+\])?\s*(?:\(([^)]*)\))?(?:\s*:\s*([^=\n{]+))?/gm)) {
       if (m[1].startsWith('_')) continue;
       const params = m[2] ? `(${normalizeParams(m[2])})` : '';
-      members.push(`def ${m[1]}${params}`);
+      const ret = normalizeType(m[3]);
+      const retStr = ret ? ` \u2192 ${ret}` : '';
+      members.push(`def ${m[1]}${params}${retStr}`);
     }
     return members.slice(0, 8);
   }
@@ -1100,6 +1321,11 @@ __factories["./src/extractors/scala"] = function(module, exports) {
       .map((p) => p.trim().split(':')[0].trim())
       .filter(Boolean)
       .join(', ');
+  }
+
+  function normalizeType(type) {
+    if (!type) return '';
+    return type.trim().replace(/\s+/g, ' ').slice(0, 25);
   }
   
   module.exports = { extract };
@@ -1179,16 +1405,18 @@ __factories["./src/extractors/svelte"] = function(module, exports) {
     }
   
     // Exported functions
-    for (const m of script.matchAll(/^export\s+(?:async\s+)?function\s+(\w+)\s*\(([^)]*)\)/gm)) {
+    for (const m of script.matchAll(/^export\s+(?:async\s+)?function\s+(\w+)\s*\(([^)]*)\)(?:\s*:\s*([^{=\n]+))?/gm)) {
       const asyncKw = m[0].includes('async') ? 'async ' : '';
-      sigs.push(`export ${asyncKw}function ${m[1]}(${normalizeParams(m[2])})`);
+      const retStr = m[3] ? ` \u2192 ${normalizeType(m[3])}` : '';
+      sigs.push(`export ${asyncKw}function ${m[1]}(${normalizeParams(m[2])})${retStr}`);
     }
   
     // Top-level functions
-    for (const m of script.matchAll(/^(?:async\s+)?function\s+(\w+)\s*\(([^)]*)\)/gm)) {
+    for (const m of script.matchAll(/^(?:async\s+)?function\s+(\w+)\s*\(([^)]*)\)(?:\s*:\s*([^{=\n]+))?/gm)) {
       if (m[1].startsWith('_')) continue;
       const asyncKw = m[0].startsWith('async') ? 'async ' : '';
-      sigs.push(`${asyncKw}function ${m[1]}(${normalizeParams(m[2])})`);
+      const retStr = m[3] ? ` \u2192 ${normalizeType(m[3])}` : '';
+      sigs.push(`${asyncKw}function ${m[1]}(${normalizeParams(m[2])})${retStr}`);
     }
   
     // Reactive declarations $:
@@ -1202,6 +1430,11 @@ __factories["./src/extractors/svelte"] = function(module, exports) {
   function normalizeParams(params) {
     if (!params) return '';
     return params.trim().replace(/\s+/g, ' ');
+  }
+
+  function normalizeType(type) {
+    if (!type) return '';
+    return type.trim().replace(/[;\s]+$/g, '').replace(/\s+/g, ' ').slice(0, 25);
   }
   
   module.exports = { extract };
@@ -1233,9 +1466,11 @@ __factories["./src/extractors/swift"] = function(module, exports) {
     }
   
     // Top-level public functions
-    for (const m of stripped.matchAll(/^(?:public\s+|internal\s+)?(?:static\s+)?(?:async\s+)?func\s+(\w+)(?:<[^(]*>)?\s*\(([^)]*)\)/gm)) {
+    // Top-level public functions — capture everything after ) to end of line for arrow type
+    for (const m of stripped.matchAll(/^(?:public\s+|internal\s+)?(?:static\s+)?(?:async\s+)?func\s+(\w+)(?:<[^(]*>)?\s*\(([^)]*)\)([^{\n]*)/gm)) {
       const asyncKw = m[0].includes('async') ? 'async ' : '';
-      sigs.push(`${asyncKw}func ${m[1]}(${normalizeParams(m[2])})`);
+      const retStr = extractArrowType(m[3]);
+      sigs.push(`${asyncKw}func ${m[1]}(${normalizeParams(m[2])})${retStr}`);
     }
   
     return sigs.slice(0, 25);
@@ -1254,10 +1489,11 @@ __factories["./src/extractors/swift"] = function(module, exports) {
   
   function extractMembers(block) {
     const members = [];
-    for (const m of block.matchAll(/^\s+(?:public\s+|internal\s+|open\s+)?(?:static\s+|class\s+)?(?:mutating\s+)?(?:async\s+)?func\s+(\w+)(?:<[^(]*>)?\s*\(([^)]*)\)/gm)) {
+    for (const m of block.matchAll(/^\s+(?:public\s+|internal\s+|open\s+)?(?:static\s+|class\s+)?(?:mutating\s+)?(?:async\s+)?func\s+(\w+)(?:<[^(]*>)?\s*\(([^)]*)\)([^{\n]*)/gm)) {
       if (m[1].startsWith('_')) continue;
       const asyncKw = m[0].includes('async') ? 'async ' : '';
-      members.push(`${asyncKw}func ${m[1]}(${normalizeParams(m[2])})`);
+      const retStr = extractArrowType(m[3]);
+      members.push(`${asyncKw}func ${m[1]}(${normalizeParams(m[2])})${retStr}`);
     }
     return members.slice(0, 8);
   }
@@ -1271,6 +1507,14 @@ __factories["./src/extractors/swift"] = function(module, exports) {
       .join(', ');
   }
   
+    function extractArrowType(str) {
+      if (!str) return '';
+      const m = str.match(/->\s*([^\n{]+)/);
+      if (!m) return '';
+      const rt = m[1].trim().replace(/\s+/g, ' ');
+      return ` \u2192 ${rt.length > 25 ? rt.slice(0, 22) + '...' : rt}`;
+    }
+
   module.exports = { extract };
   
 };
@@ -1328,7 +1572,10 @@ __factories["./src/extractors/typescript"] = function(module, exports) {
     for (const m of stripped.matchAll(/^export\s+(?:async\s+)?function\s+(\w+)\s*(?:<[^(]*>)?\s*\(([^)]*)\)(?:\s*:\s*[^{]+)?\s*\{/gm)) {
       const asyncKw = /export\s+async/.test(m[0]) ? 'async ' : '';
       const params = normalizeParams(m[2]);
-      sigs.push(`export ${asyncKw}function ${m[1]}(${params})`);
+      const retMatch = m[0].match(/\)\s*:\s*([^{]+)\s*\{/);
+      const retType = retMatch ? retMatch[1].trim().replace(/\s+/g, ' ').slice(0, 30) : '';
+      const retStr = retType ? ` \u2192 ${retType}` : '';
+      sigs.push(`export ${asyncKw}function ${m[1]}(${params})${retStr}`);
     }
   
     // Exported arrow functions / const functions
@@ -1337,8 +1584,36 @@ __factories["./src/extractors/typescript"] = function(module, exports) {
       const params = normalizeParams(m[2]);
       sigs.push(`export const ${m[1]} = ${asyncKw}(${params}) =>`);
     }
+
+    // Zustand stores: export const useXxxStore = create<State>()(...)
+    for (const m of stripped.matchAll(/^export\s+const\s+(use\w+Store)\s*=\s*create(?:<[^>]*>)?\s*\(/gm)) {
+      // Extract the State interface name from create<StateName>
+      const stateType = m[0].match(/create<([\w]+)>/)?.[1] || '';
+      sigs.push(`export const ${m[1]} = create<${stateType}>(...)`);
+      // Extract action/state keys from the embedded interface in same file
+      const ifaceRe = new RegExp(`interface\\s+${stateType}\\s*\\{([\\s\\S]*?)\\}`);
+      const ifm = stripped.match(ifaceRe);
+      if (ifm) {
+        for (const fm of ifm[1].matchAll(/^\s+(\w+)\s*(?:\([^)]*\))?\s*:/gm)) {
+          sigs.push(`  ${fm[1]}`);
+        }
+      }
+    }
+
+    // API client objects: export default { method: async (...) => ... }
+    // Pattern: const xxxApi = { methodName: async ... }
+    for (const m of stripped.matchAll(/^(?:export\s+default\s+|const\s+)(\w*[Aa]pi\w*)\s*=\s*\{/gm)) {
+      const apiName = m[1];
+      const start = m.index + m[0].length;
+      const block = extractBlock(stripped, start);
+      const methods = [];
+      for (const mm of block.matchAll(/^\s+(\w+)\s*:\s*(?:async\s+)?(?:\([^)]*\)|\w+)\s*=>/gm)) {
+        methods.push(mm[1]);
+      }
+      if (methods.length) sigs.push(`${apiName}: { ${methods.join(', ')} }`);
+    }
   
-    return sigs.slice(0, 25);
+    return sigs.slice(0, 35);
   }
   
   function extractBlock(src, startIndex) {
@@ -1355,9 +1630,11 @@ __factories["./src/extractors/typescript"] = function(module, exports) {
   
   function extractInterfaceMembers(block) {
     const members = [];
-    for (const m of block.matchAll(/^\s+(readonly\s+)?(\w+)\??:\s*[^;]+;/gm)) {
+    for (const m of block.matchAll(/^\s+(readonly\s+)?(\w+)(\??):\s*([^;]+);/gm)) {
       const readonly = m[1] ? 'readonly ' : '';
-      members.push(`${readonly}${m[2]}`);
+      const optional = m[3] ? '?' : '';
+      const typeStr = m[4].trim().replace(/\s+/g, ' ').slice(0, 35);
+      members.push(`${readonly}${m[2]}${optional}: ${typeStr}`);
     }
     for (const m of block.matchAll(/^\s+(\w+)\s*(?:<[^(]*>)?\s*\(([^)]*)\)\s*:/gm)) {
       members.push(`${m[1]}(${normalizeParams(m[2])})`);
@@ -1374,7 +1651,10 @@ __factories["./src/extractors/typescript"] = function(module, exports) {
       if (m[1] === 'constructor') { members.push(`constructor(${normalizeParams(m[2])})`); continue; }
       const isAsync = m[0].includes('async ') ? 'async ' : '';
       const isStatic = m[0].includes('static ') ? 'static ' : '';
-      members.push(`${isStatic}${isAsync}${m[1]}(${normalizeParams(m[2])})`);
+      const retMatch = m[0].match(/\)\s*:\s*([^{;]+)\s*\{/);
+      const retType = retMatch ? retMatch[1].trim().replace(/\s+/g, ' ').slice(0, 20) : '';
+      const retStr = retType ? ` \u2192 ${retType}` : '';
+      members.push(`${isStatic}${isAsync}${m[1]}(${normalizeParams(m[2])})${retStr}`);
     }
     return members.slice(0, 8);
   }
@@ -1385,6 +1665,71 @@ __factories["./src/extractors/typescript"] = function(module, exports) {
   }
   
   module.exports = { extract };
+  
+};
+
+// ── ./src/extractors/deps ──
+__factories["./src/extractors/deps"] = function(module, exports) {
+  
+  'use strict';
+  
+  const PYTHON_STDLIB = new Set([
+    'os', 'sys', 're', 'json', 'time', 'threading', 'logging', 'typing',
+    'dataclasses', 'datetime', 'uuid', 'pathlib', 'collections', 'functools',
+    'itertools', 'math', 'random', 'string', 'struct', 'io', 'copy', 'pprint',
+    'traceback', 'inspect', 'abc', 'enum', 'contextlib', 'weakref', 'gc',
+    'socket', 'ssl', 'http', 'urllib', 'email', 'html', 'xml', 'csv', 'sqlite3',
+    'argparse', 'subprocess', 'shutil', 'tempfile', 'glob', 'fnmatch', 'stat',
+    'hashlib', 'hmac', 'base64', 'binascii', 'codecs', 'unicodedata', 'locale',
+    'decimal', 'fractions', 'numbers', 'cmath', 'heapq', 'bisect', 'array',
+    'queue', 'asyncio', 'concurrent', 'multiprocessing', 'signal', 'mmap',
+    'builtins', 'warnings', 'operator', 'textwrap', 'difflib', 'readline',
+  ]);
+  
+  function extractPythonDeps(src) {
+    const deps = new Set();
+    for (const m of src.matchAll(/^from\s+([\w.]+)\s+import/gm)) {
+      const mod = m[1];
+      const root = mod.replace(/^\.+/, '').split('.')[0];
+      if (mod.startsWith('.') || (root && !PYTHON_STDLIB.has(root))) {
+        deps.add(root || mod);
+      }
+    }
+    for (const m of src.matchAll(/^import\s+([\w.]+)/gm)) {
+      const root = m[1].split('.')[0];
+      if (root && !PYTHON_STDLIB.has(root)) deps.add(root);
+    }
+    return [...deps].filter(Boolean).slice(0, 5);
+  }
+  
+  function extractTSDeps(src) {
+    // Strip single-line comments to avoid matching commented-out imports
+    const stripped = src.replace(/\/\/.*$/gm, '').replace(/\/\*[\s\S]*?\*\//g, '');
+    const deps = new Set();
+    for (const m of stripped.matchAll(/from\s+['"](\.[\/\w.-]+)['"]/g)) {
+      const clean = m[1]
+        .replace(/^\.\.\//, '')
+        .replace(/^\.\//, '')
+        .replace(/\.\w+$/, '');
+      if (clean) deps.add(clean);
+    }
+    return [...deps].slice(0, 5);
+  }
+  
+  function buildReverseDepMap(forwardMap) {
+    const reverse = new Map();
+    if (!forwardMap || typeof forwardMap.entries !== 'function') return reverse;
+    for (const [file, deps] of forwardMap.entries()) {
+      if (!Array.isArray(deps)) continue;
+      for (const dep of deps) {
+        if (!reverse.has(dep)) reverse.set(dep, []);
+        reverse.get(dep).push(file);
+      }
+    }
+    return reverse;
+  }
+
+  module.exports = { extractPythonDeps, extractTSDeps, buildReverseDepMap };
   
 };
 
@@ -1425,11 +1770,20 @@ __factories["./src/extractors/vue"] = function(module, exports) {
     // Methods in options API
     const methodsMatch = script.match(/methods\s*:\s*\{([\s\S]*?)\},?\s*(?:computed|watch|mounted|created|data|\})/);
     if (methodsMatch) {
-      for (const m of methodsMatch[1].matchAll(/^\s+(?:async\s+)?(\w+)\s*\(([^)]*)\)/gm)) {
+      for (const m of methodsMatch[1].matchAll(/^\s+(?:async\s+)?(\w+)\s*\(([^)]*)\)(?:\s*:\s*([^{=\n]+))?/gm)) {
         if (m[1].startsWith('_')) continue;
         const asyncKw = m[0].includes('async') ? 'async ' : '';
-        sigs.push(`  ${asyncKw}${m[1]}(${normalizeParams(m[2])})`);
+        const retStr = m[3] ? ` \u2192 ${normalizeType(m[3])}` : '';
+        sigs.push(`  ${asyncKw}${m[1]}(${normalizeParams(m[2])})${retStr}`);
       }
+    }
+
+    // Top-level functions in <script> (e.g., composition API helpers)
+    for (const m of script.matchAll(/^(?:export\s+)?(?:async\s+)?function\s+(\w+)\s*\(([^)]*)\)(?:\s*:\s*([^{=\n]+))?/gm)) {
+      if (m[1].startsWith('_')) continue;
+      const asyncKw = m[0].includes('async') ? 'async ' : '';
+      const retStr = m[3] ? ` \u2192 ${normalizeType(m[3])}` : '';
+      sigs.push(`${asyncKw}function ${m[1]}(${normalizeParams(m[2])})${retStr}`);
     }
   
     // defineProps (Composition API)
@@ -1452,6 +1806,11 @@ __factories["./src/extractors/vue"] = function(module, exports) {
   function normalizeParams(params) {
     if (!params) return '';
     return params.trim().replace(/\s+/g, ' ');
+  }
+
+  function normalizeType(type) {
+    if (!type) return '';
+    return type.trim().replace(/[;\s]+$/g, '').replace(/\s+/g, ' ').slice(0, 25);
   }
   
   module.exports = { extract };
@@ -3224,14 +3583,23 @@ const path = require('path');
 const os = require('os');
 const { execSync } = require('child_process');
 
-const VERSION = '1.5.2';
+const VERSION = '2.0.0';
 const MARKER = '\n\n## Auto-generated signatures\n<!-- Updated by gen-context.js -->\n';
+
+function requireSourceOrBundled(key) {
+  try {
+    const rel = key.replace(/^\.\//, '') + '.js';
+    const abs = path.join(__dirname, rel);
+    if (fs.existsSync(abs)) return require(abs);
+  } catch (_) {}
+  return __require(key);
+}
 
 // ---------------------------------------------------------------------------
 // Config — delegate to src/config/loader.js
 // ---------------------------------------------------------------------------
-const { loadConfig } = __require('./src/config/loader');
-const { DEFAULTS } = __require('./src/config/defaults');
+const { loadConfig } = requireSourceOrBundled('./src/config/loader');
+const { DEFAULTS } = requireSourceOrBundled('./src/config/defaults');
 
 // ---------------------------------------------------------------------------
 // Language → extractor mapping (by file extension)
@@ -3340,7 +3708,7 @@ const _extractorCache = {};
 function getExtractor(name) {
   if (_extractorCache[name]) return _extractorCache[name];
   try {
-    const mod = __require(`./src/extractors/${name}`);
+    const mod = requireSourceOrBundled(`./src/extractors/${name}`);
     _extractorCache[name] = mod;
     return mod;
   } catch (err) {
@@ -3366,6 +3734,35 @@ function detectAndExtract(filePath, content, maxSigsPerFile) {
     console.warn(`[sigmap] extractor failed for ${filePath}: ${err.message}`);
     return [];
   }
+}
+
+function extractFileDeps(filePath, content, config) {
+  if (config && config.depMap === false) return [];
+  try {
+    const { extractPythonDeps, extractTSDeps } = requireSourceOrBundled('./src/extractors/deps');
+    const ext = path.extname(filePath).toLowerCase();
+    if (ext === '.py' || ext === '.pyw') return extractPythonDeps(content);
+    if (['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs'].includes(ext)) return extractTSDeps(content);
+  } catch (_) {}
+  return [];
+}
+
+function extractSignatureName(sig) {
+  const s = (sig || '').trim();
+  const m = s.match(/(?:def|function|func|constructor|async\s+def|async\s+function)?\s*([A-Za-z_][A-Za-z0-9_]*)\s*\(/);
+  return m ? m[1] : '';
+}
+
+function annotateCoverage(sigs, testIndex, enabled) {
+  if (!enabled || !testIndex || testIndex.size === 0) return sigs;
+  const { isTested } = requireSourceOrBundled('./src/extractors/coverage');
+  return sigs.map((sig) => {
+    const name = extractSignatureName(sig);
+    if (!name) return sig;
+    // Skip non-callable/type declarations.
+    if (/^(class|interface|enum|type|module|trait|struct|record)\b/.test(sig.trim())) return sig;
+    return `${sig}  ${isTested(name, testIndex) ? '✓' : '✗'}`;
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -3459,10 +3856,192 @@ function getDiffFiles(cwd, stagedOnly) {
   }
 }
 
+function getFilesChangedSinceBase(cwd, baseRef) {
+  if (!/^[A-Za-z0-9._/\-~^]+$/.test(baseRef)) {
+    console.warn(`[sigmap] --diff: invalid base ref '${baseRef}'`);
+    return new Set();
+  }
+  try {
+    const { execFileSync } = require('child_process');
+    const out = execFileSync('git', ['diff', `${baseRef}..HEAD`, '--name-only'], {
+      cwd, encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'],
+    });
+    return new Set(out.split('\n').map((f) => f.trim()).filter(Boolean).map((f) => path.resolve(cwd, f)));
+  } catch (_) {
+    return new Set();
+  }
+}
+
+function buildDiffSectionFromBase(cwd, baseRef, currentEntries, config) {
+  const { diffSignatures, extractName } = requireSourceOrBundled('./src/extractors/prdiff');
+  const lines = ['## diff (vs ' + baseRef + ')', '```'];
+
+  for (const entry of currentEntries) {
+    const rel = path.relative(cwd, entry.filePath);
+    let baseSrc = '';
+    try {
+      const { execFileSync } = require('child_process');
+      baseSrc = execFileSync('git', ['show', `${baseRef}:${rel}`], {
+        cwd, encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'],
+      });
+    } catch (_) {
+      baseSrc = '';
+    }
+
+    const baseSigs = baseSrc ? detectAndExtract(entry.filePath, baseSrc, config.maxSigsPerFile) : [];
+    const d = diffSignatures(baseSigs, entry.sigs || []);
+
+    const markers = [];
+    for (const a of d.added.slice(0, 4)) {
+      const n = extractName(a);
+      if (n) markers.push(`+${n}`);
+    }
+    for (const r of d.removed.slice(0, 4)) {
+      const n = extractName(r);
+      if (n) markers.push(`-${n}`);
+    }
+    for (const m of d.modified.slice(0, 4)) markers.push(`~${m}`);
+    if (markers.length === 0) continue;
+    lines.push(`${rel}`);
+    lines.push(`  ${[...new Set(markers)].slice(0, 6).join('  ')}`);
+  }
+
+  lines.push('```', '');
+  return lines.length > 3 ? lines : [];
+}
+
 // ---------------------------------------------------------------------------
 // Output formatter
 // ---------------------------------------------------------------------------
-function formatOutput(fileEntries, cwd, routingEnabled) {
+function buildDepMap(fileEntries, cwd) {
+  const lines = [];
+  for (const entry of fileEntries) {
+    const deps = entry.deps;
+    if (!deps || deps.length === 0) continue;
+    const rel = path.relative(cwd, entry.filePath);
+    lines.push(`${rel} \u2190 ${deps.join(', ')}`);
+  }
+  return lines;
+}
+
+function buildTodoSection(fileEntries, cwd, config) {
+  if (config && config.todos === false) return [];
+  const { extractTodos } = requireSourceOrBundled('./src/extractors/todos');
+  const out = [];
+  for (const entry of fileEntries) {
+    const todos = extractTodos(entry.content || '');
+    if (!todos || todos.length === 0) continue;
+    const rel = path.relative(cwd, entry.filePath);
+    for (const t of todos) {
+      out.push(`${rel}:${t.line}  # ${t.tag}: ${t.text}`);
+    }
+  }
+  return out.slice(0, 20);
+}
+
+function buildChangesSection(cwd, config, fileEntries) {
+  if (config && config.changes === false) return [];
+  const n = (config && config.changesCommits) || 5;
+  try {
+    let range = `HEAD~${n}..HEAD`;
+    try {
+      execSync(`git rev-parse --verify HEAD~${n} 2>/dev/null`, {
+        cwd, encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'],
+      });
+    } catch (_) {
+      // HEAD~n doesn't exist (shallow repo) — clamp to deepest valid ancestor
+      let best = 1;
+      for (let k = n - 1; k >= 2; k--) {
+        try {
+          execSync(`git rev-parse --verify HEAD~${k} 2>/dev/null`, {
+            cwd, encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'],
+          });
+          best = k;
+          break;
+        } catch (_) {}
+      }
+      range = `HEAD~${best}..HEAD`;
+    }
+
+    const namesOnly = execSync(`git diff ${range} --name-only 2>/dev/null`, {
+      cwd, encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'],
+    });
+    const changed = new Set(namesOnly.split('\n').map((l) => l.trim()).filter(Boolean).map((f) => path.resolve(cwd, f)));
+    if (changed.size === 0) return [];
+
+    const timeAgo = execSync('git log -1 --format="%cr" 2>/dev/null', {
+      cwd, encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'],
+    }).trim();
+
+    const lines = [`## changes (last ${n} commits — ${timeAgo})`, '```'];
+    let hasDelta = false;
+    for (const entry of fileEntries) {
+      if (!changed.has(entry.filePath)) continue;
+      const rel = path.relative(cwd, entry.filePath);
+      let diff = '';
+      try {
+        diff = execSync(`git diff ${range} -- "${rel}" 2>/dev/null`, {
+          cwd, encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'],
+        });
+      } catch (_) {
+        continue;
+      }
+      const plus = [...diff.matchAll(/^\+.*(?:def\s+|function\s+|class\s+|func\s+)(\w+)/gm)].map((m) => `+${m[1]}`);
+      const modDef = [...diff.matchAll(/^-.*(?:def\s+|function\s+|class\s+|func\s+)(\w+)/gm)].map((m) => `~${m[1]}`);
+      // Hunk headers (Python/Go/Java: git shows enclosing func in @@ ... @@ context)
+      const modCtx = [...diff.matchAll(/^@@[^@]*@@\s+(?:(?:async|export|public|private|static)\s+)*(?:def|function|class|func)\s+(\w+)/gm)].map((m) => `~${m[1]}`);
+      // Context lines (TS/JS: git doesn't detect funcname, so scan the unchanged lines adjacent to hunks)
+      const ctxFn = [...diff.matchAll(/^ +(?:export\s+)?(?:async\s+)?(?:default\s+)?(?:function\s+(\w+)|class\s+(\w+))/gm)].map((m) => `~${m[1] || m[2]}`);
+      const delta = [...new Set([...plus, ...modDef, ...modCtx, ...ctxFn])].slice(0, 4).join('  ');
+      if (delta) {
+        hasDelta = true;
+        lines.push(`${rel.padEnd(45)} ${delta}`);
+      }
+    }
+    lines.push('```', '');
+    return hasDelta ? lines : [];
+  } catch (_) {
+    return [];
+  }
+}
+
+function normalizeRelNoExt(rel) {
+  return rel.replace(/\.[^.]+$/, '').replace(/\\/g, '/');
+}
+
+function resolveImpactRadius(fileEntries, cwd, config) {
+  const map = new Map();
+  if (!config || !config.impactRadius) return map;
+  const rels = fileEntries.map((e) => path.relative(cwd, e.filePath));
+  const keys = rels.map((r) => ({ rel: r, norm: normalizeRelNoExt(r), base: path.basename(normalizeRelNoExt(r)) }));
+
+  for (const entry of fileEntries) {
+    const importer = path.relative(cwd, entry.filePath);
+    const importerTop = importer.split('/')[0];
+    for (const dep of (entry.deps || [])) {
+      const depNorm = dep.replace(/\\/g, '/').replace(/^\.\//, '').replace(/\.[^.]+$/, '');
+      const matches = keys.filter((k) => {
+        if (k.norm === depNorm) return true;
+        // Path-segment or base-only match: both require same top-level directory
+        // to prevent cross-subsystem matches (e.g. 'app' dep in server/ matching desktop/gui/app.py)
+        const matchTop = k.rel.split('/')[0];
+        if (k.norm.endsWith('/' + depNorm) || k.base === depNorm) return matchTop === importerTop;
+        return false;
+      });
+      for (const m of matches) {
+        if (!map.has(m.rel)) map.set(m.rel, []);
+        map.get(m.rel).push(importer);
+      }
+    }
+  }
+
+  for (const [k, v] of map.entries()) {
+    map.set(k, [...new Set(v)].slice(0, 5));
+  }
+  return map;
+}
+
+function formatOutput(fileEntries, cwd, routingEnabled, config, extras) {
   const lines = [
     '<!-- Generated by SigMap gen-context.js v' + VERSION + ' -->',
     '<!-- DO NOT EDIT below the marker line — run gen-context.js to regenerate -->',
@@ -3470,6 +4049,34 @@ function formatOutput(fileEntries, cwd, routingEnabled) {
     '# Code signatures',
     '',
   ];
+
+  // Compact dependency map section (shows import relationships, ~50-100 tokens)
+  const depLines = buildDepMap(fileEntries, cwd);
+  if ((!config || config.depMap !== false) && depLines.length) {
+    lines.push('## deps');
+    lines.push('```');
+    lines.push(...depLines);
+    lines.push('```');
+    lines.push('');
+  }
+
+  const todoLines = buildTodoSection(fileEntries, cwd, config || {});
+  if (todoLines.length) {
+    lines.push('## todos');
+    lines.push('```');
+    lines.push(...todoLines);
+    lines.push('```');
+    lines.push('');
+  }
+
+  const changesLines = buildChangesSection(cwd, config || {}, fileEntries);
+  if (changesLines.length) lines.push(...changesLines);
+
+  if (extras && Array.isArray(extras.diffSection) && extras.diffSection.length) {
+    lines.push(...extras.diffSection);
+  }
+
+  const impactMap = resolveImpactRadius(fileEntries, cwd, config || {});
 
   // Group by top-level src dir
   const groups = {};
@@ -3486,7 +4093,9 @@ function formatOutput(fileEntries, cwd, routingEnabled) {
     lines.push('');
     for (const { rel, sigs } of entries) {
       if (sigs.length === 0) continue;
-      lines.push(`### ${rel}`);
+      const usedBy = impactMap.get(rel);
+      const usedByStr = usedBy && usedBy.length ? ` (used by: ${usedBy.join(', ')})` : '';
+      lines.push(`### ${rel}${usedByStr}`);
       lines.push('```');
       lines.push(...sigs);
       lines.push('```');
@@ -3496,8 +4105,8 @@ function formatOutput(fileEntries, cwd, routingEnabled) {
 
   if (routingEnabled) {
     try {
-      const { classifyAll } = __require('./src/routing/classifier');
-      const { formatRoutingSection } = __require('./src/routing/hints');
+      const { classifyAll } = requireSourceOrBundled('./src/routing/classifier');
+      const { formatRoutingSection } = requireSourceOrBundled('./src/routing/hints');
       const groups = classifyAll(fileEntries, cwd);
       lines.push(formatRoutingSection(groups));
     } catch (err) {
@@ -3748,7 +4357,7 @@ function runPerModuleStrategy(cwd, config, fileEntries, inputTokenTotal) {
     const modBudget = Math.max(1000, Math.floor(config.maxTokens / moduleNames.length));
     const budgeted = applyTokenBudget(modEntries, modBudget);
 
-    const content = formatOutput(budgeted, cwd, false);
+    const content = formatOutput(budgeted, cwd, false, config, null);
     ensureDir(outPath);
     fs.writeFileSync(outPath, content, 'utf8');
     const modTokens = estimateTokens(content);
@@ -3779,7 +4388,7 @@ function runHotColdStrategy(cwd, config, fileEntries, recentFiles, inputTokenTot
 
   // Hot → primary output (auto-injected by IDE)
   const hotContent = hotEntries.length > 0
-    ? formatOutput(hotEntries, cwd, false)
+    ? formatOutput(hotEntries, cwd, false, config, null)
     : '<!-- Generated by SigMap — no recently changed files -->\n';
   const primaryTargets = (config.outputs || ['copilot']).filter((t) => t !== 'claude');
   writeOutputs(hotContent, primaryTargets, cwd);
@@ -3792,7 +4401,7 @@ function runHotColdStrategy(cwd, config, fileEntries, recentFiles, inputTokenTot
     '<!-- NOT auto-injected. Retrieve via MCP: read_context({ module: "..." }) -->',
     '',
   ].join('\n');
-  const coldContent = coldHeader + formatOutput(coldEntries, cwd, false);
+  const coldContent = coldHeader + formatOutput(coldEntries, cwd, false, config, null);
   ensureDir(coldPath);
   fs.writeFileSync(coldPath, coldContent, 'utf8');
   const coldTokens = estimateTokens(coldContent);
@@ -3810,11 +4419,11 @@ function runHotColdStrategy(cwd, config, fileEntries, recentFiles, inputTokenTot
 // ---------------------------------------------------------------------------
 // Diff-mode pipeline — context for changed files only
 // ---------------------------------------------------------------------------
-function runDiff(cwd, config, stagedOnly) {
-  const diffFiles = getDiffFiles(cwd, stagedOnly);
+function runDiff(cwd, config, stagedOnly, baseRef) {
+  const diffFiles = baseRef ? getFilesChangedSinceBase(cwd, baseRef) : getDiffFiles(cwd, stagedOnly);
 
   if (diffFiles.size === 0) {
-    const scope = stagedOnly ? 'staged' : 'working tree';
+    const scope = baseRef ? `base ${baseRef}` : (stagedOnly ? 'staged' : 'working tree');
     console.warn(`[sigmap] --diff: no changed files found in ${scope} — running full generate`);
     runGenerate(cwd, config, false);
     return;
@@ -3838,6 +4447,15 @@ function runDiff(cwd, config, stagedOnly) {
 
   let inputTokenTotal = 0;
   let fileEntries = [];
+  let testIndex = null;
+  if (config.testCoverage) {
+    try {
+      const { buildTestIndex } = requireSourceOrBundled('./src/extractors/coverage');
+      testIndex = buildTestIndex(cwd, config.testDirs);
+    } catch (err) {
+      console.warn(`[sigmap] coverage index failed: ${err.message}`);
+    }
+  }
 
   for (const filePath of diffFiltered) {
     let content = '';
@@ -3853,7 +4471,7 @@ function runDiff(cwd, config, stagedOnly) {
     inputTokenTotal += estimateTokens(content);
 
     if (config.secretScan) {
-      const { scan } = __require('./src/security/scanner');
+      const { scan } = requireSourceOrBundled('./src/security/scanner');
       const result = scan(sigs, filePath);
       if (result.redacted) {
         console.warn(`[sigmap] secrets redacted in ${path.relative(cwd, filePath)}`);
@@ -3861,7 +4479,9 @@ function runDiff(cwd, config, stagedOnly) {
       sigs = result.safe;
     }
 
-    fileEntries.push({ filePath, sigs, mtime: Date.now() });
+    sigs = annotateCoverage(sigs, testIndex, !!config.testCoverage);
+
+    fileEntries.push({ filePath, sigs, deps: extractFileDeps(filePath, content, config), content, mtime: Date.now() });
   }
 
   if (fileEntries.length === 0) {
@@ -3871,11 +4491,12 @@ function runDiff(cwd, config, stagedOnly) {
   }
 
   const routingEnabled = !!(config.routing || process.argv.includes('--routing'));
-  const content = formatOutput(fileEntries, cwd, routingEnabled);
+  const diffSection = baseRef ? buildDiffSectionFromBase(cwd, baseRef, fileEntries, config) : [];
+  const content = formatOutput(fileEntries, cwd, routingEnabled, config, { diffSection });
   const finalTokens = estimateTokens(content);
   writeOutputs(content, config.outputs, cwd);
 
-  const scope = stagedOnly ? 'staged' : 'diff';
+  const scope = baseRef ? `diff-vs-${baseRef}` : (stagedOnly ? 'staged' : 'diff');
   console.warn(`[sigmap] ${scope} files: ${fileEntries.length}, diff tokens: ~${finalTokens}`);
 
   if (process.argv.includes('--report')) {
@@ -3909,6 +4530,15 @@ function runGenerate(cwd, config, reportMode, reportJson = false) {
 
   let inputTokenTotal = 0;
   let fileEntries = [];
+  let testIndex = null;
+  if (config.testCoverage) {
+    try {
+      const { buildTestIndex } = requireSourceOrBundled('./src/extractors/coverage');
+      testIndex = buildTestIndex(cwd, config.testDirs);
+    } catch (err) {
+      console.warn(`[sigmap] coverage index failed: ${err.message}`);
+    }
+  }
 
   for (const filePath of allFiles) {
     let content = '';
@@ -3925,13 +4555,15 @@ function runGenerate(cwd, config, reportMode, reportJson = false) {
     inputTokenTotal += estimateTokens(content);
 
     if (config.secretScan) {
-      const { scan } = __require('./src/security/scanner');
+      const { scan } = requireSourceOrBundled('./src/security/scanner');
       const result = scan(sigs, filePath);
       if (result.redacted) {
         console.warn(`[sigmap] secrets redacted in ${path.relative(cwd, filePath)}`);
       }
       sigs = result.safe;
     }
+
+    sigs = annotateCoverage(sigs, testIndex, !!config.testCoverage);
 
     let mtime = 0;
     try {
@@ -3941,7 +4573,7 @@ function runGenerate(cwd, config, reportMode, reportJson = false) {
     // Boost recently committed files (give them max mtime so they aren't dropped first)
     if (recentFiles.has(filePath)) mtime = Date.now();
 
-    fileEntries.push({ filePath, sigs, mtime });
+    fileEntries.push({ filePath, sigs, deps: extractFileDeps(filePath, content, config), content, mtime });
   }
 
   const strategy = config.strategy || 'full';
@@ -3967,7 +4599,7 @@ function runGenerate(cwd, config, reportMode, reportJson = false) {
       fileEntries = applyTokenBudget(fileEntries, config.maxTokens);
       const droppedCount = beforeCount - fileEntries.length;
       const routingEnabled = !!(config.routing || process.argv.includes('--routing'));
-      const content = formatOutput(fileEntries, cwd, routingEnabled);
+      const content = formatOutput(fileEntries, cwd, routingEnabled, config, null);
       const finalTokens = estimateTokens(content);
       const formatIdx = process.argv.indexOf('--format');
       const formatValue = formatIdx >= 0 ? process.argv[formatIdx + 1] : (config.format || 'default');
@@ -3979,7 +4611,7 @@ function runGenerate(cwd, config, reportMode, reportJson = false) {
     // report mode: always run full pipeline for accurate stats
     const budgeted = applyTokenBudget([...fileEntries], config.maxTokens);
     const droppedCount = beforeCount - budgeted.length;
-    const content = formatOutput(budgeted, cwd, false);
+    const content = formatOutput(budgeted, cwd, false, config, null);
     const finalTokens = estimateTokens(content);
     result = { inputTokenTotal, finalTokens, fileCount: beforeCount, droppedCount };
   }
@@ -3992,7 +4624,7 @@ function runGenerate(cwd, config, reportMode, reportJson = false) {
   const trackingEnabled = !!(config.tracking || process.argv.includes('--track'));
   if (trackingEnabled && !reportMode) {
     try {
-      const { logRun } = __require('./src/tracking/logger');
+      const { logRun } = requireSourceOrBundled('./src/tracking/logger');
       logRun({
         version: VERSION,
         fileCount: result.fileCount,
@@ -4155,6 +4787,7 @@ Usage:
   node gen-context.js --health                          Print composite health score
   node gen-context.js --health --json                   Machine-readable health score
   node gen-context.js --diff                            Generate context for git-changed files only
+  node gen-context.js --diff <base-ref>                 Generate context + structural diff vs base ref (e.g. main)
   node gen-context.js --diff --staged                   Generate context for staged files only
   node gen-context.js --init                            Write example config + .contextignore scaffold
   node gen-context.js --help                            Show this message
@@ -4329,7 +4962,10 @@ function main() {
   }
 
   if (args.includes('--diff')) {
-    runDiff(cwd, config, args.includes('--staged'));
+    const idx = args.indexOf('--diff');
+    const maybeBase = args[idx + 1];
+    const baseRef = (maybeBase && !maybeBase.startsWith('--')) ? maybeBase : null;
+    runDiff(cwd, config, args.includes('--staged'), baseRef);
     process.exit(0);
   }
 

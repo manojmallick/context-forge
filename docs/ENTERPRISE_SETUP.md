@@ -24,7 +24,7 @@ SigMap ships three observability features from v0.9:
 
 ```json
 {
-  "version": "1.0.0",
+  "version": "2.0.0",
   "timestamp": "2026-04-01T00:00:00.000Z",
   "rawTokens": 42000,
   "finalTokens": 3200,
@@ -120,8 +120,8 @@ Once enabled, every `node gen-context.js` run appends one JSON line to `.context
 
 Each line is one record:
 ```json
-{"ts":"2026-04-01T09:00:00.000Z","version":"1.0.0","fileCount":147,"droppedCount":0,"rawTokens":42000,"finalTokens":3200,"reductionPct":92.4,"overBudget":false,"budgetLimit":6000}
-{"ts":"2026-04-01T09:30:00.000Z","version":"1.0.0","fileCount":149,"droppedCount":2,"rawTokens":43500,"finalTokens":3400,"reductionPct":92.2,"overBudget":false,"budgetLimit":6000}
+{"ts":"2026-04-01T09:00:00.000Z","version":"2.0.0","fileCount":147,"droppedCount":0,"rawTokens":42000,"finalTokens":3200,"reductionPct":92.4,"overBudget":false,"budgetLimit":6000}
+{"ts":"2026-04-01T09:30:00.000Z","version":"2.0.0","fileCount":149,"droppedCount":2,"rawTokens":43500,"finalTokens":3400,"reductionPct":92.2,"overBudget":false,"budgetLimit":6000}
 ```
 
 Because it's NDJSON (one JSON object per line), it's easy to process with standard tools:

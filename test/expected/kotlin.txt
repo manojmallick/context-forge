@@ -1,7 +1,7 @@
 class User
-  fun getUser(id)
-  suspend fun createUser(dto)
+  fun getUser(id) → User?
+  suspend fun createUser(dto) → User
 interface Repository
-  fun findById(id)
-  suspend fun save(entity)
-fun formatUser(user)
+  fun findById(id) → T?
+  suspend fun save(entity) → T
+fun formatUser(user) → String

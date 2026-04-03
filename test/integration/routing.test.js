@@ -265,11 +265,14 @@ function mcpCall(messages, cwd) {
   return stdout.split('\n').filter((l) => l.trim()).map((l) => JSON.parse(l));
 }
 
-test('tools/list returns 5 tools including get_routing', () => {
+test('tools/list includes get_routing and core MCP tools', () => {
   withTempProject((dir) => {
     const [res] = mcpCall({ jsonrpc: '2.0', method: 'tools/list', id: 1 }, dir);
     const names = res.result.tools.map((t) => t.name);
-    assert.strictEqual(names.length, 5, 'Should have 5 tools');
+    assert.ok(names.length >= 5, `Should have at least 5 tools, got ${names.length}`);
+    assert.ok(names.includes('read_context'), 'Should include read_context');
+    assert.ok(names.includes('search_signatures'), 'Should include search_signatures');
+    assert.ok(names.includes('get_map'), 'Should include get_map');
     assert.ok(names.includes('get_routing'), 'Should include get_routing');
   });
 });

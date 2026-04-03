@@ -125,27 +125,27 @@ test('extension manifest has correct name', () => {
   assert.strictEqual(pkg.name, 'sigmap');
 });
 
-test('extension manifest declares contextforge.regenerate command', () => {
+test('extension manifest declares sigmap.regenerate command', () => {
   const pkg = JSON.parse(fs.readFileSync(path.join(ROOT, 'vscode-extension', 'package.json'), 'utf8'));
   const commands = pkg.contributes && pkg.contributes.commands;
   assert.ok(Array.isArray(commands), 'Should have commands array');
   const names = commands.map((c) => c.command);
-  assert.ok(names.includes('contextforge.regenerate'), 'Should declare contextforge.regenerate');
+  assert.ok(names.includes('sigmap.regenerate'), 'Should declare sigmap.regenerate');
 });
 
-test('extension manifest declares contextforge.openContext command', () => {
+test('extension manifest declares sigmap.openContext command', () => {
   const pkg = JSON.parse(fs.readFileSync(path.join(ROOT, 'vscode-extension', 'package.json'), 'utf8'));
   const commands = pkg.contributes && pkg.contributes.commands;
   const names = commands.map((c) => c.command);
-  assert.ok(names.includes('contextforge.openContext'), 'Should declare contextforge.openContext');
+  assert.ok(names.includes('sigmap.openContext'), 'Should declare sigmap.openContext');
 });
 
-test('extension manifest has contextforge.scriptPath configuration', () => {
+test('extension manifest has sigmap.scriptPath configuration', () => {
   const pkg = JSON.parse(fs.readFileSync(path.join(ROOT, 'vscode-extension', 'package.json'), 'utf8'));
   const props = pkg.contributes &&
     pkg.contributes.configuration &&
     pkg.contributes.configuration.properties;
-  assert.ok(props && props['contextforge.scriptPath'], 'Should have contextforge.scriptPath config');
+  assert.ok(props && props['sigmap.scriptPath'], 'Should have sigmap.scriptPath config');
 });
 
 test('extension manifest has onStartupFinished activation', () => {
@@ -174,19 +174,19 @@ test('extension.js implements stale context notification', () => {
   assert.ok(src.includes('showInformationMessage'), 'Should show notification');
 });
 
-test('extension.js handles contextforge.regenerate command', () => {
+test('extension.js handles sigmap.regenerate command', () => {
   const src = fs.readFileSync(path.join(ROOT, 'vscode-extension', 'src', 'extension.js'), 'utf8');
-  assert.ok(src.includes('contextforge.regenerate'), 'Should register regenerate command');
+  assert.ok(src.includes('sigmap.regenerate'), 'Should register regenerate command');
 });
 
-test('extension.js handles contextforge.openContext command', () => {
+test('extension.js handles sigmap.openContext command', () => {
   const src = fs.readFileSync(path.join(ROOT, 'vscode-extension', 'src', 'extension.js'), 'utf8');
-  assert.ok(src.includes('contextforge.openContext'), 'Should register openContext command');
+  assert.ok(src.includes('sigmap.openContext'), 'Should register openContext command');
 });
 
-test('extension.js respects contextforge.scriptPath setting', () => {
+test('extension.js respects sigmap.scriptPath setting', () => {
   const src = fs.readFileSync(path.join(ROOT, 'vscode-extension', 'src', 'extension.js'), 'utf8');
-  assert.ok(src.includes('contextforge.scriptPath') || src.includes('scriptPath'), 'Should read scriptPath setting');
+  assert.ok(src.includes('sigmap.scriptPath') || src.includes('scriptPath'), 'Should read scriptPath setting');
 });
 
 // ─────────────────────────────────────────────────────────────

@@ -34,11 +34,20 @@ function extract(src) {
   // Methods in options API
   const methodsMatch = script.match(/methods\s*:\s*\{([\s\S]*?)\},?\s*(?:computed|watch|mounted|created|data|\})/);
   if (methodsMatch) {
-    for (const m of methodsMatch[1].matchAll(/^\s+(?:async\s+)?(\w+)\s*\(([^)]*)\)/gm)) {
+    for (const m of methodsMatch[1].matchAll(/^\s+(?:async\s+)?(\w+)\s*\(([^)]*)\)(?:\s*:\s*([^{=\n]+))?/gm)) {
       if (m[1].startsWith('_')) continue;
       const asyncKw = m[0].includes('async') ? 'async ' : '';
-      sigs.push(`  ${asyncKw}${m[1]}(${normalizeParams(m[2])})`);
+      const retStr = m[3] ? ` → ${normalizeType(m[3])}` : '';
+      sigs.push(`  ${asyncKw}${m[1]}(${normalizeParams(m[2])})${retStr}`);
     }
+  }
+
+  // Top-level functions in <script> (e.g., composition API helpers)
+  for (const m of script.matchAll(/^(?:export\s+)?(?:async\s+)?function\s+(\w+)\s*\(([^)]*)\)(?:\s*:\s*([^{=\n]+))?/gm)) {
+    if (m[1].startsWith('_')) continue;
+    const asyncKw = m[0].includes('async') ? 'async ' : '';
+    const retStr = m[3] ? ` → ${normalizeType(m[3])}` : '';
+    sigs.push(`${asyncKw}function ${m[1]}(${normalizeParams(m[2])})${retStr}`);
   }
 
   // defineProps (Composition API)
@@ -61,6 +70,11 @@ function extract(src) {
 function normalizeParams(params) {
   if (!params) return '';
   return params.trim().replace(/\s+/g, ' ');
+}
+
+function normalizeType(type) {
+  if (!type) return '';
+  return type.trim().replace(/[;\s]+$/g, '').replace(/\s+/g, ' ').slice(0, 25);
 }
 
 module.exports = { extract };

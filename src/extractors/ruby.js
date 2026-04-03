@@ -22,14 +22,16 @@ function extract(src) {
     if (m[1].startsWith('_')) continue;
     const params = m[2] ? `(${normalizeParams(m[2])})` : '';
     const selfPrefix = m[0].includes('self.') ? 'self.' : '';
-    sigs.push(`  def ${selfPrefix}${m[1]}${params}`);
+    const retStr = extractReturnHint(stripped, m.index);
+    sigs.push(`  def ${selfPrefix}${m[1]}${params}${retStr}`);
   }
 
   // Top-level def
   for (const m of stripped.matchAll(/^def\s+(\w+)(?:\s*\(([^)]*)\))?/gm)) {
     if (m[1].startsWith('_')) continue;
     const params = m[2] ? `(${normalizeParams(m[2])})` : '';
-    sigs.push(`def ${m[1]}${params}`);
+    const retStr = extractReturnHint(stripped, m.index);
+    sigs.push(`def ${m[1]}${params}${retStr}`);
   }
 
   return sigs.slice(0, 25);
@@ -38,6 +40,15 @@ function extract(src) {
 function normalizeParams(params) {
   if (!params) return '';
   return params.trim().replace(/\s+/g, ' ');
+}
+
+function extractReturnHint(stripped, index) {
+  const start = Math.max(0, index - 180);
+  const before = stripped.slice(start, index);
+  const m = before.match(/sig\s*\{[\s\S]*?returns\(([^)]+)\)[\s\S]*?\}\s*$/);
+  if (!m) return '';
+  const type = m[1].trim().replace(/\s+/g, ' ').slice(0, 25);
+  return type ? ` → ${type}` : '';
 }
 
 module.exports = { extract };

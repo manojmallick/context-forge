@@ -43,6 +43,14 @@ export const formatUser = async (user: User): Promise<string> => {
   return user.id;
 };
 
+export const useAuth = (loginId: string, password: string) => {
+  const user = { id: loginId };
+  const isAuthenticated = !!password;
+  const login = () => true;
+  const logout = () => false;
+  return { user, isAuthenticated, login, logout };
+};
+
 class InternalHelper {
   process(data: string): string {
     return data;

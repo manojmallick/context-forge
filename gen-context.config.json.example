@@ -1,5 +1,5 @@
 {
-  "_comment": "ContextForge configuration — all keys are optional (defaults shown)",
+  "_comment": "SigMap configuration — all keys are optional (defaults shown)",
 
   "output": ".github/copilot-instructions.md",
 
@@ -36,5 +36,26 @@
   "strategy": "full",
 
   "_hotCommits_comment": "Only used by hot-cold strategy: how many recent commits count as 'hot'",
-  "hotCommits": 10
+  "hotCommits": 10,
+
+  "_depMap_comment": "Include a compact import dependency map at the top of the output (~50-100 extra tokens)",
+  "depMap": true,
+
+  "_todos_comment": "Include compact TODO/FIXME/HACK/XXX section (max 20 entries)",
+  "todos": true,
+
+  "_changes_comment": "Include compact recent git changes section",
+  "changes": true,
+
+  "_changesCommits_comment": "How many recent commits to analyze for the changes section",
+  "changesCommits": 5,
+
+  "_testCoverage_comment": "Append function-level coverage hints (✓/✗) by scanning tests",
+  "testCoverage": false,
+
+  "_testDirs_comment": "Directories used when testCoverage is enabled",
+  "testDirs": ["tests", "test", "__tests__", "spec"],
+
+  "_impactRadius_comment": "Append reverse dependency hints in file headers (used by: ...)",
+  "impactRadius": false
 }

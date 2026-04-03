@@ -38,12 +38,23 @@ function extractBlock(src, startIndex) {
 
 function extractMembers(block) {
   const members = [];
-  const methodRe = /^\s+(?:public|protected)\s+(?:static\s+)?(?:final\s+)?(?:[\w<>\[\]]+\s+)+(\w+)\s*\(([^)]*)\)/gm;
+  const methodRe = /^\s+(?:public|protected)\s+(?:static\s+)?(?:final\s+)?(?:synchronized\s+)?(?:<[^>]+>\s+)?([\w<>\[\], ?.]+)\s+(\w+)\s*\(([^)]*)\)/gm;
   for (const m of block.matchAll(methodRe)) {
-    const sig = m[0].trim().split('{')[0].trim();
-    members.push(sig);
+    const ret = normalizeType(m[1]);
+    const retStr = ret ? ` → ${ret}` : '';
+    members.push(`${m[2]}(${normalizeParams(m[3])})${retStr}`);
   }
   return members.slice(0, 8);
+}
+
+function normalizeParams(params) {
+  if (!params) return '';
+  return params.trim().replace(/\s+/g, ' ');
+}
+
+function normalizeType(type) {
+  if (!type) return '';
+  return type.trim().replace(/\s+/g, ' ').slice(0, 30);
 }
 
 module.exports = { extract };

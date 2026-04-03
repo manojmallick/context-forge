@@ -1,6 +1,6 @@
 class UserService
-  public User GetUser(string id)
-  public async Task<User> CreateUserAsync(CreateUserDto dto)
-  protected void ValidateUser(User user)
+  GetUser(string id) → User
+  CreateUserAsync(CreateUserDto dto) → Task<User>
+  ValidateUser(User user) → void
 interface IUserRepository
 enum UserStatus

@@ -1,4 +1,4 @@
 class UserService
-  public User getUser(String id)
-  public User createUser(CreateUserDto dto)
-  protected void validateUser(User user)
+  getUser(String id) → User
+  createUser(CreateUserDto dto) → User
+  validateUser(User user) → void

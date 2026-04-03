@@ -20,10 +20,12 @@ function extract(src) {
     for (const meth of extractMembers(block)) sigs.push(`  ${meth}`);
   }
 
-  // Top-level functions
-  for (const m of stripped.matchAll(/^(?:public\s+|internal\s+)?(?:suspend\s+)?fun\s+(\w+)\s*(?:<[^(]*>)?\s*\(([^)]*)\)/gm)) {
+  // Top-level functions — capture `: RetType` after params
+  for (const m of stripped.matchAll(/^(?:public\s+|internal\s+)?(?:suspend\s+)?fun\s+(\w+)\s*(?:<[^(]*>)?\s*\(([^)]*)\)(?:\s*:\s*([^\n{=]+))?/gm)) {
     const suspend = m[0].includes('suspend') ? 'suspend ' : '';
-    sigs.push(`${suspend}fun ${m[1]}(${normalizeParams(m[2])})`);
+    const retType = m[3] ? m[3].trim().replace(/\s+/g, ' ') : '';
+    const retStr = retType ? ` \u2192 ${retType.slice(0, 25)}` : '';
+    sigs.push(`${suspend}fun ${m[1]}(${normalizeParams(m[2])})${retStr}`);
   }
 
   return sigs.slice(0, 25);
@@ -42,10 +44,12 @@ function extractBlock(src, startIndex) {
 
 function extractMembers(block) {
   const members = [];
-  for (const m of block.matchAll(/^\s+(?:public\s+|internal\s+|override\s+)?(?:suspend\s+)?fun\s+(\w+)\s*(?:<[^(]*>)?\s*\(([^)]*)\)/gm)) {
+  for (const m of block.matchAll(/^\s+(?:public\s+|internal\s+|override\s+)?(?:suspend\s+)?fun\s+(\w+)\s*(?:<[^(]*>)?\s*\(([^)]*)\)(?:\s*:\s*([^\n{=]+))?/gm)) {
     if (m[1].startsWith('_')) continue;
     const suspend = m[0].includes('suspend') ? 'suspend ' : '';
-    members.push(`${suspend}fun ${m[1]}(${normalizeParams(m[2])})`);
+    const retType = m[3] ? m[3].trim().replace(/\s+/g, ' ') : '';
+    const retStr = retType ? ` \u2192 ${retType.slice(0, 25)}` : '';
+    members.push(`${suspend}fun ${m[1]}(${normalizeParams(m[2])})${retStr}`);
   }
   return members.slice(0, 8);
 }

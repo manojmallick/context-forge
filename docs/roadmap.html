@@ -4,9 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Roadmap — SigMap</title>
-<meta name="description" content="SigMap shipped v0.1 through v1.5 — 16 versions, 97% token reduction, 274 tests. Full visual timeline from baseline to complete system.">
-<meta property="og:title" content="SigMap Roadmap — v0.1 to v1.5 complete">
-<meta property="og:description" content="15 versions shipped. 97% token reduction. 274 tests. MIT license. See how SigMap was built from first extractor to full enterprise system.">
+<meta name="description" content="SigMap shipped v0.1 through v2.0 — 17 versions, 97% token reduction, 262 tests. Full visual timeline from baseline to complete system.">
+<meta property="og:title" content="SigMap Roadmap — v0.1 to v2.0 complete">
+<meta property="og:description" content="17 versions shipped. 97% token reduction. 262 tests. MIT license. See how SigMap was built from first extractor to full enterprise system.">
 <meta property="og:url" content="https://manojmallick.github.io/sigmap/roadmap.html">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="canonical" href="https://manojmallick.github.io/sigmap/roadmap.html">
@@ -141,7 +141,7 @@ footer{background:var(--s1);border-top:1px solid var(--line);padding:32px 24px}
 <div class="page-hero">
   <div class="hero-inner">
     <div class="hero-badge"><span class="dot"></span>All versions complete</div>
-    <h1>v0.0 → v1.5</h1>
+    <h1>v0.0 → v2.0</h1>
     <p class="hero-sub">Sixteen versions. Every one shipped. MIT open source from day one.</p>
     <div class="hero-stats">
       <div class="hstat"><span class="hstat-val p">97%</span><span class="hstat-lbl">Token reduction</span></div>
@@ -600,6 +600,31 @@ footer{background:var(--s1);border-top:1px solid var(--line);padding:32px 24px}
       </div>
     </div>
 
+    <!-- v2.0 -->
+    <div class="tl-item">
+      <div class="tl-rail">
+        <div class="tl-dot done" style="background:rgba(124,106,247,.2);border-color:var(--p);color:var(--pd);font-size:10px">v2.0</div>
+      </div>
+      <div class="tl-content">
+        <div class="tl-header">
+          <span class="tl-version" style="background:linear-gradient(135deg,var(--t1),var(--pd));-webkit-background-clip:text;-webkit-text-fill-color:transparent">v2.0</span>
+          <span class="tl-name">v2 pipeline — TODOs, changes, coverage, diff</span>
+          <span class="tl-badge done">✓ Complete — tagged v2.0.0</span>
+        </div>
+        <div class="tl-desc">Major pipeline overhaul adds four new context sections: <strong>TODOs</strong> (inline TODO/FIXME/HACK extraction), <strong>Recent changes</strong> (git log summary), <strong>Coverage gaps</strong> (files lacking tests), and <strong>PR diff context</strong> (changed-file signatures). New dependency extractors for Python (<code>import</code>/<code>from</code>) and TypeScript (<code>import</code>/<code>require</code>). Three extractor bug fixes: Python BaseModel field bleed, TypeScript union type truncation, and TypeScript function-style hook detection. 262 tests passing across 21 languages and 17 integration suites.</div>
+        <div class="tl-tags">
+          <span class="tl-tag">v2 pipeline</span>
+          <span class="tl-tag">TODOs</span>
+          <span class="tl-tag">coverage gaps</span>
+          <span class="tl-tag">PR diff context</span>
+          <span class="tl-tag">dependency extractors</span>
+          <span class="tl-tag">262 tests</span>
+          <span class="tl-tag">MIT v2.0.0</span>
+        </div>
+        <div class="tl-impact">Full project awareness — agents see TODOs, recent changes, coverage gaps, and PR context</div>
+      </div>
+    </div>
+
   </div>
 </section>
 
@@ -607,7 +632,7 @@ footer{background:var(--s1);border-top:1px solid var(--line);padding:32px 24px}
 
 <section class="section">
   <p class="section-ey">Final numbers</p>
-  <h2>v1.5.0 at a glance</h2>
+  <h2>v2.0.0 at a glance</h2>
 
   <div class="final-grid">
     <div class="final-stat">
@@ -615,7 +640,7 @@ footer{background:var(--s1);border-top:1px solid var(--line);padding:32px 24px}
       <div class="final-stat-lbl">Token reduction</div>
     </div>
     <div class="final-stat">
-      <span class="final-stat-val g">274</span>
+      <span class="final-stat-val g">262</span>
       <div class="final-stat-lbl">Tests passing</div>
     </div>
     <div class="final-stat">
@@ -636,7 +661,7 @@ footer{background:var(--s1);border-top:1px solid var(--line);padding:32px 24px}
 
 <footer>
   <div class="footer-inner">
-    <span class="footer-logo">sigmap v1.5.0</span>
+    <span class="footer-logo">sigmap v2.0.0</span>
     <div class="footer-links">
       <a href="quick-start.html">Quick start</a>
       <a href="strategies.html">Strategies</a>
@@ -650,7 +675,7 @@ footer{background:var(--s1);border-top:1px solid var(--line);padding:32px 24px}
   </div>
 </footer>
 
-<!-- SigMap docs search — v1.5 -->
+<!-- SigMap docs search — v2.0 -->
 <style>
 .cf-search-btn{background:none;border:1px solid var(--line2);border-radius:7px;padding:0 10px;height:32px;cursor:pointer;display:flex;align-items:center;gap:6px;color:var(--t2);font-size:12px;font-family:inherit;transition:.15s;flex-shrink:0}
 .cf-search-btn:hover{border-color:var(--p);color:var(--pd)}

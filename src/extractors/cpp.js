@@ -23,9 +23,11 @@ function extract(src) {
   }
 
   // Top-level function declarations/definitions (not inside a class)
-  for (const m of stripped.matchAll(/^(?!class|struct|if|for|while|switch)[\w:*&<> ]+\s+(\w+)\s*\(([^)]*)\)\s*(?:const\s*)?\{/gm)) {
-    if (m[1].startsWith('_')) continue;
-    sigs.push(`${m[1]}(${normalizeParams(m[2])})`);
+  for (const m of stripped.matchAll(/^(?!class|struct|if|for|while|switch)([\w:*&<> ]+?)\s+(\w+)\s*\(([^)]*)\)\s*(?:const\s*)?\{/gm)) {
+    if (m[2].startsWith('_')) continue;
+    const ret = normalizeType(m[1]);
+    const retStr = ret ? ` → ${ret}` : '';
+    sigs.push(`${m[2]}(${normalizeParams(m[3])})${retStr}`);
   }
 
   return sigs.slice(0, 25);
@@ -44,10 +46,12 @@ function extractBlock(src, startIndex) {
 
 function extractMembers(block) {
   const members = [];
-  const methodRe = /^\s+(?:virtual\s+|static\s+|inline\s+)?(?!private:|protected:|public:)[\w:*&<> ]+\s+(\w+)\s*\(([^)]*)\)\s*(?:const\s*)?(?:override\s*)?(?:=\s*0\s*)?;/gm;
+  const methodRe = /^\s+(?:virtual\s+|static\s+|inline\s+)?(?!private:|protected:|public:)([\w:*&<> ]+?)\s+(\w+)\s*\(([^)]*)\)\s*(?:const\s*)?(?:override\s*)?(?:=\s*0\s*)?;/gm;
   for (const m of block.matchAll(methodRe)) {
-    if (m[1].startsWith('_')) continue;
-    members.push(`${m[1]}(${normalizeParams(m[2])})`);
+    if (m[2].startsWith('_')) continue;
+    const ret = normalizeType(m[1]);
+    const retStr = ret ? ` → ${ret}` : '';
+    members.push(`${m[2]}(${normalizeParams(m[3])})${retStr}`);
   }
   return members.slice(0, 8);
 }
@@ -55,6 +59,11 @@ function extractMembers(block) {
 function normalizeParams(params) {
   if (!params) return '';
   return params.trim().replace(/\s+/g, ' ');
+}
+
+function normalizeType(type) {
+  if (!type) return '';
+  return type.trim().replace(/\s+/g, ' ').slice(0, 30);
 }
 
 module.exports = { extract };

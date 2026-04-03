@@ -25,10 +25,12 @@ function extract(src) {
   }
 
   // Top-level defs
-  for (const m of stripped.matchAll(/^def\s+(\w+)(?:\[[\w, ]+\])?\s*(?:\(([^)]*)\))?/gm)) {
+  for (const m of stripped.matchAll(/^def\s+(\w+)(?:\[[\w, ]+\])?\s*(?:\(([^)]*)\))?(?:\s*:\s*([^=\n{]+))?/gm)) {
     if (m[1].startsWith('_')) continue;
     const params = m[2] ? `(${normalizeParams(m[2])})` : '';
-    sigs.push(`def ${m[1]}${params}`);
+    const ret = normalizeType(m[3]);
+    const retStr = ret ? ` → ${ret}` : '';
+    sigs.push(`def ${m[1]}${params}${retStr}`);
   }
 
   return sigs.slice(0, 25);
@@ -47,10 +49,12 @@ function extractBlock(src, startIndex) {
 
 function extractMembers(block) {
   const members = [];
-  for (const m of block.matchAll(/^\s+def\s+(\w+)(?:\[[\w, ]+\])?\s*(?:\(([^)]*)\))?/gm)) {
+  for (const m of block.matchAll(/^\s+def\s+(\w+)(?:\[[\w, ]+\])?\s*(?:\(([^)]*)\))?(?:\s*:\s*([^=\n{]+))?/gm)) {
     if (m[1].startsWith('_')) continue;
     const params = m[2] ? `(${normalizeParams(m[2])})` : '';
-    members.push(`def ${m[1]}${params}`);
+    const ret = normalizeType(m[3]);
+    const retStr = ret ? ` → ${ret}` : '';
+    members.push(`def ${m[1]}${params}${retStr}`);
   }
   return members.slice(0, 8);
 }
@@ -62,6 +66,11 @@ function normalizeParams(params) {
     .map((p) => p.trim().split(':')[0].trim())
     .filter(Boolean)
     .join(', ');
+}
+
+function normalizeType(type) {
+  if (!type) return '';
+  return type.trim().replace(/\s+/g, ' ').slice(0, 25);
 }
 
 module.exports = { extract };

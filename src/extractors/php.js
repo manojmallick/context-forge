@@ -25,8 +25,10 @@ function extract(src) {
   }
 
   // Top-level functions
-  for (const m of stripped.matchAll(/^function\s+(\w+)\s*\(([^)]*)\)/gm)) {
-    sigs.push(`function ${m[1]}(${normalizeParams(m[2])})`);
+  for (const m of stripped.matchAll(/^function\s+(\w+)\s*\(([^)]*)\)\s*(?::\s*([^\n{]+))?/gm)) {
+    const ret = normalizeType(m[3]);
+    const retStr = ret ? ` → ${ret}` : '';
+    sigs.push(`function ${m[1]}(${normalizeParams(m[2])})${retStr}`);
   }
 
   return sigs.slice(0, 25);
@@ -45,11 +47,13 @@ function extractBlock(src, startIndex) {
 
 function extractMembers(block) {
   const members = [];
-  const methodRe = /^\s+(?:public|protected)\s+(?:static\s+)?function\s+(\w+)\s*\(([^)]*)\)/gm;
+  const methodRe = /^\s+(?:public|protected)\s+(?:static\s+)?function\s+(\w+)\s*\(([^)]*)\)\s*(?::\s*([^\n{]+))?/gm;
   for (const m of block.matchAll(methodRe)) {
     if (m[1].startsWith('_')) continue;
     const isStatic = m[0].includes('static ') ? 'static ' : '';
-    members.push(`${isStatic}function ${m[1]}(${normalizeParams(m[2])})`);
+    const ret = normalizeType(m[3]);
+    const retStr = ret ? ` → ${ret}` : '';
+    members.push(`${isStatic}function ${m[1]}(${normalizeParams(m[2])})${retStr}`);
   }
   return members.slice(0, 8);
 }
@@ -57,6 +61,11 @@ function extractMembers(block) {
 function normalizeParams(params) {
   if (!params) return '';
   return params.trim().replace(/\s+/g, ' ');
+}
+
+function normalizeType(type) {
+  if (!type) return '';
+  return type.trim().replace(/[;\s]+$/g, '').replace(/\s+/g, ' ').slice(0, 25);
 }
 
 module.exports = { extract };

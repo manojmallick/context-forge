@@ -6,7 +6,8 @@
 2. Create `test/fixtures/{language}.{ext}` with representative code
 3. Run `node test/run.js --update {language}` to generate expected output
 4. Review the expected output — it should contain only signatures, no bodies
-5. Run `node test/run.js` — must be 177/177 PASS (21 extractor + 156 integration) before opening a PR
+5. Run `node test/run.js` — must be 21/21 PASS before opening a PR
+6. Run `node test/integration/all.js` — 17/17 integration suites must pass
 
 ## Extractor contract
 

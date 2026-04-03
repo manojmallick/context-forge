@@ -1,9 +1,9 @@
 case class User
-  def findById(id)
-  def save(entity)
+  def findById(id) → Option[T]
+  def save(entity) → T
 class UserService
-  def getUser(id)
-  def createUser(dto)
+  def getUser(id) → Option[User]
+  def createUser(dto) → User
 object UserService
-  def apply(repo)
-def hashPassword(password)
+  def apply(repo) → UserService
+def hashPassword(password) → String

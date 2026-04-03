@@ -11,7 +11,7 @@
 
 <!-- Status -->
 [![npm version](https://img.shields.io/npm/v/sigmap?color=7c6af7&label=latest&logo=npm)](https://www.npmjs.com/package/sigmap)
-[![Tests](https://img.shields.io/badge/tests-274%20passing-22c55e)](https://github.com/manojmallick/sigmap/tree/main/test)
+[![Tests](https://img.shields.io/badge/tests-262%20passing-22c55e)](https://github.com/manojmallick/sigmap/tree/main/test)
 [![Zero deps](https://img.shields.io/badge/dependencies-zero-22c55e)](package.json)
 [![Last commit](https://img.shields.io/github/last-commit/manojmallick/sigmap?color=7c6af7)](https://github.com/manojmallick/sigmap/commits/main)
 
@@ -82,6 +82,23 @@ AI agent session starts with full context
 
 ---
 
+## 🆕 What's new in 2.0
+
+| Feature | Description |
+|---|---|
+| **Enriched signatures** | Return types, type hints, and schema field collapse (Python `@dataclass` / `BaseModel`) |
+| **Dependency map** | Compact import dependency section at the top of output (~50–100 extra tokens) |
+| **TODO/FIXME section** | Auto-harvested TODO/FIXME/HACK/XXX comments (max 20 entries) |
+| **Recent changes section** | Git-based recent changes summary in output |
+| **Test coverage markers** | Per-function `✓`/`✗` hints by scanning test directories |
+| **Structural diff mode** | `--diff <base-ref>` writes a signature-level diff section |
+| **Impact radius hints** | Reverse dependency annotations (used by: ...) |
+| **New helper extractors** | `deps.js`, `todos.js`, `coverage.js`, `prdiff.js` |
+
+Several v2 enhancements (deps map, TODOs, recent changes) are enabled by default. All v2 sections can be tuned or disabled via `gen-context.config.json`.
+
+---
+
 ## 🚀 Quick start
 
 **No install required — just Node.js 18+.**
@@ -147,7 +164,7 @@ The `vscode-extension/` directory contains a first-party VS Code extension that 
 | **Stale notification** | Warns when `copilot-instructions.md` is > 24 h old; one-click regeneration |
 | **Regenerate command** | `SigMap: Regenerate Context` — runs `node gen-context.js` in the integrated terminal |
 | **Open context command** | `SigMap: Open Context File` — opens `.github/copilot-instructions.md` |
-| **Script path setting** | `contextforge.scriptPath` — override when `gen-context.js` is not at the project root |
+| **Script path setting** | `sigmap.scriptPath` — override when `gen-context.js` is not at the project root |
 
 Activate on startup (`onStartupFinished`) — loads within 3 s, never blocks editor startup.
 
@@ -380,7 +397,7 @@ node gen-context.js --track
 
 # Structured JSON report for CI (exits 1 if over budget)
 node gen-context.js --report --json
-# { "version": "1.5.0", "finalTokens": 3200, "reductionPct": 92.4, "overBudget": false }
+# { "version": "2.0.0", "finalTokens": 3200, "reductionPct": 92.4, "overBudget": false }
 
 # Composite health score
 node gen-context.js --health
@@ -426,8 +443,8 @@ node test/run.js typescript
 # Regenerate expected outputs after extractor changes
 node test/run.js --update
 
-# Full integration suite (253 tests across 16 test files)
-for f in test/integration/*.test.js; do node "$f"; done
+# Full integration suite
+node test/integration/all.js
 ```
 
 ### Validation gates
@@ -478,7 +495,7 @@ sigmap/
 │   ├── fixtures/                ← one source file per language
 │   ├── expected/                ← expected extractor output
 │   ├── run.js                   ← zero-dep test runner
-│   └── integration/             ← 16 integration test files (253 tests)
+│   └── integration/             ← 17 integration test files (241 tests)
 │
 ├── docs/                        ← documentation site (GitHub Pages)
 │   ├── index.html               ← homepage
@@ -490,11 +507,12 @@ sigmap/
 │
 ├── scripts/
 │   ├── ci-update.sh             ← CI pipeline helper
-│   └── inject-search.py         ← one-time: add search to docs HTML pages
+│   └── release.sh               ← version bump + npm publish helper
 │
 ├── examples/
 │   ├── self-healing-github-action.yml
-│   └── gen-context.config.json  ← full annotated config
+│   ├── github-action.yml            ← ready-to-use CI workflow
+│   └── claude-code-settings.json    ← MCP server config example
 │
 ├── .npmignore                   ← excludes docs/, test/, vscode-extension/ from publish
 ├── .contextignore.example       ← exclusion template

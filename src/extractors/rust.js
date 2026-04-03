@@ -35,10 +35,11 @@ function extract(src) {
     for (const fn of extractMethods(block)) sigs.push(`  ${fn}`);
   }
 
-  // Top-level pub fns
-  for (const m of stripped.matchAll(/^pub(?:\s+async)?\s+fn\s+(\w+)(?:<[^(]*>)?\s*\(([^)]*)\)/gm)) {
+  // Top-level pub fns — capture everything after ) up to { or ; for return type
+  for (const m of stripped.matchAll(/^pub(?:\s+async)?\s+fn\s+(\w+)(?:<[^(]*>)?\s*\(([^)]*)\)([^{;]*)/gm)) {
     const asyncKw = m[0].includes('async') ? 'async ' : '';
-    sigs.push(`pub ${asyncKw}fn ${m[1]}(${normalizeParams(m[2])})`);
+    const retStr = extractReturnType(m[3]);
+    sigs.push(`pub ${asyncKw}fn ${m[1]}(${normalizeParams(m[2])})${retStr}`);
   }
 
   return sigs.slice(0, 25);
@@ -57,9 +58,10 @@ function extractBlock(src, startIndex) {
 
 function extractMethods(block) {
   const methods = [];
-  for (const m of block.matchAll(/^\s+pub(?:\s+async)?\s+fn\s+(\w+)(?:<[^(]*>)?\s*\(([^)]*)\)/gm)) {
+  for (const m of block.matchAll(/^\s+pub(?:\s+async)?\s+fn\s+(\w+)(?:<[^(]*>)?\s*\(([^)]*)\)([^{;]*)/gm)) {
     const asyncKw = m[0].includes('async') ? 'async ' : '';
-    methods.push(`pub ${asyncKw}fn ${m[1]}(${normalizeParams(m[2])})`);
+    const retStr = extractReturnType(m[3]);
+    methods.push(`pub ${asyncKw}fn ${m[1]}(${normalizeParams(m[2])})${retStr}`);
   }
   return methods.slice(0, 8);
 }
@@ -67,6 +69,14 @@ function extractMethods(block) {
 function normalizeParams(params) {
   if (!params) return '';
   return params.trim().replace(/\s+/g, ' ');
+}
+
+function extractReturnType(afterParen) {
+  if (!afterParen) return '';
+  const m = afterParen.match(/->\s*([^{;]+)/);
+  if (!m) return '';
+  const rt = m[1].trim().replace(/\s+/g, ' ');
+  return ` \u2192 ${rt.length > 30 ? rt.slice(0, 27) + '...' : rt}`;
 }
 
 module.exports = { extract };

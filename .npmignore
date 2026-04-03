@@ -1,4 +1,4 @@
-# ContextForge — files excluded from npm publish
+# SigMap — files excluded from npm publish
 # Only gen-context.js, gen-project-map.js, src/, README.md, LICENSE, CHANGELOG.md,
 # .contextignore.example, and gen-context.config.json.example are published.
 

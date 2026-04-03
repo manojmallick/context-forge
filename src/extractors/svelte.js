@@ -23,16 +23,18 @@ function extract(src) {
   }
 
   // Exported functions
-  for (const m of script.matchAll(/^export\s+(?:async\s+)?function\s+(\w+)\s*\(([^)]*)\)/gm)) {
+  for (const m of script.matchAll(/^export\s+(?:async\s+)?function\s+(\w+)\s*\(([^)]*)\)(?:\s*:\s*([^{=\n]+))?/gm)) {
     const asyncKw = m[0].includes('async') ? 'async ' : '';
-    sigs.push(`export ${asyncKw}function ${m[1]}(${normalizeParams(m[2])})`);
+    const retStr = m[3] ? ` → ${normalizeType(m[3])}` : '';
+    sigs.push(`export ${asyncKw}function ${m[1]}(${normalizeParams(m[2])})${retStr}`);
   }
 
   // Top-level functions
-  for (const m of script.matchAll(/^(?:async\s+)?function\s+(\w+)\s*\(([^)]*)\)/gm)) {
+  for (const m of script.matchAll(/^(?:async\s+)?function\s+(\w+)\s*\(([^)]*)\)(?:\s*:\s*([^{=\n]+))?/gm)) {
     if (m[1].startsWith('_')) continue;
     const asyncKw = m[0].startsWith('async') ? 'async ' : '';
-    sigs.push(`${asyncKw}function ${m[1]}(${normalizeParams(m[2])})`);
+    const retStr = m[3] ? ` → ${normalizeType(m[3])}` : '';
+    sigs.push(`${asyncKw}function ${m[1]}(${normalizeParams(m[2])})${retStr}`);
   }
 
   // Reactive declarations $:
@@ -46,6 +48,11 @@ function extract(src) {
 function normalizeParams(params) {
   if (!params) return '';
   return params.trim().replace(/\s+/g, ' ');
+}
+
+function normalizeType(type) {
+  if (!type) return '';
+  return type.trim().replace(/[;\s]+$/g, '').replace(/\s+/g, ' ').slice(0, 25);
 }
 
 module.exports = { extract };

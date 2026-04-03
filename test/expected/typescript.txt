@@ -1,5 +1,5 @@
 export interface UserService
-  readonly version
+  readonly version: string
   getUser(id)
   createUser(data)
 export type UserId
@@ -7,9 +7,10 @@ export type UserRole
 export enum Status
 export class UserRepository
   constructor(private db)
-  async findById(id)
-  async save(user)
-  static create(db)
+  async findById(id) → Promise<User | null>
+  async save(user) → Promise<void>
+  static create(db) → UserRepository
 class InternalHelper
-  process(data)
-export async function hashPassword(password)
+  process(data) → string
+export async function hashPassword(password) → Promise<string>
+export const useAuth = (loginId, password) => → { user, isAuthenticated, login, logout }

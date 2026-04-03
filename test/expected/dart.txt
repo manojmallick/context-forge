@@ -1,8 +1,8 @@
 abstract class Repository
-  findById(String id)
-  save(T entity)
+  findById(String id) → T?
+  save(T entity) → Future<T>
 class UserService
-  getUser(String id)
-  createUser(CreateUserDto data)
+  getUser(String id) → User?
+  createUser(CreateUserDto data) → Future<User>
 class User
-hashPassword(String password)
+hashPassword(String password) → String

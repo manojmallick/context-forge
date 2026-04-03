@@ -6,6 +6,39 @@ Format: [Semantic Versioning](https://semver.org/)
 
 ---
 
+## [2.0.0] — 2026-04-04
+
+### Added
+- **v2 output enrichment pipeline** — compact `deps`, `todos`, `changes` sections auto-generated in context output.
+- **Structural diff mode** — `--diff <base-ref>` writes a signature-level diff section comparing current signatures against a base branch.
+- **Test coverage markers** — opt-in per-function `✓`/`✗` hints by scanning test directories (`testCoverage: true`).
+- **Impact radius hints** — opt-in reverse dependency annotations (`impactRadius: true`).
+- **New helper extractors**:
+  - `src/extractors/deps.js` — Python and TS/JS dependency extraction + reverse dep map.
+  - `src/extractors/todos.js` — TODO/FIXME/HACK/XXX harvesting (max 20 entries).
+  - `src/extractors/coverage.js` — lightweight function/test correlation.
+  - `src/extractors/prdiff.js` — signature-level base-ref diffs.
+- **New config keys**: `enrichSignatures`, `depMap`, `schemaFields`, `todos`, `changes`, `changesCommits`, `testCoverage`, `testDirs`, `impactRadius`.
+- `test/integration/v2plus.test.js` — 3 integration tests for todos, coverage markers, and structural diff.
+- `test/integration/all.js` — unified integration runner and `test:integration:all` npm script.
+
+### Changed
+- **Enriched multi-language extractors** — return-type hints (`→ Type`) and richer signatures across C++, C#, Dart, Go, Java, JavaScript, Kotlin, PHP, Python, Ruby, Rust, Scala, Svelte, Swift, TypeScript, and Vue.
+- **Python extractor** — dataclass/BaseModel field collapse, top-level docstring hints, fixed field bleed across class boundaries.
+- **TypeScript extractor** — interface property types, class method return hints, compact hook return shapes for `export function useX()`, union type truncation extended to 35 chars.
+- Removed stale development files: `TIMELINE.md`, `scripts/bundle.js`, `scripts/make-icon.py`, `scripts/inject-search.py`, `scripts/backfill-npm.sh`, `examples/slack-context-bot.js`, `examples/copilot-prompts.code-snippets`.
+
+### Fixed
+- Python `tryExtractBaseModelFields` no longer bleeds fields into subsequent classes.
+- TypeScript interface member type previews preserve longer union strings (20 → 35 chars).
+- TypeScript function-style hooks (`export function useX`) now include compact return object shapes.
+
+### Validation gate
+- 21/21 extractor tests passed
+- 17/17 integration suites passed (262 individual tests)
+- `node gen-context.js --report` → ~93.5% reduction
+
+
 ## [1.5.0] — 2026-04-04
 
 ### Added
@@ -32,7 +65,6 @@ Format: [Semantic Versioning](https://semver.org/)
 
 ### Notes
 - The VS Code extension requires the `vscode` peer dependency at runtime (provided by the editor). It has no npm runtime dependencies of its own.
-- `scripts/inject-search.py` is the one-time migration script used to add search to existing HTML pages; it is idempotent (skip if already patched).
 
 ### Validation gate
 - `node gen-context.js --version` → `1.5.0` ✔  *(note: version bumped separately if desired)*

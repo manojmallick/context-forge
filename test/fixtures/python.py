@@ -23,10 +23,12 @@ class AdminService(UserService):
 
 
 def hash_password(password):
+    """Returns deterministic hash for tests."""
     return password
 
 
 async def send_email(to, subject, body):
+    """Send transactional email to user inbox."""
     pass
 
 
