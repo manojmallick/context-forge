@@ -121,7 +121,7 @@ async function updateStatusBar(statusBar) {
   const status = await getStatus(root, scriptPath);
 
   if (!status) {
-    statusBar.text = '$(file-code) cf: no context';
+    statusBar.text = '$(file-code) sm: no context';
     statusBar.tooltip = 'SigMap: no context file found. Run: node gen-context.js';
     statusBar.show();
     return;
@@ -129,7 +129,7 @@ async function updateStatusBar(statusBar) {
 
   const icon = GRADE_ICONS[status.grade] || GRADE_ICONS.A;
   const age = formatAge(status.daysSince);
-  statusBar.text = `$(file-code) cf: ${icon} ${age}`;
+  statusBar.text = `$(file-code) sm: ${icon} ${age}`;
   statusBar.tooltip = `SigMap health: ${status.grade} (${status.score}/100)\nLast regenerated: ${age}\nClick to regenerate`;
   statusBar.show();
 }

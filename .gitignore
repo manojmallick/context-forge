@@ -4,3 +4,4 @@ gen-context.standalone.js
 package.json.bak
 node_modules/
 .context/
+*.vsix

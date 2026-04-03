@@ -31,6 +31,23 @@ After SigMap:   "I can see your AuthService, UserRepository, 47 API routes …"
 
 ---
 
+## 🆕 What's new in 2.0
+
+| Feature | Description |
+|---|---|
+| **TODO extraction** | Inline TODO/FIXME/HACK comments surfaced in context output |
+| **Recent changes** | Git log summary so the AI knows what you've been working on |
+| **Coverage gaps** | Highlights files/functions lacking tests |
+| **PR diff context** | `--diff <base>` shows changed-file signatures for focused reviews |
+| **Dependency map** | Import/require graph for Python and TypeScript |
+| **Impact radius** | Reverse dependency annotations (used by: ...) |
+| **Enriched signatures** | Return types, type hints, and schema field collapse across all 21 languages |
+| **New helper extractors** | `deps.js`, `todos.js`, `coverage.js`, `prdiff.js` |
+
+Several v2 enhancements (deps map, TODOs, recent changes) are enabled by default. All v2 sections can be tuned or disabled via `gen-context.config.json`.
+
+---
+
 ## ✨ Features
 
 ### 🔄 Auto-regeneration on startup
