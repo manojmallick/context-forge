@@ -7,6 +7,7 @@
 **97% token reduction · 21 languages · Always-on · Node 18+**
 
 [![VS Marketplace](https://img.shields.io/visual-studio-marketplace/v/manojmallick.sigmap?color=7c6af7&label=VS%20Marketplace&logo=visual-studio-code)](https://marketplace.visualstudio.com/items?itemName=manojmallick.sigmap)
+[![Open VSX](https://img.shields.io/open-vsx/v/manojmallick/sigmap?color=a251e3&label=Open%20VSX&logo=vscodium)](https://open-vsx.org/extension/manojmallick/sigmap)
 [![Installs](https://img.shields.io/visual-studio-marketplace/i/manojmallick.sigmap?color=blue&logo=visual-studio-code)](https://marketplace.visualstudio.com/items?itemName=manojmallick.sigmap)
 [![Rating](https://img.shields.io/visual-studio-marketplace/r/manojmallick.sigmap?color=brightgreen)](https://marketplace.visualstudio.com/items?itemName=manojmallick.sigmap)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](https://github.com/manojmallick/sigmap/blob/main/LICENSE)
@@ -308,12 +309,24 @@ dist/
 
 ---
 
+## 🏪 Available on
+
+| Store | Editors | Link |
+|---|---|---|
+| **VS Code Marketplace** | VS Code, Cursor | [marketplace.visualstudio.com](https://marketplace.visualstudio.com/items?itemName=manojmallick.sigmap) |
+| **Open VSX Registry** | VSCodium, Gitpod, Theia, Eclipse, Windsurf | [open-vsx.org](https://open-vsx.org/extension/manojmallick/sigmap) |
+| **npm (CLI)** | Any terminal / CI | [npmjs.com/package/sigmap](https://www.npmjs.com/package/sigmap) |
+| **GitHub Packages** | Enterprise / private registries | [@manojmallick/sigmap](https://github.com/manojmallick/sigmap/packages) |
+
+---
+
 ## 📦 Related Resources
 
 | Resource | Link |
 |---|---|
 | 📖 Documentation | [manojmallick.github.io/sigmap](https://manojmallick.github.io/sigmap/) |
 | 📦 npm package | [npmjs.com/package/sigmap](https://www.npmjs.com/package/sigmap) |
+| 🟣 Open VSX | [open-vsx.org/extension/manojmallick/sigmap](https://open-vsx.org/extension/manojmallick/sigmap) |
 | 💻 GitHub | [github.com/manojmallick/sigmap](https://github.com/manojmallick/sigmap) |
 | 📝 Changelog | [CHANGELOG.md](https://github.com/manojmallick/sigmap/blob/main/CHANGELOG.md) |
 | 🐛 Issues | [github.com/manojmallick/sigmap/issues](https://github.com/manojmallick/sigmap/issues) |
