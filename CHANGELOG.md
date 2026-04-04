@@ -6,6 +6,27 @@ Format: [Semantic Versioning](https://semver.org/)
 
 ---
 
+## [2.1.0] — 2026-04-05
+
+### Added
+- **Benchmark & evaluation system** — `src/eval/runner.js` and `src/eval/scorer.js`: zero-dependency retrieval quality measurement pipeline. Computes hit@5, MRR, and precision@5 against a JSONL task file.
+- **`benchmarks/` directory structure** — `benchmarks/tasks/retrieval.jsonl` (20 tasks against SigMap's own codebase), `benchmarks/results/` (gitignored run output), `benchmarks/reports/` (human-readable summaries).
+- **`--benchmark` CLI flag** — runs retrieval through all tasks in `benchmarks/tasks/retrieval.jsonl`, prints a markdown table (Task | Query | hit@5 | RR | Tokens) plus aggregate metrics; `--benchmark --json` for machine-readable output.
+- **`--eval` CLI flag** — alias for `--benchmark`.
+- **`src/eval/scorer.js`** — pure metric functions: `hitAtK(ranked, expected, k)`, `reciprocalRank(ranked, expected)`, `precisionAtK(ranked, expected, k)`, `aggregate(results)`. Never throws.
+- **`src/eval/runner.js`** — task loader (`loadTasks`), sig-index builder (`buildSigIndex`), keyword ranker (`rank`, `tokenize`), and main `run(tasksFile, cwd)` entry point. Reads generated context file from disk; no in-memory state.
+- **`test/integration/benchmark.test.js`** — 10 integration tests covering scorer unit tests, tokenizer, task loading, empty-file edge case, metrics shape, and `--benchmark --json` CLI output.
+
+### Validation gate
+- 21/21 extractor tests passed
+- All integration suites passed (includes 10 new benchmark tests)
+- `node gen-context.js --version` → `2.1.0`
+- `node gen-context.js --benchmark` runs without error on SigMap repo
+- `node gen-context.js --benchmark --json` → valid JSON with `metrics.hitAt5`, `metrics.mrr`, `tasks` array
+- `node gen-context.js --eval --json` → same output as `--benchmark --json`
+
+---
+
 ## [2.0.0] — 2026-04-04
 
 ### Added

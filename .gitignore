@@ -5,3 +5,5 @@ package.json.bak
 node_modules/
 .context/
 *.vsix
+IMPL.md
+PLAN.md

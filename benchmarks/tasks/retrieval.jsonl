@@ -1,0 +1,20 @@
+{"id":"t001","query":"add a new language extractor","expected_files":["src/extractors/typescript.js","src/extractors/javascript.js","src/extractors/python.js"],"repo":"."}
+{"id":"t002","query":"secret scanning and redacting credentials","expected_files":["src/security/scanner.js","src/security/patterns.js"],"repo":"."}
+{"id":"t003","query":"MCP server tool definitions","expected_files":["src/mcp/tools.js","src/mcp/server.js","src/mcp/handlers.js"],"repo":"."}
+{"id":"t004","query":"health score calculation and grade","expected_files":["src/health/scorer.js"],"repo":"."}
+{"id":"t005","query":"context strategy hot-cold per-module","expected_files":["src/config/defaults.js","src/config/loader.js"],"repo":"."}
+{"id":"t006","query":"token budget enforcement dropping files","expected_files":["gen-context.js"],"repo":"."}
+{"id":"t007","query":"import graph cycle detection","expected_files":["src/map/import-graph.js"],"repo":"."}
+{"id":"t008","query":"class hierarchy extends implements","expected_files":["src/map/class-hierarchy.js"],"repo":"."}
+{"id":"t009","query":"HTTP route extraction Express Flask","expected_files":["src/map/route-table.js"],"repo":"."}
+{"id":"t010","query":"model routing classifier fast balanced powerful","expected_files":["src/routing/classifier.js","src/routing/hints.js"],"repo":"."}
+{"id":"t011","query":"python dataclass BaseModel field extraction","expected_files":["src/extractors/python.js"],"repo":"."}
+{"id":"t012","query":"TypeScript interface members return types","expected_files":["src/extractors/typescript.js"],"repo":"."}
+{"id":"t013","query":"dependency map reverse lookup","expected_files":["src/extractors/deps.js"],"repo":"."}
+{"id":"t014","query":"TODO FIXME HACK extraction from source","expected_files":["src/extractors/todos.js"],"repo":"."}
+{"id":"t015","query":"test coverage function correlation isTested","expected_files":["src/extractors/coverage.js"],"repo":"."}
+{"id":"t016","query":"structural diff signatures base branch","expected_files":["src/extractors/prdiff.js"],"repo":"."}
+{"id":"t017","query":"Anthropic prompt cache content block","expected_files":["src/format/cache.js"],"repo":"."}
+{"id":"t018","query":"usage log tracking NDJSON runs","expected_files":["src/tracking/logger.js"],"repo":"."}
+{"id":"t019","query":"config loader deep clone defaults","expected_files":["src/config/loader.js","src/config/defaults.js"],"repo":"."}
+{"id":"t020","query":"MCP read_context search_signatures explain_file","expected_files":["src/mcp/handlers.js","src/mcp/tools.js"],"repo":"."}
