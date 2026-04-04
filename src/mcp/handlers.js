@@ -430,4 +430,31 @@ function listModules(args, cwd) {
   ].join('\n');
 }
 
-module.exports = { readContext, searchSignatures, getMap, createCheckpoint, getRouting, explainFile, listModules };
+/**
+ * query_context({ query, topK? }) → string
+ *
+ * Ranks context-file entries by relevance to the query and returns the
+ * top-K most relevant files with their signatures and scores.
+ */
+function queryContext(args, cwd) {
+  if (!args || !args.query) return 'Missing required argument: query';
+
+  const contextPath = path.join(cwd, CONTEXT_FILE);
+  if (!fs.existsSync(contextPath)) {
+    return 'No context file found. Run: node gen-context.js';
+  }
+
+  try {
+    const { rank, buildSigIndex, formatRankTable } = require('../retrieval/ranker');
+    const index = buildSigIndex(cwd);
+    if (index.size === 0) return 'No signatures indexed. Run: node gen-context.js';
+
+    const topK = Math.min(Math.max(1, parseInt(args.topK, 10) || 10), 25);
+    const results = rank(args.query, index, { topK });
+    return formatRankTable(results, args.query);
+  } catch (err) {
+    return `_query_context failed: ${err.message}_`;
+  }
+}
+
+module.exports = { readContext, searchSignatures, getMap, createCheckpoint, getRouting, explainFile, listModules, queryContext };

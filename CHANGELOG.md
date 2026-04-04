@@ -6,6 +6,30 @@ Format: [Semantic Versioning](https://semver.org/)
 
 ---
 
+## [2.3.0] — 2026-04-07
+
+### Added
+- **Query-aware retrieval** — `src/retrieval/tokenizer.js` and `src/retrieval/ranker.js`: zero-dependency relevance ranker that scores every file against a free-text query by exact token, symbol, prefix, path, and recency signals.
+- **`--query "<text>"` CLI flag** — ranks all context files by relevance and prints a scored table (Rank | File | Score | Sigs | Tokens) plus the top-3 signature blocks; `--query "<text>" --json` for machine-readable output; `--query "<text>" --top <n>` to limit result set.
+- **`query_context` MCP tool** — 8th MCP tool; accepts `{ query: string, topK?: number }` and returns the same ranked table as the `--query` CLI flag; live within any running MCP session.
+- **Retrieval config** — `config.retrieval.topK` (default 10) and `config.retrieval.recencyBoost` (default 1.5×) added to `src/config/defaults.js`.
+- **`test/integration/retrieval.test.js`** — 23 integration tests covering tokenizer unit tests, ranker sorting/scoring/topK/empty-query, `formatRankTable`, `formatRankJSON`, CLI `--query` flags, and MCP `query_context`.
+
+### Changed
+- `src/mcp/server.js` version bumped to `2.3.0`.
+- `test/integration/mcp-server.test.js` and `mcp-v14.test.js` updated to assert 8 tools.
+- `test/integration/analyze.test.js` version assertion updated to `2.3.0`.
+
+### Validation gate
+- 21/21 extractor unit tests passed
+- 20/20 integration suites passed (0 failures)
+- `node gen-context.js --version` → `2.3.0`
+- `node gen-context.js --query "python extractor"` → `src/extractors/python.js` in top-3
+- `node gen-context.js --query "fix secret scanning" --json` → valid JSON
+- MCP `tools/list` → 8 tools including `query_context`
+
+---
+
 ## [2.2.0] — 2026-04-06
 
 ### Added

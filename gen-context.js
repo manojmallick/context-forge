@@ -2879,7 +2879,23 @@ __factories["./src/mcp/handlers"] = function(module, exports) {
     ].join('\n');
   }
   
-  module.exports = { readContext, searchSignatures, getMap, createCheckpoint, getRouting, explainFile, listModules };
+  function queryContext(args, cwd) {
+    if (!args || !args.query) return 'Missing required argument: query';
+    const contextPath = path.join(cwd, CONTEXT_FILE);
+    if (!fs.existsSync(contextPath)) return 'No context file found. Run: node gen-context.js';
+    try {
+      const { rank, buildSigIndex, formatRankTable } = __require('./src/retrieval/ranker');
+      const index = buildSigIndex(cwd);
+      if (index.size === 0) return 'No signatures indexed. Run: node gen-context.js';
+      const topK = Math.min(Math.max(1, parseInt(args.topK, 10) || 10), 25);
+      const results = rank(args.query, index, { topK });
+      return formatRankTable(results, args.query);
+    } catch (err) {
+      return `_query_context failed: ${err.message}_`;
+    }
+  }
+  
+  module.exports = { readContext, searchSignatures, getMap, createCheckpoint, getRouting, explainFile, listModules, queryContext };
 };
 
 // ── ./src/mcp/server ──
@@ -2899,7 +2915,7 @@ __factories["./src/mcp/server"] = function(module, exports) {
   
   const readline = require('readline');
   const { TOOLS } = __require('./src/mcp/tools');
-  const { readContext, searchSignatures, getMap, createCheckpoint, getRouting, explainFile, listModules } = __require('./src/mcp/handlers');
+  const { readContext, searchSignatures, getMap, createCheckpoint, getRouting, explainFile, listModules, queryContext } = __require('./src/mcp/handlers');
   
   const SERVER_INFO = {
     name: 'sigmap',
@@ -2958,6 +2974,7 @@ __factories["./src/mcp/server"] = function(module, exports) {
         else if (name === 'get_routing') text = getRouting(args, cwd);
         else if (name === 'explain_file') text = explainFile(args, cwd);
         else if (name === 'list_modules') text = listModules(args, cwd);
+        else if (name === 'query_context') text = queryContext(args, cwd);
         else {
           respondError(id, -32601, `Unknown tool: ${name}`);
           return;
@@ -3135,6 +3152,30 @@ __factories["./src/mcp/tools"] = function(module, exports) {
         type: 'object',
         properties: {},
         required: [],
+      },
+    },
+    {
+      name: 'query_context',
+      description:
+        'Rank and return the most relevant files for a specific task or question. ' +
+        'Uses keyword + symbol + path scoring to surface only the top-K files relevant ' +
+        'to the query — much cheaper than reading all context. ' +
+        'Returns ranked file list with signatures and relevance scores.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          query: {
+            type: 'string',
+            description:
+              'Natural language task description or keyword(s) to rank files against. ' +
+              'E.g. "add a new language extractor", "fix secret scanning", "auth module".',
+          },
+          topK: {
+            type: 'number',
+            description: 'Maximum number of files to return (default: 10, max: 25).',
+          },
+        },
+        required: ['query'],
       },
     },
   ];
@@ -3570,6 +3611,120 @@ __factories["./src/tracking/logger"] = function(module, exports) {
   
 };
 
+// ── ./src/retrieval/tokenizer ──
+__factories["./src/retrieval/tokenizer"] = function(module, exports) {
+  'use strict';
+  const STOP_WORDS = new Set([
+    'the', 'a', 'an', 'in', 'of', 'to', 'for', 'and', 'or', 'is', 'are',
+    'that', 'this', 'it', 'with', 'from', 'by', 'be', 'as', 'on', 'at',
+    'do', 'not', 'use', 'get', 'set', 'up', 'if', 'no', 'so', 'we',
+  ]);
+  function tokenize(text, opts) {
+    if (!text || typeof text !== 'string') return [];
+    const removeStop = opts && opts.removeStopWords === false ? false : true;
+    const minLen = (opts && opts.minLength) || 2;
+    const tokens = text
+      .replace(/\.\w{1,6}(?=\s|\/|$)/g, ' ')
+      .replace(/([a-z])([A-Z])/g, '$1 $2')
+      .replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2')
+      .replace(/[_\-\.\/]/g, ' ')
+      .replace(/[^\w\s]/g, ' ')
+      .toLowerCase()
+      .split(/\s+/)
+      .filter((t) => t.length >= minLen);
+    if (!removeStop) return [...new Set(tokens)];
+    return [...new Set(tokens.filter((t) => !STOP_WORDS.has(t)))];
+  }
+  module.exports = { tokenize, STOP_WORDS };
+};
+
+// ── ./src/retrieval/ranker ──
+__factories["./src/retrieval/ranker"] = function(module, exports) {
+  'use strict';
+  const { tokenize, STOP_WORDS } = __require('./src/retrieval/tokenizer');
+  const DEFAULT_WEIGHTS = {
+    exactToken: 1.0, symbolMatch: 0.5, prefixMatch: 0.3, pathMatch: 0.8, recencyBoost: 1.5,
+  };
+  function scoreFile(filePath, sigs, queryTokens, weights) {
+    if (!sigs || sigs.length === 0) return 0;
+    const w = weights || DEFAULT_WEIGHTS;
+    const sigTokenSet = new Set(tokenize(sigs.join(' ')));
+    const pathTokenSet = new Set(tokenize(filePath));
+    let score = 0;
+    for (const qt of queryTokens) {
+      if (STOP_WORDS.has(qt)) continue;
+      if (sigTokenSet.has(qt)) {
+        score += w.exactToken;
+        if (sigs.some((sig) => tokenize(sig.replace(/[^a-zA-Z0-9_\s]/g, ' ')).includes(qt))) score += w.symbolMatch;
+      }
+      if (qt.length >= 4) {
+        for (const st of sigTokenSet) {
+          if (st !== qt && st.startsWith(qt)) { score += w.prefixMatch; break; }
+        }
+      }
+      if (pathTokenSet.has(qt)) score += w.pathMatch;
+    }
+    return score;
+  }
+  function rank(query, sigIndex, opts) {
+    if (!query || typeof query !== 'string') return [];
+    if (!sigIndex || !(sigIndex instanceof Map) || sigIndex.size === 0) return [];
+    const topK = (opts && opts.topK) || 10;
+    const recencyMultiplier = (opts && opts.recencyBoost) || DEFAULT_WEIGHTS.recencyBoost;
+    const recencySet = (opts && opts.recencySet) || null;
+    const weights = (opts && opts.weights) ? Object.assign({}, DEFAULT_WEIGHTS, opts.weights) : DEFAULT_WEIGHTS;
+    const queryTokens = tokenize(query);
+    if (queryTokens.length === 0) {
+      const all = [];
+      for (const [file, sigs] of sigIndex.entries()) all.push({ file, score: sigs.length, sigs, tokens: Math.ceil(sigs.join('\n').length / 4) });
+      all.sort((a, b) => b.score - a.score || a.file.localeCompare(b.file));
+      return all.slice(0, topK);
+    }
+    const scored = [];
+    for (const [file, sigs] of sigIndex.entries()) {
+      let score = scoreFile(file, sigs, queryTokens, weights);
+      if (recencySet && recencySet.has(file) && score > 0) score *= recencyMultiplier;
+      scored.push({ file, score, sigs, tokens: Math.ceil(sigs.join('\n').length / 4) });
+    }
+    scored.sort((a, b) => b.score - a.score || a.file.localeCompare(b.file));
+    return scored.slice(0, topK);
+  }
+  function buildSigIndex(cwd) {
+    const fs = require('fs'); const path = require('path');
+    const contextPath = path.join(cwd, '.github', 'copilot-instructions.md');
+    const index = new Map();
+    if (!fs.existsSync(contextPath)) return index;
+    const content = fs.readFileSync(contextPath, 'utf8');
+    const lines = content.split('\n');
+    let currentFile = null; let inBlock = false; let sigs = [];
+    for (const line of lines) {
+      const hm = line.match(/^###\s+(\S+)\s*$/);
+      if (hm) { if (currentFile !== null) index.set(currentFile, sigs); currentFile = hm[1]; sigs = []; inBlock = false; continue; }
+      if (line.startsWith('```')) { inBlock = !inBlock; continue; }
+      if (inBlock && currentFile && line.trim()) sigs.push(line.trim());
+    }
+    if (currentFile !== null) index.set(currentFile, sigs);
+    return index;
+  }
+  function formatRankTable(results, query) {
+    if (!results || results.length === 0) return `No matching files found for query: "${query}"\n`;
+    const lines = [`## Query: ${query}`, '', '| Rank | File | Score | Sigs | Tokens |', '|------|------|-------|------|--------|',
+      ...results.map((r, i) => `| ${i + 1} | ${r.file} | ${r.score.toFixed(2)} | ${r.sigs.length} | ${r.tokens} |`), ''];
+    for (const r of results.slice(0, 3)) {
+      if (r.sigs.length > 0) {
+        lines.push(`### ${r.file}`, '```', ...r.sigs.slice(0, 10));
+        if (r.sigs.length > 10) lines.push(`... (${r.sigs.length - 10} more)`);
+        lines.push('```', '');
+      }
+    }
+    return lines.join('\n');
+  }
+  function formatRankJSON(results, query) {
+    return { query, results: (results || []).map((r, i) => ({ rank: i + 1, file: r.file, score: r.score, sigs: r.sigs, tokens: r.tokens })), totalResults: (results || []).length };
+  }
+  module.exports = { rank, buildSigIndex, scoreFile, formatRankTable, formatRankJSON, DEFAULT_WEIGHTS };
+};
+
 // ── ./src/eval/scorer ──
 __factories["./src/eval/scorer"] = function(module, exports) {
   'use strict';
@@ -3936,7 +4091,7 @@ const path = require('path');
 const os = require('os');
 const { execSync } = require('child_process');
 
-const VERSION = '2.2.0';
+const VERSION = '2.3.0';
 const MARKER = '\n\n## Auto-generated signatures\n<!-- Updated by gen-context.js -->\n';
 
 function requireSourceOrBundled(key) {
@@ -5149,6 +5304,9 @@ Usage:
   node gen-context.js --analyze --json                  Breakdown as JSON
   node gen-context.js --analyze --slow                  Re-time each extractor; flag files >50ms
   node gen-context.js --diagnose-extractors             Run all 21 extractors vs fixtures; show pass/fail + diff
+  node gen-context.js --query "<text>"                  Rank files by relevance to a query
+  node gen-context.js --query "<text>" --json           Ranked results as JSON
+  node gen-context.js --query "<text>" --top <n>        Limit results to top N files (default 10)
   node gen-context.js --init                            Write example config + .contextignore scaffold
   node gen-context.js --help                            Show this message
   node gen-context.js --version                         Show version
@@ -5433,6 +5591,38 @@ function main() {
       console.error(`[sigmap] diagnose error: ${err.message}`);
       process.exit(1);
     }
+  }
+
+  if (args.includes('--query')) {
+    try {
+      const qIdx = args.indexOf('--query');
+      const query = (args[qIdx + 1] || '').trim();
+      if (!query || query.startsWith('--')) {
+        console.error('[sigmap] --query requires a search string');
+        console.error('  Example: node gen-context.js --query "add a new language extractor"');
+        process.exit(1);
+      }
+      const { rank, buildSigIndex, formatRankTable, formatRankJSON } = requireSourceOrBundled('./src/retrieval/ranker');
+      const index = buildSigIndex(cwd);
+      if (index.size === 0) {
+        console.error('[sigmap] no context file found. Run: node gen-context.js');
+        process.exit(1);
+      }
+      const topIdx = args.indexOf('--top');
+      const topK = topIdx >= 0 ? Math.min(Math.max(1, parseInt(args[topIdx + 1], 10) || 10), 25)
+                               : ((config && config.retrieval && config.retrieval.topK) || 10);
+      const recencyBoost = (config && config.retrieval && config.retrieval.recencyBoost) || 1.5;
+      const results = rank(query, index, { topK, recencyBoost });
+      if (args.includes('--json')) {
+        process.stdout.write(JSON.stringify(formatRankJSON(results, query)) + '\n');
+      } else {
+        process.stdout.write(formatRankTable(results, query));
+      }
+    } catch (err) {
+      console.error(`[sigmap] query error: ${err.message}`);
+      process.exit(1);
+    }
+    process.exit(0);
   }
 
   if (args.includes('--report')) {
