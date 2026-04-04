@@ -3630,6 +3630,143 @@ __factories["./src/eval/scorer"] = function(module, exports) {
   module.exports = { hitAtK, reciprocalRank, precisionAtK, aggregate, firstRank };
 };
 
+// ── ./src/eval/analyzer ──
+__factories["./src/eval/analyzer"] = function(module, exports) {
+  'use strict';
+
+  const fs   = require('fs');
+  const path = require('path');
+
+  const EXT_MAP = {
+    '.ts': 'typescript', '.tsx': 'typescript',
+    '.js': 'javascript', '.jsx': 'javascript', '.mjs': 'javascript', '.cjs': 'javascript',
+    '.py': 'python',     '.pyw': 'python',
+    '.java': 'java',
+    '.kt': 'kotlin',     '.kts': 'kotlin',
+    '.go': 'go',
+    '.rs': 'rust',
+    '.cs': 'csharp',
+    '.cpp': 'cpp', '.c': 'cpp', '.h': 'cpp', '.hpp': 'cpp', '.cc': 'cpp',
+    '.rb': 'ruby',       '.rake': 'ruby',
+    '.php': 'php',
+    '.swift': 'swift',
+    '.dart': 'dart',
+    '.scala': 'scala',   '.sc': 'scala',
+    '.vue': 'vue',
+    '.svelte': 'svelte',
+    '.html': 'html',     '.htm': 'html',
+    '.css': 'css',       '.scss': 'css', '.sass': 'css', '.less': 'css',
+    '.yml': 'yaml',      '.yaml': 'yaml',
+    '.sh': 'shell',      '.bash': 'shell', '.zsh': 'shell', '.fish': 'shell',
+  };
+
+  function isDockerfile(name) { return name === 'Dockerfile' || name.startsWith('Dockerfile.'); }
+
+  function getExtractorName(filePath) {
+    const base = path.basename(filePath);
+    const ext  = path.extname(base).toLowerCase();
+    if (EXT_MAP[ext]) return EXT_MAP[ext];
+    if (isDockerfile(base)) return 'dockerfile';
+    return null;
+  }
+
+  function tokenCount(sigs) {
+    return Math.ceil(sigs.reduce((sum, s) => sum + s.length, 0) / 4);
+  }
+
+  function hasCoverage(filePath, cwd) {
+    const base = path.basename(filePath, path.extname(filePath));
+    const testDirs = ['test', 'tests', '__tests__', 'spec'];
+    for (const d of testDirs) {
+      const abs = path.join(cwd, d);
+      if (!fs.existsSync(abs)) continue;
+      let entries;
+      try { entries = fs.readdirSync(abs, { withFileTypes: true }); } catch (_) { continue; }
+      for (const e of entries) { if (e.name.includes(base)) return true; }
+    }
+    return false;
+  }
+
+  function analyzeFiles(files, cwd, opts) {
+    const slow    = (opts && opts.slow)    || false;
+    const slowMs  = (opts && opts.slowMs)  || 50;
+    const maxSigs = (opts && opts.maxSigs) || 25;
+    const stats   = [];
+    const cache   = {};
+
+    for (const filePath of files) {
+      const extractorName = getExtractorName(filePath);
+      if (!extractorName) continue;
+      if (!cache[extractorName]) {
+        try { cache[extractorName] = __require(`./src/extractors/${extractorName}`); } catch (_) { cache[extractorName] = null; }
+      }
+      const extractor = cache[extractorName];
+      if (!extractor || typeof extractor.extract !== 'function') continue;
+
+      let content;
+      try { content = fs.readFileSync(filePath, 'utf8'); } catch (_) { continue; }
+
+      let sigs; let elapsedMs = 0;
+      if (slow) {
+        const t0 = Date.now();
+        try { sigs = extractor.extract(content); } catch (_) { sigs = []; }
+        elapsedMs = Date.now() - t0;
+      } else {
+        try { sigs = extractor.extract(content); } catch (_) { sigs = []; }
+      }
+      sigs = (Array.isArray(sigs) ? sigs : []).slice(0, maxSigs);
+
+      stats.push({
+        file:      path.relative(cwd, filePath),
+        extractor: extractorName,
+        sigs:      sigs.length,
+        tokens:    tokenCount(sigs),
+        covered:   hasCoverage(filePath, cwd),
+        elapsedMs: slow ? elapsedMs : undefined,
+        slow:      slow ? (elapsedMs > slowMs) : undefined,
+      });
+    }
+    return stats;
+  }
+
+  function formatAnalysisTable(stats, showSlow) {
+    if (!stats || stats.length === 0) return '_(no files analyzed)_\n';
+    const maxFile = Math.max(4, ...stats.map((s) => s.file.length));
+    const header  = showSlow
+      ? `| ${'File'.padEnd(maxFile)} | Sigs | Tokens | Extractor   | Coverage   | Elapsed  |`
+      : `| ${'File'.padEnd(maxFile)} | Sigs | Tokens | Extractor   | Coverage   |`;
+    const sep = showSlow
+      ? `|${'-'.repeat(maxFile + 2)}|------|--------|-------------|------------|----------|`
+      : `|${'-'.repeat(maxFile + 2)}|------|--------|-------------|------------|`;
+    const rows = stats.map((s) => {
+      const cov  = s.covered ? '✓ tested  ' : '✗ untested';
+      const file = s.file.padEnd(maxFile);
+      const ext  = (s.extractor || '').padEnd(11);
+      const base = `| ${file} | ${String(s.sigs).padStart(4)} | ${String(s.tokens).padStart(6)} | ${ext} | ${cov} |`;
+      if (showSlow) {
+        const ms   = s.elapsedMs !== undefined ? `${s.elapsedMs}ms` : '';
+        return `${base} ${ms.padStart(6)}${s.slow ? ' ⚠️' : ''} |`;
+      }
+      return base;
+    });
+    const totalSigs   = stats.reduce((n, s) => n + s.sigs,   0);
+    const totalTokens = stats.reduce((n, s) => n + s.tokens, 0);
+    const slotFile    = ''.padEnd(maxFile);
+    const baseFoot    = `| ${slotFile} | ${String(totalSigs).padStart(4)} | ${String(totalTokens).padStart(6)} | **Total**   |            |`;
+    const footer      = showSlow ? `${baseFoot} ${' '.padStart(8)} |` : baseFoot;
+    return [header, sep, ...rows, sep, footer].join('\n') + '\n';
+  }
+
+  function formatAnalysisJSON(stats) {
+    const totalSigs   = stats.reduce((n, s) => n + s.sigs,   0);
+    const totalTokens = stats.reduce((n, s) => n + s.tokens, 0);
+    const slowFiles   = stats.filter((s) => s.slow).map((s) => ({ file: s.file, elapsedMs: s.elapsedMs }));
+    return { files: stats, totalSigs, totalTokens, slowFiles, fileCount: stats.length };
+  }
+
+  module.exports = { analyzeFiles, formatAnalysisTable, formatAnalysisJSON };
+};
+
 // ── ./src/eval/runner ──
 __factories["./src/eval/runner"] = function(module, exports) {
   'use strict';
@@ -3799,7 +3936,7 @@ const path = require('path');
 const os = require('os');
 const { execSync } = require('child_process');
 
-const VERSION = '2.1.0';
+const VERSION = '2.2.0';
 const MARKER = '\n\n## Auto-generated signatures\n<!-- Updated by gen-context.js -->\n';
 
 function requireSourceOrBundled(key) {
@@ -5008,6 +5145,10 @@ Usage:
   node gen-context.js --benchmark                       Run retrieval benchmark (benchmarks/tasks/retrieval.jsonl)
   node gen-context.js --benchmark --json                Benchmark results as JSON
   node gen-context.js --eval                            Alias for --benchmark
+  node gen-context.js --analyze                         Per-file breakdown: sigs, tokens, extractor, coverage
+  node gen-context.js --analyze --json                  Breakdown as JSON
+  node gen-context.js --analyze --slow                  Re-time each extractor; flag files >50ms
+  node gen-context.js --diagnose-extractors             Run all 21 extractors vs fixtures; show pass/fail + diff
   node gen-context.js --init                            Write example config + .contextignore scaffold
   node gen-context.js --help                            Show this message
   node gen-context.js --version                         Show version
@@ -5167,6 +5308,131 @@ function main() {
       process.exit(1);
     }
     process.exit(0);
+  }
+
+  if (args.includes('--analyze')) {
+    try {
+      const { analyzeFiles, formatAnalysisTable, formatAnalysisJSON } = requireSourceOrBundled('./src/eval/analyzer');
+      const cfg    = config || {};
+      const srcDirs = cfg.srcDirs || DEFAULTS.srcDirs;
+      const exclude = cfg.exclude || DEFAULTS.exclude;
+      const slow    = args.includes('--slow');
+
+      // Collect files (reuse existing file-walker if accessible, else inline)
+      const allFiles = [];
+      function walkForAnalyze(dir, depth) {
+        if (depth > (cfg.maxDepth || 6)) return;
+        let entries;
+        try { entries = fs.readdirSync(dir, { withFileTypes: true }); } catch (_) { return; }
+        for (const e of entries) {
+          if (exclude.some((x) => e.name === x || e.name.startsWith(x))) continue;
+          const full = path.join(dir, e.name);
+          if (e.isDirectory()) walkForAnalyze(full, depth + 1);
+          else if (e.isFile()) allFiles.push(full);
+        }
+      }
+      for (const sd of srcDirs) {
+        const abs = path.join(cwd, sd);
+        if (fs.existsSync(abs)) walkForAnalyze(abs, 0);
+      }
+
+      const stats = analyzeFiles(allFiles, cwd, { slow, maxSigs: cfg.maxSigsPerFile || 25 });
+
+      if (args.includes('--json')) {
+        process.stdout.write(JSON.stringify(formatAnalysisJSON(stats)) + '\n');
+      } else {
+        const table = formatAnalysisTable(stats, slow);
+        process.stdout.write(table);
+      }
+    } catch (err) {
+      console.error(`[sigmap] analyze error: ${err.message}`);
+      process.exit(1);
+    }
+    process.exit(0);
+  }
+
+  if (args.includes('--diagnose-extractors')) {
+    try {
+      const fixturesDir = path.join(cwd, 'test', 'fixtures');
+      const expectedDir = path.join(cwd, 'test', 'expected');
+      if (!fs.existsSync(fixturesDir) || !fs.existsSync(expectedDir)) {
+        console.error('[sigmap] test/fixtures or test/expected not found — run from the SigMap repo root');
+        process.exit(1);
+      }
+
+      const EXT_TO_LANG = {
+        '.ts': 'typescript', '.js': 'javascript', '.py': 'python',
+        '.java': 'java', '.kt': 'kotlin', '.go': 'go', '.rs': 'rust',
+        '.cs': 'csharp', '.cpp': 'cpp', '.rb': 'ruby', '.php': 'php',
+        '.swift': 'swift', '.dart': 'dart', '.scala': 'scala',
+        '.vue': 'vue', '.svelte': 'svelte', '.html': 'html',
+        '.css': 'css', '.yml': 'yaml', '.sh': 'shell',
+      };
+      const SPECIAL = { 'Dockerfile': 'dockerfile' };
+
+      let passed = 0; let failed = 0;
+      const entries = fs.readdirSync(fixturesDir).sort();
+
+      for (const filename of entries) {
+        const ext  = path.extname(filename).toLowerCase();
+        const lang = EXT_TO_LANG[ext] || SPECIAL[filename];
+        if (!lang) continue;
+
+        const fixturePath = path.join(fixturesDir, filename);
+        const expectedPath = path.join(expectedDir, `${lang}.txt`);
+        if (!fs.existsSync(expectedPath)) {
+          console.log(`  SKIP  ${lang.padEnd(12)} (no expected file)`);
+          continue;
+        }
+
+        const src      = fs.readFileSync(fixturePath, 'utf8');
+        const expected = fs.readFileSync(expectedPath, 'utf8').trim();
+
+        let mod;
+        try {
+          mod = requireSourceOrBundled(`./src/extractors/${lang}`);
+        } catch (e) {
+          console.log(`  ERROR ${lang.padEnd(12)} loader failed: ${e.message}`);
+          failed++;
+          continue;
+        }
+
+        let actual;
+        try {
+          const sigs = mod.extract(src);
+          actual = sigs.join('\n').trim();
+        } catch (e) {
+          console.log(`  ERROR ${lang.padEnd(12)} extract() threw: ${e.message}`);
+          failed++;
+          continue;
+        }
+
+        if (actual === expected) {
+          console.log(`  PASS  ${lang}`);
+          passed++;
+        } else {
+          console.log(`  FAIL  ${lang}`);
+          // Show first diff line
+          const aLines = actual.split('\n');
+          const eLines = expected.split('\n');
+          const maxLen = Math.max(aLines.length, eLines.length);
+          for (let i = 0; i < maxLen; i++) {
+            if (aLines[i] !== eLines[i]) {
+              console.log(`         expected: ${(eLines[i] || '(missing)').slice(0, 100)}`);
+              console.log(`         actual  : ${(aLines[i] || '(missing)').slice(0, 100)}`);
+              break;
+            }
+          }
+          failed++;
+        }
+      }
+
+      console.log(`\n${passed} passed, ${failed} failed`);
+      process.exit(failed > 0 ? 1 : 0);
+    } catch (err) {
+      console.error(`[sigmap] diagnose error: ${err.message}`);
+      process.exit(1);
+    }
   }
 
   if (args.includes('--report')) {
