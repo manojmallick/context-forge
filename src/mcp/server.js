@@ -14,11 +14,11 @@
 
 const readline = require('readline');
 const { TOOLS } = require('./tools');
-const { readContext, searchSignatures, getMap, createCheckpoint, getRouting, explainFile, listModules } = require('./handlers');
+const { readContext, searchSignatures, getMap, createCheckpoint, getRouting, explainFile, listModules, queryContext } = require('./handlers');
 
 const SERVER_INFO = {
   name: 'sigmap',
-  version: '2.2.0',
+  version: '2.3.0',
   description: 'SigMap MCP server — code signatures on demand',
 };
 
@@ -73,6 +73,7 @@ function dispatch(msg, cwd) {
       else if (name === 'get_routing') text = getRouting(args, cwd);
       else if (name === 'explain_file') text = explainFile(args, cwd);
       else if (name === 'list_modules') text = listModules(args, cwd);
+      else if (name === 'query_context') text = queryContext(args, cwd);
       else {
         respondError(id, -32601, `Unknown tool: ${name}`);
         return;

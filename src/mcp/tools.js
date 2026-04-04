@@ -120,6 +120,30 @@ const TOOLS = [
       required: [],
     },
   },
+  {
+    name: 'query_context',
+    description:
+      'Rank and return the most relevant files for a specific task or question. ' +
+      'Uses keyword + symbol + path scoring to surface only the top-K files relevant ' +
+      'to the query — much cheaper than reading all context. ' +
+      'Returns ranked file list with signatures and relevance scores.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        query: {
+          type: 'string',
+          description:
+            'Natural language task description or keyword(s) to rank files against. ' +
+            'E.g. "add a new language extractor", "fix secret scanning", "auth module".',
+        },
+        topK: {
+          type: 'number',
+          description: 'Maximum number of files to return (default: 10, max: 25).',
+        },
+      },
+      required: ['query'],
+    },
+  },
 ];
 
 module.exports = { TOOLS };

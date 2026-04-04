@@ -92,6 +92,14 @@ const DEFAULTS = {
 
   // Add reverse dependency usage hints on file headings (opt-in)
   impactRadius: false,
+
+  // Query-aware retrieval settings (v2.3)
+  retrieval: {
+    // Maximum number of files to return for --query
+    topK: 10,
+    // Multiplier applied to recently-changed files (>1 boosts them up)
+    recencyBoost: 1.5,
+  },
 };
 
 module.exports = { DEFAULTS };
