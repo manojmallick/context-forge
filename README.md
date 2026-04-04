@@ -608,7 +608,7 @@ function extract(src) {   // src: string → string[]
 
 ## 📄 License
 
-MIT © 2026 [Manoj Mallick](https://github.com/manojmallick)
+MIT © 2026 [Manoj Mallick](https://github.com/manojmallick) · Made in Amsterdam 🇳🇱
 
 ---
 
