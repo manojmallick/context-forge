@@ -6,6 +6,26 @@ Format: [Semantic Versioning](https://semver.org/)
 
 ---
 
+## [2.2.0] — 2026-04-06
+
+### Added
+- **Diagnostics & analyze command** — `src/eval/analyzer.js`: per-file breakdown of signature count, token cost, extractor used, and test coverage status.
+- **`--analyze` CLI flag** — prints a per-file table (File | Extractor | Sigs | Tokens | Covered) across all srcDirs; respects `exclude` config.
+- **`--analyze --json` flag** — outputs the same breakdown as structured JSON (`{ files, totalSigs, totalTokens, slowFiles, fileCount }`).
+- **`--analyze --slow` flag** — re-times each extractor and flags any file whose extraction takes >50ms in the table.
+- **`--diagnose-extractors` CLI flag** — runs all 21 language extractors against `test/fixtures/` and compares output to `test/expected/`; exits non-zero if any extractor diverges, shows first diff line per failure.
+- **`test/integration/analyze.test.js`** — 14 integration tests covering `analyzeFiles`, `formatAnalysisTable`, `formatAnalysisJSON`, and all four CLI flags.
+
+### Validation gate
+- 21/21 extractor tests passed
+- All integration suites passed (19 suites, 19 passed, 0 failed — includes 14 new analyze tests)
+- `node gen-context.js --version` → `2.2.0`
+- `node gen-context.js --analyze` runs without error on SigMap repo
+- `node gen-context.js --analyze --json` → valid JSON with required keys
+- `node gen-context.js --diagnose-extractors` → exits 0 on SigMap repo
+
+---
+
 ## [2.1.0] — 2026-04-05
 
 ### Added
