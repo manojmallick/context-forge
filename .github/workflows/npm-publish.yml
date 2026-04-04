@@ -117,10 +117,58 @@ jobs:
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
 
-  # ── 5. Create GitHub Release (after all publishes succeed) ────────────────
+  # ── 5. Publish to Open VSX Registry ──────────────────────────────────────
+  publish-openvsx:
+    name: Publish → Open VSX Registry
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install ovsx
+        run: npm install -g ovsx
+
+      - name: Sync extension version with tag
+        run: |
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          node -e "
+            const fs = require('fs');
+            const v = process.env.TAG_VERSION;
+            const pkg = JSON.parse(fs.readFileSync('vscode-extension/package.json', 'utf8'));
+            pkg.version = v;
+            fs.writeFileSync('vscode-extension/package.json', JSON.stringify(pkg, null, 2) + '\n');
+            console.log('✓ extension version set to', v);
+          "
+        env:
+          TAG_VERSION: ${{ github.ref_name }}
+
+      - name: Package extension (.vsix)
+        working-directory: vscode-extension
+        run: |
+          npm install -g @vscode/vsce
+          vsce package --no-dependencies
+
+      - name: Publish to Open VSX
+        working-directory: vscode-extension
+        run: |
+          VSIX_FILE=$(ls *.vsix | head -1)
+          ovsx publish "$VSIX_FILE" --pat "$OVSX_PAT" 2>&1 | tee /tmp/ovsx-out.txt
+          EXIT=${PIPESTATUS[0]}
+          if [ $EXIT -ne 0 ] && grep -q "already exists" /tmp/ovsx-out.txt; then
+            echo "✓ Version already on Open VSX — skipping (not an error)"
+            exit 0
+          fi
+          exit $EXIT
+        env:
+          OVSX_PAT: ${{ secrets.OVSX_PAT }}
+
+  # ── 6. Create GitHub Release (after all publishes succeed) ────────────────
   release:
     name: Create GitHub Release
-    needs: [publish-npm, publish-github, publish-vscode]
+    needs: [publish-npm, publish-github, publish-vscode, publish-openvsx]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

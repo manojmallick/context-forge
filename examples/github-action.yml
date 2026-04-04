@@ -124,3 +124,54 @@ jobs:
             echo "Running $f..."
             node "$f"
           done
+
+  # ─────────────────────────────────────────────────────────────────
+  # Job 5 (optional): Publish VS Code extension on version tags
+  # Uncomment if your project includes a VS Code extension.
+  # Required secrets:
+  #   VSCE_PAT  — VS Code Marketplace personal access token
+  #   OVSX_PAT  — Open VSX Registry token (https://open-vsx.org/user-settings/tokens)
+  # ─────────────────────────────────────────────────────────────────
+  # publish-extension:
+  #   name: Publish extension (tag only)
+  #   if: startsWith(github.ref, 'refs/tags/v')
+  #   needs: test
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - uses: actions/setup-node@v4
+  #       with:
+  #         node-version: '20'
+  #
+  #     - name: Install tools
+  #       run: npm install -g @vscode/vsce ovsx
+  #
+  #     - name: Sync extension version with tag
+  #       run: |
+  #         TAG_VERSION="${GITHUB_REF_NAME#v}"
+  #         node -e "
+  #           const fs = require('fs');
+  #           const pkg = JSON.parse(fs.readFileSync('vscode-extension/package.json', 'utf8'));
+  #           pkg.version = process.env.TAG_VERSION;
+  #           fs.writeFileSync('vscode-extension/package.json', JSON.stringify(pkg, null, 2) + '\n');
+  #         "
+  #       env:
+  #         TAG_VERSION: ${{ github.ref_name }}
+  #
+  #     - name: Package extension
+  #       working-directory: vscode-extension
+  #       run: vsce package --no-dependencies
+  #
+  #     - name: Publish to VS Code Marketplace
+  #       working-directory: vscode-extension
+  #       run: vsce publish --no-dependencies
+  #       env:
+  #         VSCE_PAT: ${{ secrets.VSCE_PAT }}
+  #
+  #     - name: Publish to Open VSX Registry
+  #       working-directory: vscode-extension
+  #       run: |
+  #         VSIX_FILE=$(ls *.vsix | head -1)
+  #         ovsx publish "$VSIX_FILE" --pat "$OVSX_PAT"
+  #       env:
+  #         OVSX_PAT: ${{ secrets.OVSX_PAT }}
