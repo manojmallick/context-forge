@@ -6,6 +6,23 @@ Format: [Semantic Versioning](https://semver.org/)
 
 ---
 
+## [2.10.0] — upcoming · [#25](https://github.com/manojmallick/sigmap/issues/25) · branch: `feat/v2.10-reporting-charts-advanced-metrics`
+
+### Planned additions
+- **Report charts** — add chart-ready output for token reduction, signatures per file, and budget utilization trends.
+- **Advanced metrics** — extend evaluation output with precision@K, recall@K, MRR, and query-level diagnostics.
+- **CLI reporting mode** — introduce richer report surfaces for both human-readable tables and structured JSON artifacts.
+- **Benchmark visibility** — include comparative metrics across runs to track regressions and improvements over time.
+- **Docs refresh** — align roadmap and docs site references to the v2.10 milestone.
+
+### Go / No-go criteria
+- Full test suite passes (extractor + integration).
+- Report output includes chart-friendly numeric series and summary stats.
+- Benchmark metrics remain stable or improve versus v2.9 baseline.
+- Generated docs and release metadata are version-synced to `2.10.0`.
+
+---
+
 ## [2.9.1] — 2026-04-06 · JetBrains Marketplace Publishing
 
 ### Added
