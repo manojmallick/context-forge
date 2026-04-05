@@ -165,10 +165,55 @@ jobs:
         env:
           OVSX_PAT: ${{ secrets.OVSX_PAT }}
 
-  # ── 6. Create GitHub Release (after all publishes succeed) ────────────────
+  # ── 6. Publish JetBrains Plugin ───────────────────────────────────────────
+  publish-jetbrains:
+    name: Publish → JetBrains Marketplace
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+      
+      - name: Setup Gradle
+        uses: gradle/gradle-build-action@v3
+      
+      - name: Verify plugin version matches tag
+        run: |
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          PLUGIN_VERSION=$(grep '^version = ' jetbrains-plugin/build.gradle.kts | sed 's/version = "\(.*\)"/\1/')
+          if [ "$PLUGIN_VERSION" != "$TAG_VERSION" ]; then
+            echo "ERROR: plugin version ($PLUGIN_VERSION) does not match tag ($TAG_VERSION)"
+            exit 1
+          fi
+          echo "✓ plugin version check passed: $PLUGIN_VERSION"
+      
+      - name: Build and verify plugin
+        working-directory: jetbrains-plugin
+        run: |
+          ./gradlew buildPlugin verifyPlugin
+          echo "✓ Plugin built and verified successfully"
+      
+      - name: Publish plugin to JetBrains Marketplace
+        working-directory: jetbrains-plugin
+        run: |
+          ./gradlew publishPlugin 2>&1 | tee /tmp/jetbrains-out.txt
+          EXIT=${PIPESTATUS[0]}
+          if [ $EXIT -ne 0 ] && grep -q "already exists" /tmp/jetbrains-out.txt; then
+            echo "✓ Version already on JetBrains Marketplace — skipping (not an error)"
+            exit 0
+          fi
+          exit $EXIT
+        env:
+          PUBLISH_TOKEN: ${{ secrets.JETBRAINS_PUBLISH_TOKEN }}
+
+  # ── 7. Create GitHub Release (after all publishes succeed) ────────────────
   release:
     name: Create GitHub Release
-    needs: [publish-npm, publish-github, publish-vscode, publish-openvsx]
+    needs: [publish-npm, publish-github, publish-vscode, publish-openvsx, publish-jetbrains]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
