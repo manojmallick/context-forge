@@ -128,9 +128,9 @@ const health = score('/path/to/project');
 
 All existing CLI flags (`--generate`, `--watch`, `--mcp`, `--query`, `--analyze`, `--benchmark`, `--health`, …) are unchanged.
 
-## What's next — v2.7
+## What's next — v2.8
 
-v2.7 adds ranking optimization and fine-tuned weights for better precision in query-aware retrieval. TF-IDF scoring option, configurable weight presets (precision, balanced, recall), and performance optimization for large codebases. See [issue #19](https://github.com/manojmallick/sigmap/issues/19).
+v2.8 adds hybrid depth snippet retrieval — return not just relevant files, but the exact code snippets within those files. Includes `--query --snippets` CLI flag and `snippets: true` option for MCP `query_context`. See [issue #21](https://github.com/manojmallick/sigmap/issues/21).
 
 See the full [roadmap](https://manojmallick.github.io/sigmap/roadmap.html).
 
