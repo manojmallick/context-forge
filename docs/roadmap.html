@@ -4,15 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Roadmap — SigMap</title>
-<meta name="description" content="SigMap shipped v0.1 through v2.3 — 20 versions, 97% token reduction, 325 tests. Full visual timeline from baseline to complete system.">
-<meta property="og:title" content="SigMap Roadmap — v0.1 to v2.3 complete">
+<meta name="description" content="SigMap shipped v0.1 through v2.4 — 21 versions, 97% token reduction, 340 tests. Full visual timeline from baseline to complete system.">
+<meta property="og:title" content="SigMap Roadmap — v0.1 to v2.4 complete">
 <meta property="og:description" content="20 versions shipped. 97% token reduction. 325 tests. MIT license. See how SigMap was built from first extractor to full enterprise system.">
 <meta property="og:url" content="https://manojmallick.github.io/sigmap/roadmap.html">
 <meta name="twitter:card" content="summary_large_image">
 <meta property="og:image" content="https://manojmallick.github.io/sigmap/sigmap-banner.png">
 <meta name="twitter:image" content="https://manojmallick.github.io/sigmap/sigmap-banner.png">
 <link rel="canonical" href="https://manojmallick.github.io/sigmap/roadmap.html">
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","headline":"SigMap roadmap — v0.1 to v2.3 complete","description":"20 versions shipped. 97% token reduction. 325 tests. MIT license. See how SigMap was built from first extractor to full enterprise system.","url":"https://manojmallick.github.io/sigmap/roadmap.html","author":{"@type":"Person","name":"Manoj Mallick","url":"https://github.com/manojmallick"},"isPartOf":{"@type":"WebSite","name":"SigMap","url":"https://manojmallick.github.io/sigmap/"}}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","headline":"SigMap roadmap — v0.1 to v2.4 complete","description":"21 versions shipped. 97% token reduction. 340 tests. MIT license. See how SigMap was built from first extractor to full enterprise system.","url":"https://manojmallick.github.io/sigmap/roadmap.html","author":{"@type":"Person","name":"Manoj Mallick","url":"https://github.com/manojmallick"},"isPartOf":{"@type":"WebSite","name":"SigMap","url":"https://manojmallick.github.io/sigmap/"}}</script>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=IBM+Plex+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <script>(function(){var r=document.documentElement;if(localStorage.getItem('cf-theme')==='light')r.classList.add('light');document.addEventListener('DOMContentLoaded',function(){document.querySelectorAll('.theme-toggle').forEach(function(b){b.addEventListener('click',function(){r.classList.toggle('light');localStorage.setItem('cf-theme',r.classList.contains('light')?'light':'dark');});});});})();</script>
 <style>
@@ -146,7 +146,7 @@ footer{background:var(--s1);border-top:1px solid var(--line);padding:32px 24px}
 <div class="page-hero">
   <div class="hero-inner">
     <div class="hero-badge"><span class="dot"></span>All versions complete</div>
-    <h1>v0.0 → v2.3</h1>
+    <h1>v0.0 → v2.4</h1>
     <p class="hero-sub">Twenty versions. Every one shipped. MIT open source from day one.</p>
     <div class="hero-stats">
       <div class="hstat"><span class="hstat-val p">97%</span><span class="hstat-lbl">Token reduction</span></div>
@@ -720,6 +720,31 @@ footer{background:var(--s1);border-top:1px solid var(--line);padding:32px 24px}
       </div>
     </div>
 
+    <!-- v2.4 -->
+    <div class="tl-item">
+      <div class="tl-rail">
+        <div class="tl-dot done" style="background:rgba(124,106,247,.2);border-color:var(--p);color:var(--pd);font-size:10px">v2.4</div>
+      </div>
+      <div class="tl-content">
+        <div class="tl-header">
+          <span class="tl-version" style="background:linear-gradient(135deg,var(--t1),var(--pd));-webkit-background-clip:text;-webkit-text-fill-color:transparent">v2.4</span>
+          <span class="tl-name">packages/core — programmatic API</span>
+          <span class="tl-badge done">✓ Complete — tagged v2.4.0</span>
+        </div>
+        <div class="tl-desc">Splits <code>gen-context.js</code> into a proper package structure. <code>packages/core/index.js</code> (<code>sigmap-core</code>) exposes a stable programmatic API: <strong>extract</strong>, <strong>rank</strong>, <strong>buildSigIndex</strong>, <strong>scan</strong>, <strong>score</strong>. Third-party tools can now <code>require('sigmap')</code> without spawning a CLI process. <code>packages/cli/index.js</code> (<code>sigmap-cli</code>) is a thin forward-compat shim for the v3.0 adapter architecture. Root <code>gen-context.js</code> entry and all CLI flags unchanged — full backward compat. New <code>exports</code> field in root <code>package.json</code>. 15 new integration tests.</div>
+        <div class="tl-tags">
+          <span class="tl-tag">packages/core</span>
+          <span class="tl-tag">packages/cli</span>
+          <span class="tl-tag">require('sigmap')</span>
+          <span class="tl-tag">programmatic API</span>
+          <span class="tl-tag">backward compat</span>
+          <span class="tl-tag">340 tests</span>
+          <span class="tl-tag">MIT v2.4.0</span>
+        </div>
+        <div class="tl-impact">Third-party tools can now use SigMap as a library — no CLI subprocess required</div>
+      </div>
+    </div>
+
   </div>
 </section>
 
@@ -727,7 +752,7 @@ footer{background:var(--s1);border-top:1px solid var(--line);padding:32px 24px}
 
 <section class="section">
   <p class="section-ey">Final numbers</p>
-  <h2>v2.3.0 at a glance</h2>
+  <h2>v2.4.0 at a glance</h2>
 
   <div class="final-grid">
     <div class="final-stat">
@@ -735,7 +760,7 @@ footer{background:var(--s1);border-top:1px solid var(--line);padding:32px 24px}
       <div class="final-stat-lbl">Token reduction</div>
     </div>
     <div class="final-stat">
-      <span class="final-stat-val g">325</span>
+      <span class="final-stat-val g">340</span>
       <div class="final-stat-lbl">Tests passing</div>
     </div>
     <div class="final-stat">
@@ -756,7 +781,7 @@ footer{background:var(--s1);border-top:1px solid var(--line);padding:32px 24px}
 
 <footer>
   <div class="footer-inner">
-    <span class="footer-logo">sigmap v2.3.0</span>
+    <span class="footer-logo">sigmap v2.4.0</span>
     <div class="footer-links">
       <a href="quick-start.html">Quick start</a>
       <a href="cli.html">CLI reference</a>

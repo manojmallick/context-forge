@@ -1,0 +1,26 @@
+{
+  "name": "sigmap-cli",
+  "version": "2.4.0",
+  "description": "SigMap CLI wrapper — thin adapter for programmatic CLI invocation",
+  "main": "index.js",
+  "keywords": [
+    "sigmap",
+    "cli",
+    "ai-context",
+    "code-signatures"
+  ],
+  "author": {
+    "name": "Manoj Mallick",
+    "url": "https://github.com/manojmallick"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/manojmallick/sigmap.git",
+    "directory": "packages/cli"
+  },
+  "homepage": "https://manojmallick.github.io/sigmap/",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

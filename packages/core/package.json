@@ -1,0 +1,28 @@
+{
+  "name": "sigmap-core",
+  "version": "2.4.0",
+  "description": "SigMap core library — zero-dependency code signature extraction, retrieval, and security scanning",
+  "main": "index.js",
+  "keywords": [
+    "sigmap",
+    "ai-context",
+    "code-signatures",
+    "extraction",
+    "retrieval",
+    "zero-dependency"
+  ],
+  "author": {
+    "name": "Manoj Mallick",
+    "url": "https://github.com/manojmallick"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/manojmallick/sigmap.git",
+    "directory": "packages/core"
+  },
+  "homepage": "https://manojmallick.github.io/sigmap/",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
