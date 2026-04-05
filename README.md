@@ -110,24 +110,19 @@ AI agent session starts with full context
 
 ---
 
-## 🔭 What's next — v2.5-v2.6 (in progress · [#14](https://github.com/manojmallick/sigmap/issues/14) · [#16](https://github.com/manojmallick/sigmap/issues/16))
+## 🔭 What's next — v2.7 (in progress · [#19](https://github.com/manojmallick/sigmap/issues/19))
 
-### v2.6 — Research Mode
-
-| Feature | Description |
-|---|---|
-| **`--benchmark --repo <path>`** | Run benchmarks against any external repository (express, flask, gin, spring-petclinic, rails) |
-| **`--report --paper`** | Generate paper-ready metrics: markdown + LaTeX tables for academic publishing |
-| **50 real eval tasks** | JSONL task file covering 5 real open-source repos — `benchmarks/tasks/retrieval-real.jsonl` |
-| **`src/eval/paper.js`** | Zero-dependency LaTeX table formatter for token reduction, hit@5, MRR, latency (p50/p95/p99) |
-| **8 new tests** | `paper.test.js` — report generation, LaTeX syntax validation, graceful failures |
-
-### v2.5 — Impact Layer
+### v2.7 — Ranking Optimization
 
 | Feature | Description |
 |---|---|
-| **`--impact <file>`** | Show every file that transitively depends on a changed file — instant blast-radius awareness |
-| **`--impact --json`** | Machine-readable output for CI pipelines |
+| **Fine-tuned ranking weights** | Optimize weights in `src/retrieval/ranker.js` for better precision based on benchmark evaluation |
+| **TF-IDF scoring** | Add term frequency-inverse document frequency scoring option for better semantic relevance |
+| **Weight presets** | `precision`, `balanced`, `recall` presets — configurable via `retrieval.preset` |
+| **Performance optimization** | <100ms query performance for 1000-file repos, optimized for large codebases (10K+ files) |
+| **Precision improvement** | Target ≥5% precision@5 improvement while maintaining hit@5 ≥ 0.80 |
+
+---
 | **`get_impact` MCP tool** | 9th MCP tool — `{ file, depth? }` → impacted files + signatures |
 | **`src/map/dep-graph.js`** | Reverse-dependency graph built from the import analysis; circular deps handled safely |
 | **15 new tests** | `impact.test.js` — direct deps, transitive deps, depth limit, JSON output |

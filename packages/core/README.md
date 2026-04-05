@@ -128,11 +128,9 @@ const health = score('/path/to/project');
 
 All existing CLI flags (`--generate`, `--watch`, `--mcp`, `--query`, `--analyze`, `--benchmark`, `--health`, …) are unchanged.
 
-## What's next — v2.5-v2.6
+## What's next — v2.7
 
-v2.5 adds `analyzeImpact(changedFiles, cwd)` to `packages/core` — given a list of changed files, it returns every file that transitively imports them. See [issue #14](https://github.com/manojmallick/sigmap/issues/14).
-
-v2.6 adds benchmark and paper reporting capabilities — run evaluations against external repos and export metrics in LaTeX format for academic papers. See [issue #16](https://github.com/manojmallick/sigmap/issues/16).
+v2.7 adds ranking optimization and fine-tuned weights for better precision in query-aware retrieval. TF-IDF scoring option, configurable weight presets (precision, balanced, recall), and performance optimization for large codebases. See [issue #19](https://github.com/manojmallick/sigmap/issues/19).
 
 See the full [roadmap](https://manojmallick.github.io/sigmap/roadmap.html).
 
