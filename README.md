@@ -112,17 +112,17 @@ AI agent session starts with full context
 
 ---
 
-## 🔭 What's next — v2.9 (in progress · [#23](https://github.com/manojmallick/sigmap/issues/23))
+## 🔭 What's next — v2.10 (in progress · [#25](https://github.com/manojmallick/sigmap/issues/25))
 
-### v2.9 — IDE Expansion: JetBrains Plugin
+### v2.10 — Reporting: Charts + Advanced Metrics
 
 | Feature | Description |
 |---|---|
-| **JetBrains plugin** | Install SigMap natively in IntelliJ IDEA, WebStorm, PyCharm, GoLand, RubyMine |
-| **Toolbar actions** | "Regenerate Context", "Open Context File", "View Roadmap" buttons |
-| **Settings panel** | Configure srcDirs, exclude patterns, maxTokens, routing presets from IDE |
-| **File watcher** | Auto-regenerate context on file changes (opt-in) |
-| **Marketplace publishing** | Automated publishing to JetBrains Marketplace via GitHub Actions |
+| **Charts in reports** | Visualize token reduction, signature counts, and budget usage per run |
+| **Advanced retrieval metrics** | Add precision@K, recall@K, MRR trend, and query-level diagnostics |
+| **Evaluation dashboard output** | Generate shareable HTML/JSON benchmark summaries from CLI runs |
+| **CI-friendly metrics export** | Persist machine-readable metrics for release gates and regression tracking |
+| **Release quality gates** | Add pass/fail thresholds for hit@5 and precision before publish |
 
 ---
 | **`get_impact` MCP tool** | 9th MCP tool — `{ file, depth? }` → impacted files + signatures |
@@ -722,6 +722,6 @@ MIT © 2026 [Manoj Mallick](https://github.com/manojmallick) · Made in Amsterda
 
 If SigMap saves you time — a ⭐ on [GitHub](https://github.com/manojmallick/sigmap) helps others find it.
 
-**[Docs](https://manojmallick.github.io/sigmap) · [Changelog](CHANGELOG.md) · [Roadmap](docs/roadmap.html) · [Repomix](https://github.com/yamadashy/repomix)**
+**[Docs](https://manojmallick.github.io/sigmap) · [Changelog](CHANGELOG.md) · [Roadmap](https://manojmallick.github.io/sigmap/roadmap.html) · [Repomix](https://github.com/yamadashy/repomix)**
 
 </div>

@@ -128,9 +128,9 @@ const health = score('/path/to/project');
 
 All existing CLI flags (`--generate`, `--watch`, `--mcp`, `--query`, `--analyze`, `--benchmark`, `--health`, …) are unchanged.
 
-## What's next — v2.9
+## What's next — v2.10
 
-v2.9 adds JetBrains plugin support — install SigMap natively in IntelliJ IDEA, WebStorm, PyCharm, GoLand, RubyMine. Includes toolbar actions, settings panel, file watcher integration, and automated JetBrains Marketplace publishing. See [issue #23](https://github.com/manojmallick/sigmap/issues/23).
+v2.10 adds reporting charts and advanced metrics for benchmark visibility. This milestone focuses on chart-ready report output, precision@K/recall@K/MRR trends, and CI-friendly metrics artifacts. See [issue #25](https://github.com/manojmallick/sigmap/issues/25).
 
 See the full [roadmap](https://manojmallick.github.io/sigmap/roadmap.html).
 

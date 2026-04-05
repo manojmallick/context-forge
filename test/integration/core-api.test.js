@@ -227,13 +227,14 @@ test('buildSigIndex(cwd) returns a Map', () => {
 });
 
 // ---------------------------------------------------------------------------
-// 14. CLI --version backward compat
+// 14. CLI --version matches package version
 // ---------------------------------------------------------------------------
-test('CLI --version returns 2.4.0', () => {
+test('CLI --version matches package version', () => {
   const res = spawnSync('node', [SCRIPT, '--version'], { cwd: ROOT, encoding: 'utf8' });
+  const pkg = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8'));
   assert.ok(
-    res.stdout.includes('2.4.0'),
-    `expected version 2.4.0 in output, got: ${res.stdout.trim()}`,
+    res.stdout.includes(pkg.version),
+    `expected version ${pkg.version} in output, got: ${res.stdout.trim()}`,
   );
 });
 

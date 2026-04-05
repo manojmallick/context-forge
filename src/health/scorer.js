@@ -36,6 +36,10 @@ function score(cwd) {
   let strategyFreshnessDays = null;
   let overBudgetRuns = 0;
   let totalRuns = 0;
+  let p50TokenCount = 0;
+  let p95TokenCount = 0;
+  let overBudgetStreak = 0;
+  let extractorCoverage = 0;
 
   // ── Detect active strategy ────────────────────────────────────────────────
   let strategy = 'full';
@@ -50,6 +54,7 @@ function score(cwd) {
   // ── Read usage log via tracking logger ──────────────────────────────────
   try {
     const { readLog, summarize } = require('../tracking/logger');
+    const { percentile, overBudgetStreak: calcOverBudgetStreak } = require('../format/dashboard');
     const entries = readLog(cwd);
     const s = summarize(entries);
     // Only set tokenReductionPct when there is actual history; a brand-new/
@@ -57,8 +62,19 @@ function score(cwd) {
     if (s.totalRuns > 0) tokenReductionPct = s.avgReductionPct;
     overBudgetRuns = s.overBudgetRuns;
     totalRuns = s.totalRuns;
+    const finals = entries.map((e) => Number(e.finalTokens)).filter(Number.isFinite);
+    p50TokenCount = Math.round(percentile(finals, 50));
+    p95TokenCount = Math.round(percentile(finals, 95));
+    overBudgetStreak = calcOverBudgetStreak(entries);
   } catch (_) {
     // No usage log yet — proceed with nulls
+  }
+
+  try {
+    const { computeExtractorCoverage } = require('../format/dashboard');
+    extractorCoverage = computeExtractorCoverage(cwd).pct;
+  } catch (_) {
+    extractorCoverage = 0;
   }
 
   // ── Days since primary context file was last regenerated ─────────────────
@@ -117,7 +133,20 @@ function score(cwd) {
   else if (points >= 60) grade = 'C';
   else grade = 'D';
 
-  return { score: points, grade, strategy, tokenReductionPct, daysSinceRegen, strategyFreshnessDays, totalRuns, overBudgetRuns };
+  return {
+    score: points,
+    grade,
+    strategy,
+    tokenReductionPct,
+    daysSinceRegen,
+    strategyFreshnessDays,
+    totalRuns,
+    overBudgetRuns,
+    p50TokenCount,
+    p95TokenCount,
+    overBudgetStreak,
+    extractorCoverage,
+  };
 }
 
 module.exports = { score };

@@ -224,16 +224,17 @@ test('CLI --diagnose-extractors: exits 0 and shows results', () => {
 });
 
 // ---------------------------------------------------------------------------
-// 14. CLI --version returns 2.4.0
+// 14. CLI --version returns current package version
 // ---------------------------------------------------------------------------
-test('CLI --version: returns 2.4.0', () => {
+test('CLI --version: returns current package version', () => {
   const r = spawnSync(process.execPath, [SCRIPT, '--version'], {
     cwd: ROOT,
     encoding: 'utf8',
     timeout: 10000,
   });
   assert.strictEqual(r.status, 0);
-  assert.ok(r.stdout.trim().includes('2.4.0'), `got: ${r.stdout.trim()}`);
+  const pkg = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8'));
+  assert.ok(r.stdout.trim().includes(pkg.version), `got: ${r.stdout.trim()}`);
 });
 
 // ---------------------------------------------------------------------------

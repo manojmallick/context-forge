@@ -259,10 +259,11 @@ test('CLI --query missing arg: exits 1 with usage message', () => {
   assert.ok(out.includes('--query'), 'should mention --query in error');
 });
 
-test('CLI --version: returns 2.4.0', () => {
+test('CLI --version: returns current package version', () => {
   const res = run('--version');
   assert.strictEqual(res.status, 0);
-  assert.ok(res.stdout.trim().includes('2.4.0'), `expected 2.4.0, got: ${res.stdout.trim()}`);
+  const pkg = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8'));
+  assert.ok(res.stdout.trim().includes(pkg.version), `expected ${pkg.version}, got: ${res.stdout.trim()}`);
 });
 
 // ---------------------------------------------------------------------------

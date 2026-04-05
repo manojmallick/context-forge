@@ -1937,6 +1937,316 @@ __factories["./src/format/cache"] = function(module, exports) {
   
 };
 
+  // ── ./src/format/dashboard ──
+  __factories["./src/format/dashboard"] = function(module, exports) {
+    const fs = require('fs');
+    const path = require('path');
+    const { readLog } = __require('./src/tracking/logger');
+
+    const LANGUAGE_KEYS = [
+      'typescript', 'javascript', 'python', 'java', 'kotlin', 'go', 'rust',
+      'csharp', 'cpp', 'ruby', 'php', 'swift', 'dart', 'scala', 'vue',
+      'svelte', 'html', 'css', 'yaml', 'shell', 'dockerfile',
+    ];
+
+    function toNumber(v) {
+      const n = Number(v);
+      return Number.isFinite(n) ? n : null;
+    }
+
+    function percentile(values, p) {
+      if (!Array.isArray(values) || values.length === 0) return 0;
+      const sorted = values.filter(Number.isFinite).slice().sort((a, b) => a - b);
+      if (sorted.length === 0) return 0;
+      if (p <= 0) return sorted[0];
+      if (p >= 100) return sorted[sorted.length - 1];
+      const idx = (p / 100) * (sorted.length - 1);
+      const lo = Math.floor(idx);
+      const hi = Math.ceil(idx);
+      if (lo === hi) return sorted[lo];
+      const frac = idx - lo;
+      return sorted[lo] + (sorted[hi] - sorted[lo]) * frac;
+    }
+
+    function overBudgetStreak(entries) {
+      if (!Array.isArray(entries) || entries.length === 0) return 0;
+      let streak = 0;
+      for (let i = entries.length - 1; i >= 0; i--) {
+        if (entries[i] && entries[i].overBudget) streak++;
+        else break;
+      }
+      return streak;
+    }
+
+    function walkFiles(dir, maxDepth, depth, out, excludeSet) {
+      if (depth > maxDepth) return;
+      let entries = [];
+      try {
+        entries = fs.readdirSync(dir, { withFileTypes: true });
+      } catch (_) {
+        return;
+      }
+      for (const entry of entries) {
+        const abs = path.join(dir, entry.name);
+        const rel = abs.replace(/\\/g, '/');
+        if (excludeSet.has(entry.name) || rel.includes('/node_modules/') || rel.includes('/.git/')) continue;
+        if (entry.isDirectory()) walkFiles(abs, maxDepth, depth + 1, out, excludeSet);
+        else if (entry.isFile()) out.push(abs);
+      }
+    }
+
+    function detectLanguage(filePath) {
+      const base = path.basename(filePath);
+      const ext = path.extname(filePath).toLowerCase();
+      if (base === 'Dockerfile' || /^Dockerfile\./.test(base)) return 'dockerfile';
+      if (ext === '.ts' || ext === '.tsx') return 'typescript';
+      if (ext === '.js' || ext === '.jsx' || ext === '.mjs' || ext === '.cjs') return 'javascript';
+      if (ext === '.py' || ext === '.pyw') return 'python';
+      if (ext === '.java') return 'java';
+      if (ext === '.kt' || ext === '.kts') return 'kotlin';
+      if (ext === '.go') return 'go';
+      if (ext === '.rs') return 'rust';
+      if (ext === '.cs') return 'csharp';
+      if (ext === '.cpp' || ext === '.c' || ext === '.h' || ext === '.hpp' || ext === '.cc') return 'cpp';
+      if (ext === '.rb' || ext === '.rake') return 'ruby';
+      if (ext === '.php') return 'php';
+      if (ext === '.swift') return 'swift';
+      if (ext === '.dart') return 'dart';
+      if (ext === '.scala' || ext === '.sc') return 'scala';
+      if (ext === '.vue') return 'vue';
+      if (ext === '.svelte') return 'svelte';
+      if (ext === '.html' || ext === '.htm') return 'html';
+      if (ext === '.css' || ext === '.scss' || ext === '.sass' || ext === '.less') return 'css';
+      if (ext === '.yml' || ext === '.yaml') return 'yaml';
+      if (ext === '.sh' || ext === '.bash' || ext === '.zsh' || ext === '.fish') return 'shell';
+      return null;
+    }
+
+    function computeExtractorCoverage(cwd) {
+      let cfg = {};
+      try {
+        const cfgPath = path.join(cwd, 'gen-context.config.json');
+        if (fs.existsSync(cfgPath)) cfg = JSON.parse(fs.readFileSync(cfgPath, 'utf8'));
+      } catch (_) {}
+      const srcDirs = Array.isArray(cfg.srcDirs) && cfg.srcDirs.length > 0
+        ? cfg.srcDirs
+        : ['src', 'app', 'lib', 'packages', 'services', 'api'];
+      const exclude = new Set(['node_modules', '.git', 'dist', 'build', 'out', '__pycache__', '.next', 'coverage', 'target', 'vendor', '.context']);
+      if (Array.isArray(cfg.exclude)) for (const x of cfg.exclude) exclude.add(String(x));
+      const counts = {};
+      for (const k of LANGUAGE_KEYS) counts[k] = 0;
+      const files = [];
+      for (const relDir of srcDirs) {
+        const absDir = path.join(cwd, relDir);
+        if (!fs.existsSync(absDir)) continue;
+        walkFiles(absDir, 8, 0, files, exclude);
+      }
+      for (const f of files) {
+        const lang = detectLanguage(f);
+        if (lang) counts[lang]++;
+      }
+      const covered = LANGUAGE_KEYS.filter((k) => counts[k] > 0).length;
+      const supported = LANGUAGE_KEYS.length;
+      const pct = supported > 0 ? parseFloat(((covered / supported) * 100).toFixed(1)) : 0;
+      return { supported, covered, pct, perLanguage: counts };
+    }
+
+    function readBenchmarkTrend(cwd) {
+      const resultDir = path.join(cwd, 'benchmarks', 'results');
+      if (!fs.existsSync(resultDir)) return [];
+      const files = [];
+      walkFiles(resultDir, 6, 0, files, new Set());
+      const values = [];
+      for (const filePath of files) {
+        const base = path.basename(filePath).toLowerCase();
+        if (!base.endsWith('.json') && !base.endsWith('.jsonl') && !base.endsWith('.ndjson')) continue;
+        let raw = '';
+        try { raw = fs.readFileSync(filePath, 'utf8'); } catch (_) { continue; }
+        if (base.endsWith('.json')) {
+          try {
+            const obj = JSON.parse(raw);
+            const v = toNumber(obj && obj.hitAt5);
+            const m = toNumber(obj && obj.metrics && obj.metrics.hitAt5);
+            if (v !== null) values.push(v);
+            else if (m !== null) values.push(m);
+          } catch (_) {}
+          continue;
+        }
+        for (const line of raw.split('\n').filter(Boolean)) {
+          try {
+            const obj = JSON.parse(line);
+            const v = toNumber(obj && obj.hitAt5);
+            const m = toNumber(obj && obj.metrics && obj.metrics.hitAt5);
+            if (v !== null) values.push(v);
+            else if (m !== null) values.push(m);
+          } catch (_) {}
+        }
+      }
+      return values.slice(-30);
+    }
+
+    function lineChartSvg(values, title, ySuffix) {
+      const width = 760;
+      const height = 210;
+      const left = 38;
+      const right = 18;
+      const top = 22;
+      const bottom = 30;
+      const innerW = width - left - right;
+      const innerH = height - top - bottom;
+      const clean = values.filter((n) => Number.isFinite(n));
+      if (clean.length === 0) {
+        return `<svg viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${title}"><rect x="0" y="0" width="100%" height="100%" fill="#0f1320" rx="12"/><text x="20" y="36" fill="#d7defa" font-size="14" font-family="monospace">${title}</text><text x="20" y="96" fill="#8ea0d9" font-size="13" font-family="monospace">No data yet. Run with --track and --benchmark.</text></svg>`;
+      }
+      const min = Math.min(...clean);
+      const max = Math.max(...clean);
+      const span = max - min || 1;
+      const points = clean.map((v, i) => {
+        const x = left + ((clean.length === 1 ? 0 : i / (clean.length - 1)) * innerW);
+        const y = top + (1 - ((v - min) / span)) * innerH;
+        return `${x.toFixed(1)},${y.toFixed(1)}`;
+      }).join(' ');
+      const latest = clean[clean.length - 1];
+      const grid = [];
+      for (let i = 0; i <= 4; i++) {
+        const gy = top + (i / 4) * innerH;
+        grid.push(`<line x1="${left}" y1="${gy.toFixed(1)}" x2="${left + innerW}" y2="${gy.toFixed(1)}" stroke="#223056" stroke-width="1"/>`);
+      }
+      return `<svg viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${title}"><rect x="0" y="0" width="100%" height="100%" fill="#0f1320" rx="12"/><text x="20" y="26" fill="#d7defa" font-size="13" font-family="monospace">${title}</text>${grid.join('')}<polyline fill="none" stroke="#42d392" stroke-width="2.5" points="${points}"/><text x="20" y="${height - 8}" fill="#8ea0d9" font-size="12" font-family="monospace">latest: ${latest.toFixed(2)}${ySuffix || ''}</text></svg>`;
+    }
+
+    function barChartSvg(perLanguage) {
+      const width = 760;
+      const height = 260;
+      const left = 20;
+      const top = 34;
+      const usableW = width - left * 2;
+      const max = Math.max(1, ...LANGUAGE_KEYS.map((k) => perLanguage[k] || 0));
+      const barW = usableW / LANGUAGE_KEYS.length;
+      const labels = ['ts', 'js', 'py', 'java', 'kt', 'go', 'rs', 'cs', 'cpp', 'rb', 'php', 'swift', 'dart', 'scala', 'vue', 'sv', 'html', 'css', 'yaml', 'sh', 'df'];
+      const bars = [];
+      for (let i = 0; i < LANGUAGE_KEYS.length; i++) {
+        const key = LANGUAGE_KEYS[i];
+        const v = perLanguage[key] || 0;
+        const h = (v / max) * 160;
+        const x = left + i * barW + 2;
+        const y = top + 160 - h;
+        bars.push(`<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${Math.max(2, barW - 4).toFixed(1)}" height="${h.toFixed(1)}" fill="#7aa2ff" rx="2"/>`);
+      }
+      const xLabels = labels.map((lbl, i) => {
+        const x = left + i * barW + barW / 2;
+        return `<text x="${x.toFixed(1)}" y="222" fill="#8ea0d9" font-size="9" font-family="monospace" text-anchor="middle">${lbl}</text>`;
+      });
+      return `<svg viewBox="0 0 760 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Extractor coverage by language"><rect x="0" y="0" width="100%" height="100%" fill="#0f1320" rx="12"/><text x="20" y="24" fill="#d7defa" font-size="13" font-family="monospace">Per-language extractor coverage (file counts)</text><line x1="20" y1="194" x2="740" y2="194" stroke="#223056" stroke-width="1"/>${bars.join('')}${xLabels.join('')}</svg>`;
+    }
+
+    function sparkline(values) {
+      const clean = values.filter((n) => Number.isFinite(n));
+      if (clean.length === 0) return 'n/a';
+      const ticks = '▁▂▃▄▅▆▇█';
+      const min = Math.min(...clean);
+      const max = Math.max(...clean);
+      const span = max - min || 1;
+      return clean.map((v) => {
+        const idx = Math.max(0, Math.min(ticks.length - 1, Math.round(((v - min) / span) * (ticks.length - 1))));
+        return ticks[idx];
+      }).join('');
+    }
+
+    function buildDashboardData(cwd, health) {
+      const entries = readLog(cwd);
+      const recent = entries.slice(-30);
+      const tokenReductionTrend = recent.map((e) => toNumber(e.reductionPct)).filter((n) => n !== null);
+      const hitAt5Trend = readBenchmarkTrend(cwd);
+      const coverage = computeExtractorCoverage(cwd);
+      const finals = entries.map((e) => toNumber(e.finalTokens)).filter((n) => n !== null);
+      const summary = {
+        grade: health.grade,
+        score: health.score,
+        daysSinceRegen: health.daysSinceRegen,
+        totalRuns: entries.length,
+        overBudgetRate: entries.length > 0 ? parseFloat(((entries.filter((e) => e.overBudget).length / entries.length) * 100).toFixed(1)) : 0,
+        p50TokenCount: Math.round(percentile(finals, 50)),
+        p95TokenCount: Math.round(percentile(finals, 95)),
+        overBudgetStreak: overBudgetStreak(entries),
+        extractorCoverage: coverage.pct,
+      };
+      return {
+        summary,
+        tokenReductionTrend,
+        hitAt5Trend,
+        coverage,
+        charts: {
+          tokenReductionSvg: lineChartSvg(tokenReductionTrend, 'Token reduction trend (last 30 tracked runs)', '%'),
+          hitAt5Svg: lineChartSvg(hitAt5Trend, 'hit@5 trend (last 30 benchmark runs)', ''),
+          coverageSvg: barChartSvg(coverage.perLanguage),
+        },
+      };
+    }
+
+    function generateDashboardHtml(cwd, health) {
+      const data = buildDashboardData(cwd, health);
+      const cards = [
+        { label: 'Current grade', value: `${data.summary.grade} (${data.summary.score}/100)` },
+        { label: 'Days since regen', value: data.summary.daysSinceRegen === null ? 'n/a' : String(data.summary.daysSinceRegen) },
+        { label: 'Total tracked runs', value: String(data.summary.totalRuns) },
+        { label: 'Over-budget %', value: `${data.summary.overBudgetRate}%` },
+        { label: 'p50 token count', value: String(data.summary.p50TokenCount) },
+        { label: 'p95 token count', value: String(data.summary.p95TokenCount) },
+        { label: 'Over-budget streak', value: String(data.summary.overBudgetStreak) },
+        { label: 'Extractor coverage', value: `${data.summary.extractorCoverage}%` },
+      ];
+      const cardHtml = cards.map((c) => `<div class="card"><div class="label">${c.label}</div><div class="value">${c.value}</div></div>`).join('');
+      const html = [
+        '<!doctype html>', '<html lang="en">', '<head>', '<meta charset="utf-8"/>',
+        '<meta name="viewport" content="width=device-width,initial-scale=1"/>', '<title>SigMap Dashboard</title>',
+        '<style>',
+        'body{margin:0;background:#0a0f1e;color:#e6ecff;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}',
+        '.wrap{max-width:980px;margin:0 auto;padding:24px}',
+        'h1{font-size:22px;margin:0 0 6px 0}', '.sub{color:#8ea0d9;font-size:12px;margin-bottom:20px}',
+        '.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:16px}',
+        '.card{background:#111a33;border:1px solid #223056;border-radius:10px;padding:10px}',
+        '.label{font-size:11px;color:#8ea0d9;margin-bottom:6px}', '.value{font-size:16px;color:#f5f7ff}',
+        '.panel{background:#111a33;border:1px solid #223056;border-radius:12px;padding:10px;margin-top:12px}',
+        '@media (max-width:900px){.grid{grid-template-columns:repeat(2,minmax(0,1fr));}}',
+        '</style>', '</head>', '<body>', '<div class="wrap">',
+        '<h1>SigMap v2.10 dashboard</h1>',
+        '<div class="sub">Self-contained report. No external scripts, styles, or network calls.</div>',
+        `<div class="grid">${cardHtml}</div>`,
+        `<div class="panel">${data.charts.tokenReductionSvg}</div>`,
+        `<div class="panel">${data.charts.hitAt5Svg}</div>`,
+        `<div class="panel">${data.charts.coverageSvg}</div>`,
+        '</div>', '</body>', '</html>',
+      ].join('');
+      return { html, data };
+    }
+
+    function renderHistoryCharts(cwd, health) {
+      const data = buildDashboardData(cwd, health);
+      const lines = [
+        '[sigmap] history charts:',
+        `  token reduction trend : ${sparkline(data.tokenReductionTrend)}`,
+        `  hit@5 trend           : ${sparkline(data.hitAt5Trend)}`,
+        `  extractor coverage    : ${data.coverage.covered}/${data.coverage.supported} (${data.coverage.pct}%)`,
+        '',
+        '[sigmap] inline svg: token reduction', data.charts.tokenReductionSvg,
+        '',
+        '[sigmap] inline svg: hit@5', data.charts.hitAt5Svg,
+        '',
+        '[sigmap] inline svg: coverage', data.charts.coverageSvg,
+      ];
+      return {
+        text: lines.join('\n'),
+        tokenReductionSparkline: sparkline(data.tokenReductionTrend),
+        hitAt5Sparkline: sparkline(data.hitAt5Trend),
+        summary: data.summary,
+        charts: data.charts,
+      };
+    }
+
+    module.exports = { generateDashboardHtml, renderHistoryCharts, computeExtractorCoverage, percentile, overBudgetStreak };
+  };
+
 // ── ./src/health/scorer ──
 __factories["./src/health/scorer"] = function(module, exports) {
   
@@ -1970,35 +2280,147 @@ __factories["./src/health/scorer"] = function(module, exports) {
   function score(cwd) {
     const fs = require('fs');
     const path = require('path');
+
+    function toNumber(v) {
+      const n = Number(v);
+      return Number.isFinite(n) ? n : null;
+    }
+
+    function percentile(values, p) {
+      if (!Array.isArray(values) || values.length === 0) return 0;
+      const sorted = values.filter(Number.isFinite).slice().sort((a, b) => a - b);
+      if (sorted.length === 0) return 0;
+      if (p <= 0) return sorted[0];
+      if (p >= 100) return sorted[sorted.length - 1];
+      const idx = (p / 100) * (sorted.length - 1);
+      const lo = Math.floor(idx);
+      const hi = Math.ceil(idx);
+      if (lo === hi) return sorted[lo];
+      const frac = idx - lo;
+      return sorted[lo] + (sorted[hi] - sorted[lo]) * frac;
+    }
+
+    function overBudgetStreak(entries) {
+      if (!Array.isArray(entries) || entries.length === 0) return 0;
+      let streak = 0;
+      for (let i = entries.length - 1; i >= 0; i--) {
+        if (entries[i] && entries[i].overBudget) streak++;
+        else break;
+      }
+      return streak;
+    }
+
+    function walkFiles(dir, maxDepth, depth, out, excludeSet) {
+      if (depth > maxDepth) return;
+      let entries = [];
+      try { entries = fs.readdirSync(dir, { withFileTypes: true }); } catch (_) { return; }
+      for (const entry of entries) {
+        const abs = path.join(dir, entry.name);
+        const rel = abs.replace(/\\/g, '/');
+        if (excludeSet.has(entry.name) || rel.includes('/node_modules/') || rel.includes('/.git/')) continue;
+        if (entry.isDirectory()) walkFiles(abs, maxDepth, depth + 1, out, excludeSet);
+        else if (entry.isFile()) out.push(abs);
+      }
+    }
+
+    function detectLanguage(filePath) {
+      const base = path.basename(filePath);
+      const ext = path.extname(filePath).toLowerCase();
+      if (base === 'Dockerfile' || /^Dockerfile\./.test(base)) return 'dockerfile';
+      if (ext === '.ts' || ext === '.tsx') return 'typescript';
+      if (ext === '.js' || ext === '.jsx' || ext === '.mjs' || ext === '.cjs') return 'javascript';
+      if (ext === '.py' || ext === '.pyw') return 'python';
+      if (ext === '.java') return 'java';
+      if (ext === '.kt' || ext === '.kts') return 'kotlin';
+      if (ext === '.go') return 'go';
+      if (ext === '.rs') return 'rust';
+      if (ext === '.cs') return 'csharp';
+      if (ext === '.cpp' || ext === '.c' || ext === '.h' || ext === '.hpp' || ext === '.cc') return 'cpp';
+      if (ext === '.rb' || ext === '.rake') return 'ruby';
+      if (ext === '.php') return 'php';
+      if (ext === '.swift') return 'swift';
+      if (ext === '.dart') return 'dart';
+      if (ext === '.scala' || ext === '.sc') return 'scala';
+      if (ext === '.vue') return 'vue';
+      if (ext === '.svelte') return 'svelte';
+      if (ext === '.html' || ext === '.htm') return 'html';
+      if (ext === '.css' || ext === '.scss' || ext === '.sass' || ext === '.less') return 'css';
+      if (ext === '.yml' || ext === '.yaml') return 'yaml';
+      if (ext === '.sh' || ext === '.bash' || ext === '.zsh' || ext === '.fish') return 'shell';
+      return null;
+    }
+
+    function computeExtractorCoverage(cwd, cfg) {
+      const LANGUAGE_KEYS = [
+        'typescript', 'javascript', 'python', 'java', 'kotlin', 'go', 'rust',
+        'csharp', 'cpp', 'ruby', 'php', 'swift', 'dart', 'scala', 'vue',
+        'svelte', 'html', 'css', 'yaml', 'shell', 'dockerfile',
+      ];
+      const srcDirs = Array.isArray(cfg && cfg.srcDirs) && cfg.srcDirs.length > 0
+        ? cfg.srcDirs
+        : ['src', 'app', 'lib', 'packages', 'services', 'api'];
+      const exclude = new Set(['node_modules', '.git', 'dist', 'build', 'out', '__pycache__', '.next', 'coverage', 'target', 'vendor', '.context']);
+      if (cfg && Array.isArray(cfg.exclude)) for (const x of cfg.exclude) exclude.add(String(x));
+      const counts = {};
+      for (const k of LANGUAGE_KEYS) counts[k] = 0;
+      const files = [];
+      for (const relDir of srcDirs) {
+        const absDir = path.join(cwd, relDir);
+        if (!fs.existsSync(absDir)) continue;
+        walkFiles(absDir, 8, 0, files, exclude);
+      }
+      for (const f of files) {
+        const lang = detectLanguage(f);
+        if (lang) counts[lang]++;
+      }
+      const covered = LANGUAGE_KEYS.filter((k) => counts[k] > 0).length;
+      return LANGUAGE_KEYS.length > 0 ? parseFloat(((covered / LANGUAGE_KEYS.length) * 100).toFixed(1)) : 0;
+    }
   
     let tokenReductionPct = null;
     let daysSinceRegen = null;
     let strategyFreshnessDays = null;
     let overBudgetRuns = 0;
     let totalRuns = 0;
+    let p50TokenCount = 0;
+    let p95TokenCount = 0;
+    let overBudgetStreakCount = 0;
+    let extractorCoverage = 0;
+    let cfgObj = null;
+    let entries = [];
   
     // ── Detect active strategy ──────────────────────────────────────────────
     let strategy = 'full';
     try {
       const cfgPath = path.join(cwd, 'gen-context.config.json');
       if (fs.existsSync(cfgPath)) {
-        const cfg = JSON.parse(fs.readFileSync(cfgPath, 'utf8'));
-        strategy = cfg.strategy || 'full';
+        cfgObj = JSON.parse(fs.readFileSync(cfgPath, 'utf8'));
+        strategy = cfgObj.strategy || 'full';
       }
     } catch (_) {}
   
     // ── Read usage log via tracking logger ──────────────────────────────────
     try {
       const { readLog, summarize } = __require('./src/tracking/logger');
-      const entries = readLog(cwd);
+      entries = readLog(cwd);
       const s = summarize(entries);
       // Only set tokenReductionPct when there is actual history; a brand-new/
       // untracked project should not be penalised for "0% reduction".
       if (s.totalRuns > 0) tokenReductionPct = s.avgReductionPct;
       overBudgetRuns = s.overBudgetRuns;
       totalRuns = s.totalRuns;
+      const finals = entries.map((e) => toNumber(e.finalTokens)).filter((n) => n !== null);
+      p50TokenCount = Math.round(percentile(finals, 50));
+      p95TokenCount = Math.round(percentile(finals, 95));
+      overBudgetStreakCount = overBudgetStreak(entries);
     } catch (_) {
       // No usage log yet — proceed with nulls
+    }
+
+    try {
+      extractorCoverage = computeExtractorCoverage(cwd, cfgObj || {});
+    } catch (_) {
+      extractorCoverage = 0;
     }
   
     // ── Days since primary context file was last regenerated ─────────────────
@@ -2057,7 +2479,20 @@ __factories["./src/health/scorer"] = function(module, exports) {
     else if (points >= 60) grade = 'C';
     else grade = 'D';
   
-    return { score: points, grade, strategy, tokenReductionPct, daysSinceRegen, strategyFreshnessDays, totalRuns, overBudgetRuns };
+    return {
+      score: points,
+      grade,
+      strategy,
+      tokenReductionPct,
+      daysSinceRegen,
+      strategyFreshnessDays,
+      totalRuns,
+      overBudgetRuns,
+      p50TokenCount,
+      p95TokenCount,
+      overBudgetStreak: overBudgetStreakCount,
+      extractorCoverage,
+    };
   }
   
   module.exports = { score };
@@ -3107,7 +3542,7 @@ __factories["./src/mcp/server"] = function(module, exports) {
   
   const SERVER_INFO = {
     name: 'sigmap',
-    version: '1.5.0',
+    version: '2.10.0',
     description: 'SigMap MCP server — code signatures on demand',
   };
   
@@ -4304,7 +4739,7 @@ const path = require('path');
 const os = require('os');
 const { execSync } = require('child_process');
 
-const VERSION = '2.9.1';
+const VERSION = '2.10.0';
 const MARKER = '\n\n## Auto-generated signatures\n<!-- Updated by gen-context.js -->\n';
 
 function requireSourceOrBundled(key) {
@@ -5503,6 +5938,8 @@ Usage:
   node gen-context.js --report                          Token reduction stats to stdout
   node gen-context.js --report --json                   Token report as JSON (for CI; exits 1 if over budget)
   node gen-context.js --report --history                Print usage log summary from .context/usage.ndjson
+  node gen-context.js --report --history --chart        Include inline SVG charts + Unicode sparklines
+  node gen-context.js --dashboard                       Write benchmarks/reports/dashboard.html
   node gen-context.js --suggest-tool "<task>"           Recommend model tier for a task description
   node gen-context.js --suggest-tool "<task>" --json    Machine-readable tier recommendation
   node gen-context.js --health                          Print composite health score
@@ -5625,6 +6062,31 @@ function main() {
       }
       console.log(`  total runs      : ${result.totalRuns}`);
       console.log(`  over-budget runs: ${result.overBudgetRuns}`);
+      console.log(`  p50 token count : ${result.p50TokenCount}`);
+      console.log(`  p95 token count : ${result.p95TokenCount}`);
+      console.log(`  overbudget streak: ${result.overBudgetStreak}`);
+      console.log(`  extractor cover.: ${result.extractorCoverage}%`);
+    }
+    process.exit(0);
+  }
+
+  if (args.includes('--dashboard')) {
+    try {
+      const { score } = __require('./src/health/scorer');
+      const health = score(cwd);
+      const { generateDashboardHtml } = requireSourceOrBundled('./src/format/dashboard');
+      const out = generateDashboardHtml(cwd, health);
+      const outPath = path.join(cwd, 'benchmarks', 'reports', 'dashboard.html');
+      fs.mkdirSync(path.dirname(outPath), { recursive: true });
+      fs.writeFileSync(outPath, out.html, 'utf8');
+      if (args.includes('--json')) {
+        process.stdout.write(JSON.stringify({ ok: true, file: path.relative(cwd, outPath), summary: out.data.summary }) + '\n');
+      } else {
+        console.log(`[sigmap] dashboard written: ${path.relative(cwd, outPath)}`);
+      }
+    } catch (err) {
+      console.error(`[sigmap] dashboard error: ${err.message}`);
+      process.exit(1);
     }
     process.exit(0);
   }
@@ -5876,8 +6338,25 @@ function main() {
         const { readLog, summarize } = __require('./src/tracking/logger');
         const entries = readLog(cwd);
         const summary = summarize(entries);
+        let chartInfo = null;
+        if (args.includes('--chart')) {
+          const { score } = __require('./src/health/scorer');
+          const { renderHistoryCharts } = requireSourceOrBundled('./src/format/dashboard');
+          chartInfo = renderHistoryCharts(cwd, score(cwd));
+        }
         if (args.includes('--json')) {
-          process.stdout.write(JSON.stringify(summary) + '\n');
+          const payload = chartInfo
+            ? {
+                ...summary,
+                chart: {
+                  tokenReductionSparkline: chartInfo.tokenReductionSparkline,
+                  hitAt5Sparkline: chartInfo.hitAt5Sparkline,
+                  summary: chartInfo.summary,
+                  charts: chartInfo.charts,
+                },
+              }
+            : summary;
+          process.stdout.write(JSON.stringify(payload) + '\n');
         } else {
           console.log('[sigmap] usage history:');
           console.log(`  total runs      : ${summary.totalRuns}`);
@@ -5886,6 +6365,10 @@ function main() {
           console.log(`  over-budget runs: ${summary.overBudgetRuns}`);
           if (summary.firstRun) console.log(`  first run       : ${summary.firstRun}`);
           if (summary.lastRun)  console.log(`  last run        : ${summary.lastRun}`);
+          if (chartInfo) {
+            console.log('');
+            console.log(chartInfo.text);
+          }
         }
       } catch (err) {
         console.warn(`[sigmap] tracking: ${err.message}`);
