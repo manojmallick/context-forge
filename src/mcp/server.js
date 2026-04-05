@@ -14,7 +14,7 @@
 
 const readline = require('readline');
 const { TOOLS } = require('./tools');
-const { readContext, searchSignatures, getMap, createCheckpoint, getRouting, explainFile, listModules, queryContext } = require('./handlers');
+const { readContext, searchSignatures, getMap, createCheckpoint, getRouting, explainFile, listModules, queryContext, getImpact } = require('./handlers');
 
 const SERVER_INFO = {
   name: 'sigmap',
@@ -74,6 +74,7 @@ function dispatch(msg, cwd) {
       else if (name === 'explain_file') text = explainFile(args, cwd);
       else if (name === 'list_modules') text = listModules(args, cwd);
       else if (name === 'query_context') text = queryContext(args, cwd);
+      else if (name === 'get_impact') text = getImpact(args, cwd);
       else {
         respondError(id, -32601, `Unknown tool: ${name}`);
         return;

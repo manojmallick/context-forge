@@ -2462,6 +2462,182 @@ __factories["./src/map/route-table"] = function(module, exports) {
   
 };
 
+// ── ./src/graph/builder ──
+__factories["./src/graph/builder"] = function(module, exports) {
+  'use strict';
+  const fs   = require('fs');
+  const path = require('path');
+  const JS_EXTS  = new Set(['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs']);
+  const PY_EXTS  = new Set(['.py', '.pyw']);
+  const GO_EXTS  = new Set(['.go']);
+  const RS_EXTS  = new Set(['.rs']);
+  const JVM_EXTS = new Set(['.java', '.kt', '.kts', '.scala', '.sc']);
+  const RB_EXTS  = new Set(['.rb', '.rake']);
+  function resolveJsPath(dir, importStr, fileSet) {
+    const base = path.resolve(dir, importStr);
+    const candidates = [base, base+'.ts', base+'.tsx', base+'.js', base+'.jsx', base+'.mjs', base+'.cjs', path.join(base,'index.ts'), path.join(base,'index.js')];
+    for (const c of candidates) { if (fileSet.has(c)) return c; }
+    return null;
+  }
+  function extractFileDeps(filePath, content, fileSet) {
+    const ext = path.extname(filePath).toLowerCase();
+    const dir = path.dirname(filePath);
+    const found = [];
+    if (JS_EXTS.has(ext)) {
+      const stripped = content.replace(/\/\/.*$/gm,'').replace(/\/\*[\s\S]*?\*\//g,'');
+      const reEs = /(?:^|[\r\n])\s*import\s+(?:[^'";\r\n]*?\s+from\s+)?['"](\.[^'"]+)['"]/g;
+      let m;
+      while ((m = reEs.exec(stripped)) !== null) { const r = resolveJsPath(dir, m[1], fileSet); if (r) found.push(r); }
+      const reCjs = /\brequire\s*\(\s*['"](\.[^'"]+)['"]\s*\)/g;
+      while ((m = reCjs.exec(stripped)) !== null) { const r = resolveJsPath(dir, m[1], fileSet); if (r) found.push(r); }
+    }
+    if (PY_EXTS.has(ext)) {
+      const re = /^[ \t]*from\s+(\.+[\w.]*)\s+import/gm; let m;
+      while ((m = re.exec(content)) !== null) {
+        const dotCount = (m[1].match(/^\.+/)||[''])[0].length;
+        const modPart = m[1].slice(dotCount).replace(/\./g,'/');
+        let base = dir; for (let i=1;i<dotCount;i++) base=path.dirname(base);
+        const candidate = modPart ? path.join(base,modPart+'.py') : null;
+        if (candidate && fileSet.has(candidate)) found.push(candidate);
+      }
+    }
+    if (GO_EXTS.has(ext)) {
+      const imports = []; let m;
+      const re = /import\s*\(\s*([\s\S]*?)\s*\)/g;
+      const reInline = /import\s+"([^"]+)"/g;
+      while ((m = re.exec(content)) !== null) { for (const imp of m[1].matchAll(/"([^"]+)"/g)) imports.push(imp[1]); }
+      while ((m = reInline.exec(content)) !== null) imports.push(m[1]);
+      for (const imp of imports) {
+        const suffix = imp.split('/').pop();
+        for (const f of fileSet) { if (f.endsWith(path.sep+suffix+'.go')||f.includes(path.sep+suffix+path.sep)) { found.push(f); break; } }
+      }
+    }
+    if (RS_EXTS.has(ext)) {
+      const reMod = /^\s*(?:pub\s+)?mod\s+(\w+)\s*;/gm; let m;
+      while ((m = reMod.exec(content)) !== null) {
+        const c1 = path.join(dir,m[1]+'.rs'); if (fileSet.has(c1)) found.push(c1);
+        const c2 = path.join(dir,m[1],'mod.rs'); if (fileSet.has(c2)) found.push(c2);
+      }
+    }
+    if (JVM_EXTS.has(ext)) {
+      const re = /^\s*import\s+([\w.]+)\s*;?/gm; let m;
+      while ((m = re.exec(content)) !== null) {
+        const asPath = m[1].replace(/\./g,path.sep);
+        for (const jvmExt of ['.java','.kt','.kts','.scala','.sc']) {
+          for (const f of fileSet) { if (f.endsWith(asPath+jvmExt)) { found.push(f); break; } }
+        }
+      }
+    }
+    if (RB_EXTS.has(ext)) {
+      const re = /^\s*require_relative\s+['"]([^'"]+)['"]/gm; let m;
+      while ((m = re.exec(content)) !== null) {
+        const base = path.resolve(dir,m[1]);
+        const candidate = base.endsWith('.rb') ? base : base+'.rb';
+        if (fileSet.has(candidate)) found.push(candidate);
+      }
+    }
+    return [...new Set(found)];
+  }
+  function build(files, cwd) {
+    const fileSet = new Set(files.map((f) => path.resolve(f)));
+    const forward = new Map(); const reverse = new Map();
+    for (const f of fileSet) { if (!forward.has(f)) forward.set(f,[]); if (!reverse.has(f)) reverse.set(f,[]); }
+    for (const filePath of fileSet) {
+      let content; try { content = fs.readFileSync(filePath,'utf8'); } catch(_) { continue; }
+      const deps = extractFileDeps(filePath, content, fileSet);
+      if (deps.length > 0) {
+        forward.set(filePath, deps);
+        for (const dep of deps) { if (!reverse.has(dep)) reverse.set(dep,[]); reverse.get(dep).push(filePath); }
+      }
+    }
+    return { forward, reverse };
+  }
+  function buildFromCwd(cwd, opts) {
+    const { srcDirs=['src','app','lib'], exclude=['node_modules','.git','dist','build'] } = opts||{};
+    const excludeSet = new Set(exclude);
+    function walkDir(dir,depth) {
+      if (depth>8) return [];
+      let entries; try { entries = fs.readdirSync(dir,{withFileTypes:true}); } catch(_) { return []; }
+      const out=[];
+      for (const e of entries) {
+        if (excludeSet.has(e.name)||e.name.startsWith('.')) continue;
+        const full = path.join(dir,e.name);
+        if (e.isDirectory()) out.push(...walkDir(full,depth+1));
+        else if (e.isFile()) {
+          const ext = path.extname(e.name).toLowerCase();
+          if (JS_EXTS.has(ext)||PY_EXTS.has(ext)||GO_EXTS.has(ext)||RS_EXTS.has(ext)||JVM_EXTS.has(ext)||RB_EXTS.has(ext)) out.push(full);
+        }
+      }
+      return out;
+    }
+    const files=[];
+    for (const sd of srcDirs) { const absDir=path.resolve(cwd,sd); if (fs.existsSync(absDir)) files.push(...walkDir(absDir,0)); }
+    for (const rootFile of ['gen-context.js','index.js','main.js','app.js']) {
+      const abs=path.resolve(cwd,rootFile); if (fs.existsSync(abs)) files.push(abs);
+    }
+    return build(files, cwd);
+  }
+  module.exports = { build, buildFromCwd, extractFileDeps };
+};
+
+// ── ./src/graph/impact ──
+__factories["./src/graph/impact"] = function(module, exports) {
+  'use strict';
+  const path = require('path');
+  const { buildFromCwd } = __require('./src/graph/builder');
+  const TEST_PATTERNS = [/[./\\](test|tests|spec|__tests__)[./\\]/,/\.(test|spec)\.[jt]sx?$/,/_test\.[jt]sx?$/,/_test\.py$/,/test_[^/\\]+\.py$/];
+  const ROUTE_PATTERNS = [/router?\.[jt]sx?$/i,/routes?\.[jt]sx?$/i,/controller\.[jt]sx?$/i,/views?\.[jt]sx?$/i,/handlers?\.[jt]sx?$/i];
+  function isTestFile(f) { return TEST_PATTERNS.some((re) => re.test(f.replace(/\\/g,'/'))); }
+  function isRouteFile(f) { return ROUTE_PATTERNS.some((re) => re.test(f.replace(/\\/g,'/'))); }
+  function bfs(startFile, reverseGraph, maxDepth) {
+    const direct=new Set(); const transitive=new Set(); const visited=new Set([startFile]);
+    const firstLevel = reverseGraph.get(startFile)||[];
+    for (const f of firstLevel) { if (!visited.has(f)) { direct.add(f); visited.add(f); } }
+    if (maxDepth===1) return {direct,transitive};
+    let frontier=[...direct]; let depth=1;
+    while (frontier.length>0 && (maxDepth===0||depth<maxDepth)) {
+      const nextFrontier=[];
+      for (const node of frontier) {
+        const importers=reverseGraph.get(node)||[];
+        for (const imp of importers) { if (!visited.has(imp)) { transitive.add(imp); visited.add(imp); nextFrontier.push(imp); } }
+      }
+      frontier=nextFrontier; depth++;
+    }
+    return {direct,transitive};
+  }
+  function getImpact(changedFile, graph, opts) {
+    const {depth=0,cwd=process.cwd()} = opts||{};
+    const absChanged = path.resolve(cwd,changedFile);
+    if (!graph||!graph.reverse) return {changed:changedFile,direct:[],transitive:[],tests:[],routes:[],totalImpact:0};
+    const {direct,transitive} = bfs(absChanged,graph.reverse,depth);
+    const allImpacted=[...direct,...transitive];
+    const tests=allImpacted.filter(isTestFile); const routes=allImpacted.filter(isRouteFile);
+    const toRel=(f)=>path.relative(cwd,f).replace(/\\/g,'/');
+    return {changed:toRel(absChanged),direct:[...direct].map(toRel),transitive:[...transitive].map(toRel),tests:tests.map(toRel),routes:routes.map(toRel),totalImpact:direct.size+transitive.size};
+  }
+  function analyzeImpact(changedFiles, cwd, opts) {
+    const {depth=3}=opts||{};
+    const files=Array.isArray(changedFiles)?changedFiles:[changedFiles];
+    let graph;
+    try { graph=buildFromCwd(cwd,opts); } catch(_) { graph={forward:new Map(),reverse:new Map()}; }
+    return files.map((f)=>({file:f,impact:getImpact(f,graph,{depth,cwd})}));
+  }
+  function formatImpact(result) {
+    const lines=[`## Impact: \`${result.changed}\``,``];
+    if (result.direct.length===0&&result.transitive.length===0) { lines.push('_No files import this file — zero blast radius._'); return lines.join('\n'); }
+    lines.push(`**Total impacted files:** ${result.totalImpact}`,``);
+    if (result.direct.length>0) { lines.push('### Direct importers'); for (const f of result.direct) lines.push(`- \`${f}\``); lines.push(''); }
+    if (result.transitive.length>0) { lines.push('### Transitive importers'); for (const f of result.transitive) lines.push(`- \`${f}\``); lines.push(''); }
+    if (result.tests.length>0) { lines.push('### Affected tests'); for (const f of result.tests) lines.push(`- \`${f}\``); lines.push(''); }
+    if (result.routes.length>0) { lines.push('### Affected routes / controllers'); for (const f of result.routes) lines.push(`- \`${f}\``); lines.push(''); }
+    return lines.join('\n');
+  }
+  function formatImpactJSON(result) {
+    return {changed:result.changed,direct:result.direct,transitive:result.transitive,tests:result.tests,routes:result.routes,totalImpact:result.totalImpact};
+  }
+  module.exports = { getImpact, analyzeImpact, formatImpact, formatImpactJSON };
+};
+
 // ── ./src/mcp/handlers ──
 __factories["./src/mcp/handlers"] = function(module, exports) {
   
@@ -2895,7 +3071,19 @@ __factories["./src/mcp/handlers"] = function(module, exports) {
     }
   }
   
-  module.exports = { readContext, searchSignatures, getMap, createCheckpoint, getRouting, explainFile, listModules, queryContext };
+  function getImpact(args, cwd) {
+    if (!args || !args.file) return 'Missing required argument: file';
+    try {
+      const { analyzeImpact, formatImpact } = __require('./src/graph/impact');
+      const depth = Math.max(0, parseInt(args.depth, 10) || 3);
+      const results = analyzeImpact(args.file, cwd, { depth });
+      return results.map((r) => formatImpact(r.impact)).join('\n\n---\n\n');
+    } catch (err) {
+      return `_get_impact failed: ${err.message}_`;
+    }
+  }
+
+  module.exports = { readContext, searchSignatures, getMap, createCheckpoint, getRouting, explainFile, listModules, queryContext, getImpact };
 };
 
 // ── ./src/mcp/server ──
@@ -2915,7 +3103,7 @@ __factories["./src/mcp/server"] = function(module, exports) {
   
   const readline = require('readline');
   const { TOOLS } = __require('./src/mcp/tools');
-  const { readContext, searchSignatures, getMap, createCheckpoint, getRouting, explainFile, listModules, queryContext } = __require('./src/mcp/handlers');
+  const { readContext, searchSignatures, getMap, createCheckpoint, getRouting, explainFile, listModules, queryContext, getImpact } = __require('./src/mcp/handlers');
   
   const SERVER_INFO = {
     name: 'sigmap',
@@ -2975,6 +3163,7 @@ __factories["./src/mcp/server"] = function(module, exports) {
         else if (name === 'explain_file') text = explainFile(args, cwd);
         else if (name === 'list_modules') text = listModules(args, cwd);
         else if (name === 'query_context') text = queryContext(args, cwd);
+        else if (name === 'get_impact') text = getImpact(args, cwd);
         else {
           respondError(id, -32601, `Unknown tool: ${name}`);
           return;
@@ -3176,6 +3365,30 @@ __factories["./src/mcp/tools"] = function(module, exports) {
           },
         },
         required: ['query'],
+      },
+    },
+    {
+      name: 'get_impact',
+      description:
+        'Show every file that is impacted when a given file changes — direct importers, ' +
+        'transitive importers, affected tests, and affected routes/controllers. ' +
+        'Gives agents instant blast-radius awareness before making a change. ' +
+        'Handles circular dependencies safely (no infinite loops).',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          file: {
+            type: 'string',
+            description:
+              'Relative path from the project root of the file that changed ' +
+              '(e.g. "src/extractors/python.js"). Use forward slashes.',
+          },
+          depth: {
+            type: 'number',
+            description: 'BFS traversal depth limit (default: 3). Use 0 for unlimited.',
+          },
+        },
+        required: ['file'],
       },
     },
   ];
@@ -5307,6 +5520,9 @@ Usage:
   node gen-context.js --query "<text>"                  Rank files by relevance to a query
   node gen-context.js --query "<text>" --json           Ranked results as JSON
   node gen-context.js --query "<text>" --top <n>        Limit results to top N files (default 10)
+  node gen-context.js --impact <file>                   Show every file impacted by changing <file>
+  node gen-context.js --impact <file> --json            Impact as JSON {changed, direct, transitive, tests, routes}
+  node gen-context.js --impact <file> --depth <n>       BFS depth limit (default 3, 0=unlimited)
   node gen-context.js --init                            Write example config + .contextignore scaffold
   node gen-context.js --help                            Show this message
   node gen-context.js --version                         Show version
@@ -5620,6 +5836,35 @@ function main() {
       }
     } catch (err) {
       console.error(`[sigmap] query error: ${err.message}`);
+      process.exit(1);
+    }
+    process.exit(0);
+  }
+
+  // ── --impact <file> ────────────────────────────────────────────────────────
+  if (args.includes('--impact')) {
+    try {
+      const impIdx = args.indexOf('--impact');
+      const targetFile = (args[impIdx + 1] || '').trim();
+      if (!targetFile || targetFile.startsWith('--')) {
+        console.error('[sigmap] --impact requires a file path');
+        console.error('  Example: node gen-context.js --impact src/extractors/python.js');
+        process.exit(1);
+      }
+      const { analyzeImpact, formatImpact, formatImpactJSON } = requireSourceOrBundled('./src/graph/impact');
+      const depthIdx = args.indexOf('--depth');
+      const depth = depthIdx >= 0 ? Math.max(0, parseInt(args[depthIdx + 1], 10) || 3) : ((config && config.impact && config.impact.depth) || 3);
+      const results = analyzeImpact(targetFile, cwd, { depth });
+      if (args.includes('--json')) {
+        const out = results.map((r) => formatImpactJSON(r.impact));
+        process.stdout.write(JSON.stringify(out.length === 1 ? out[0] : out) + '\n');
+      } else {
+        for (const r of results) {
+          process.stdout.write(formatImpact(r.impact) + '\n');
+        }
+      }
+    } catch (err) {
+      console.error(`[sigmap] impact error: ${err.message}`);
       process.exit(1);
     }
     process.exit(0);

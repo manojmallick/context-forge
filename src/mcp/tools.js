@@ -144,6 +144,30 @@ const TOOLS = [
       required: ['query'],
     },
   },
+  {
+    name: 'get_impact',
+    description:
+      'Show every file that is impacted when a given file changes — direct importers, ' +
+      'transitive importers, affected tests, and affected routes/controllers. ' +
+      'Gives agents instant blast-radius awareness before making a change. ' +
+      'Handles circular dependencies safely (no infinite loops).',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          description:
+            'Relative path from the project root of the file that changed ' +
+            '(e.g. "src/extractors/python.js"). Use forward slashes.',
+        },
+        depth: {
+          type: 'number',
+          description: 'BFS traversal depth limit (default: 3). Use 0 for unlimited.',
+        },
+      },
+      required: ['file'],
+    },
+  },
 ];
 
 module.exports = { TOOLS };

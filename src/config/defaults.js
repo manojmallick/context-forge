@@ -100,6 +100,14 @@ const DEFAULTS = {
     // Multiplier applied to recently-changed files (>1 boosts them up)
     recencyBoost: 1.5,
   },
+
+  // Impact layer settings (v2.5)
+  impact: {
+    // BFS traversal depth limit for --impact (0 = unlimited)
+    depth: 3,
+    // Include signatures of impacted files in --impact output
+    includeSigs: true,
+  },
 };
 
 module.exports = { DEFAULTS };

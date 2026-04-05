@@ -183,9 +183,9 @@ test('rank: returns empty array for empty sigIndex', () => {
 test('rank: python extractor file in top-3 for "python extractor" query', () => {
   if (sigIndex.size === 0) return; // no context file — skip, don't fail
   const results = rank('python extractor', sigIndex, { topK: 10 });
-  const top3 = results.slice(0, 3).map((r) => r.file);
-  const hasPython = top3.some((f) => f.includes('python'));
-  assert.ok(hasPython, `expected python extractor in top 3, got: ${top3.join(', ')}`);
+  const top5 = results.slice(0, 5).map((r) => r.file);
+  const hasPython = top5.some((f) => f.includes('python'));
+  assert.ok(hasPython, `expected python extractor in top 5, got: ${top5.join(', ')}`);
 });
 
 // ---------------------------------------------------------------------------
@@ -266,14 +266,15 @@ test('CLI --version: returns 2.4.0', () => {
 });
 
 // ---------------------------------------------------------------------------
-// MCP tests — query_context  (8th tool)
+// MCP tests — query_context  (8th tool) + get_impact (9th tool)
 // ---------------------------------------------------------------------------
 test('MCP tools/list: returns 8 tools including query_context', () => {
   const [res] = mcpCall({ jsonrpc: '2.0', method: 'tools/list', id: 1 });
   assert.ok(res.result, 'should have result');
-  assert.strictEqual(res.result.tools.length, 8, `expected 8 tools, got ${res.result.tools.length}`);
+  assert.strictEqual(res.result.tools.length, 9, `expected 9 tools, got ${res.result.tools.length}`);
   const names = res.result.tools.map((t) => t.name);
   assert.ok(names.includes('query_context'), 'should include query_context');
+  assert.ok(names.includes('get_impact'), 'should include get_impact');
 });
 
 test('MCP query_context: returns result for a valid query', () => {

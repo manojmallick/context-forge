@@ -457,4 +457,24 @@ function queryContext(args, cwd) {
   }
 }
 
-module.exports = { readContext, searchSignatures, getMap, createCheckpoint, getRouting, explainFile, listModules, queryContext };
+/**
+ * get_impact({ file, depth? }) → string
+ *
+ * Returns a formatted markdown impact report for the given file:
+ * direct importers, transitive importers, affected tests, affected routes.
+ */
+function getImpact(args, cwd) {
+  if (!args || !args.file) return 'Missing required argument: file';
+
+  try {
+    const { analyzeImpact, formatImpact } = require('../graph/impact');
+    const depth = Math.max(0, parseInt(args.depth, 10) || 3);
+    const results = analyzeImpact(args.file, cwd, { depth });
+    if (results.length === 0) return `No impact data for: ${args.file}`;
+    return results.map((r) => formatImpact(r.impact)).join('\n\n---\n\n');
+  } catch (err) {
+    return `_get_impact failed: ${err.message}_`;
+  }
+}
+
+module.exports = { readContext, searchSignatures, getMap, createCheckpoint, getRouting, explainFile, listModules, queryContext, getImpact };

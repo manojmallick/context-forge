@@ -78,7 +78,7 @@ function seedContextFile(dir) {
 }
 
 // ─────────────────────────────────────────────────────────────
-// Gate: tools/list now returns 8 tools including v2.3 query_context
+// Gate: tools/list now returns 9 tools including v2.5 get_impact
 // ─────────────────────────────────────────────────────────────
 
 console.log('\nMCP v1.4 — tools/list\n');
@@ -88,7 +88,7 @@ test('tools/list returns exactly 7 tools', () => {
     const [res] = mcpCall({ jsonrpc: '2.0', method: 'tools/list', id: 1 }, dir);
     assert.ok(res.result, 'Should have result');
     assert.ok(Array.isArray(res.result.tools), 'tools should be array');
-    assert.strictEqual(res.result.tools.length, 8, `Expected 8 tools, got ${res.result.tools.length}`);
+    assert.strictEqual(res.result.tools.length, 9, `Expected 9 tools, got ${res.result.tools.length}`);
     const names = res.result.tools.map((t) => t.name);
     assert.ok(names.includes('explain_file'), 'Should have explain_file');
     assert.ok(names.includes('list_modules'), 'Should have list_modules');
