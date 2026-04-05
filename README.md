@@ -447,6 +447,31 @@ node gen-context.js --format cache
 
 ---
 
+## 📦 Programmatic API (v2.4+)
+
+Use SigMap as a library — no CLI subprocess needed:
+
+```js
+const { extract, rank, buildSigIndex, scan, score } = require('sigmap');
+
+// Extract signatures from source code
+const sigs = extract('function hello() {}', 'javascript');
+
+// Build an index and rank files by query
+const index = buildSigIndex('/path/to/project');
+const results = rank('authentication middleware', index);
+
+// Scan signatures for secrets before storing
+const { safe, redacted } = scan(sigs, 'src/config.ts');
+
+// Get a composite health score for a project
+const health = score('/path/to/project');
+```
+
+📖 Full API reference: [packages/core/README.md](packages/core/README.md)
+
+---
+
 ## 🧪 Testing
 
 ```bash
@@ -492,6 +517,11 @@ sigmap/
 │
 ├── gen-context.js               ← PRIMARY ENTRY POINT — single file, zero deps
 ├── gen-project-map.js           ← import graph, class hierarchy, route table
+│
+├── packages/
+│   ├── core/                    ← programmatic API — require('sigmap') (v2.4)
+│   │   └── index.js             ← extract, rank, buildSigIndex, scan, score
+│   └── cli/                     ← thin CLI wrapper / v3 compat shim (v2.4)
 │
 ├── src/
 │   ├── extractors/              ← 21 language extractors (one file per language)

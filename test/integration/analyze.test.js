@@ -17,7 +17,7 @@
  * 11.  CLI --analyze --json produces valid JSON with correct keys
  * 12.  CLI --analyze --slow runs without throw
  * 13.  CLI --diagnose-extractors exits 0 and prints pass/fail counts
- * 14.  CLI --version returns 2.3.0
+ * 14.  CLI --version returns 2.4.0
  */
 
 const assert = require('assert');
@@ -224,16 +224,16 @@ test('CLI --diagnose-extractors: exits 0 and shows results', () => {
 });
 
 // ---------------------------------------------------------------------------
-// 14. CLI --version returns 2.3.0
+// 14. CLI --version returns 2.4.0
 // ---------------------------------------------------------------------------
-test('CLI --version: returns 2.3.0', () => {
+test('CLI --version: returns 2.4.0', () => {
   const r = spawnSync(process.execPath, [SCRIPT, '--version'], {
     cwd: ROOT,
     encoding: 'utf8',
     timeout: 10000,
   });
   assert.strictEqual(r.status, 0);
-  assert.ok(r.stdout.trim().includes('2.3.0'), `got: ${r.stdout.trim()}`);
+  assert.ok(r.stdout.trim().includes('2.4.0'), `got: ${r.stdout.trim()}`);
 });
 
 // ---------------------------------------------------------------------------

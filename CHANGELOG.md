@@ -6,6 +6,30 @@ Format: [Semantic Versioning](https://semver.org/)
 
 ---
 
+## [2.4.0] — 2026-04-05
+
+### Added
+- **`packages/core/`** — new `sigmap-core` package exposing a stable programmatic API: `{ extract, rank, buildSigIndex, scan, score }`. Third-party tools can now `require('sigmap')` and use all extraction/retrieval/security/health APIs without spawning a CLI process.
+- **`packages/cli/`** — new `sigmap-cli` thin wrapper that exposes `{ CLI_ENTRY, run }` for programmatic CLI invocation and forward-compat with the v3.0 adapter architecture.
+- **`packages/core/README.md`** — full programmatic API reference with usage examples for all five exported functions.
+- **`exports` field in `package.json`** — `require('sigmap')` resolves to `packages/core/index.js`; `require('sigmap/cli')` resolves to `packages/cli/index.js`.
+- **`test/integration/core-api.test.js`** — 15 integration tests covering: all exports present, `extract` for JS/TS/Python, file-path extension detection, unknown language returns `[]`, never throws on bad input, `rank` with empty map, `rank` sorted shape, `scan` clean/redact, `score` shape, `buildSigIndex` returns Map, CLI `--version` backward compat, CLI `--help` no crash.
+
+### Changed
+- `package.json` `"version"` bumped to `2.4.0`.
+- `package.json` `"files"` — added `"packages/"` so `sigmap-core` and `sigmap-cli` are published with the root package.
+- `gen-context.js` `VERSION` constant bumped to `2.4.0`.
+- `src/mcp/server.js` `SERVER_INFO.version` bumped to `2.4.0`.
+
+### Validation gate
+- 21/21 extractor unit tests passed
+- 21/21 integration suites passed (0 failures, including new `core-api.test.js`)
+- `node gen-context.js --version` → `2.4.0`
+- `node -e "const { extract } = require('.'); console.log(extract('function hello(){}', 'javascript').length > 0 ? 'OK' : 'FAIL')"` → `OK`
+- `require('sigmap')` works from any directory
+
+---
+
 ## [2.3.0] — 2026-04-07
 
 ### Added

@@ -22,7 +22,7 @@
  * 16.  CLI --query --json: valid JSON with correct keys
  * 17.  CLI --query --top 3: returns at most 3 results
  * 18.  CLI --query missing arg: exits 1 with usage message
- * 19.  CLI --version: returns 2.3.0
+ * 19.  CLI --version: returns 2.4.0
  * 20.  MCP tools/list: returns 8 tools including query_context
  * 21.  MCP query_context: returns result for a valid query
  * 22.  MCP query_context: returns error for missing query arg
@@ -259,10 +259,10 @@ test('CLI --query missing arg: exits 1 with usage message', () => {
   assert.ok(out.includes('--query'), 'should mention --query in error');
 });
 
-test('CLI --version: returns 2.3.0', () => {
+test('CLI --version: returns 2.4.0', () => {
   const res = run('--version');
   assert.strictEqual(res.status, 0);
-  assert.ok(res.stdout.trim().includes('2.3.0'), `expected 2.3.0, got: ${res.stdout.trim()}`);
+  assert.ok(res.stdout.trim().includes('2.4.0'), `expected 2.4.0, got: ${res.stdout.trim()}`);
 });
 
 // ---------------------------------------------------------------------------
