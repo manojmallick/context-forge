@@ -4,15 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Roadmap — SigMap</title>
-<meta name="description" content="SigMap shipped v0.1 through v2.7 — 97% token reduction, 340+ tests. Impact layer, query-aware retrieval, research-grade benchmarks, and ranking optimization complete. Full visual timeline from baseline to complete system.">
-<meta property="og:title" content="SigMap Roadmap — v0.1 to v2.7 complete · 97% token reduction">
+<meta name="description" content="SigMap shipped v0.1 through v2.8 — 97% token reduction, 340+ tests. Impact layer, query-aware retrieval, research-grade benchmarks, ranking optimization, and snippet retrieval complete. Full visual timeline from baseline to complete system.">
+<meta property="og:title" content="SigMap Roadmap — v0.1 to v2.8 complete · 97% token reduction">
 <meta property="og:description" content="21 versions shipped. 97% token reduction. 340 tests. MIT license. See how SigMap was built from first extractor to full enterprise system.">
 <meta property="og:url" content="https://manojmallick.github.io/sigmap/roadmap.html">
 <meta name="twitter:card" content="summary_large_image">
 <meta property="og:image" content="https://manojmallick.github.io/sigmap/sigmap-banner.png">
 <meta name="twitter:image" content="https://manojmallick.github.io/sigmap/sigmap-banner.png">
 <link rel="canonical" href="https://manojmallick.github.io/sigmap/roadmap.html">
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","headline":"SigMap roadmap — v0.1 to v2.7 complete","description":"22 versions shipped. 97% token reduction. 340+ tests. MIT license. Impact layer, query-aware retrieval, research-grade benchmarks, and ranking optimization shipped. See how SigMap was built from first extractor to full enterprise system.","url":"https://manojmallick.github.io/sigmap/roadmap.html","author":{"@type":"Person","name":"Manoj Mallick","url":"https://github.com/manojmallick"},"isPartOf":{"@type":"WebSite","name":"SigMap","url":"https://manojmallick.github.io/sigmap/"}}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","headline":"SigMap roadmap — v0.1 to v2.8 complete","description":"23 versions shipped. 97% token reduction. 340+ tests. MIT license. Impact layer, query-aware retrieval, research-grade benchmarks, ranking optimization, and snippet retrieval shipped. See how SigMap was built from first extractor to full enterprise system.","url":"https://manojmallick.github.io/sigmap/roadmap.html","author":{"@type":"Person","name":"Manoj Mallick","url":"https://github.com/manojmallick"},"isPartOf":{"@type":"WebSite","name":"SigMap","url":"https://manojmallick.github.io/sigmap/"}}</script>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=IBM+Plex+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <script>(function(){var r=document.documentElement;if(localStorage.getItem('cf-theme')==='light')r.classList.add('light');document.addEventListener('DOMContentLoaded',function(){document.querySelectorAll('.theme-toggle').forEach(function(b){b.addEventListener('click',function(){r.classList.toggle('light');localStorage.setItem('cf-theme',r.classList.contains('light')?'light':'dark');});});});})();</script>
 <style>
@@ -246,6 +246,11 @@ footer{background:var(--s1);border-top:1px solid var(--line);padding:32px 24px}
       <div class="tp-ver">v2.7</div>
       <div class="tp-bar-bg"><div class="tp-bar" style="width:0.5%;background:var(--p)"></div></div>
       <div class="tp-val" style="color:var(--pd)">+ranking optimization</div>
+    </div>
+    <div class="tp-row">
+      <div class="tp-ver">v2.8</div>
+      <div class="tp-bar-bg"><div class="tp-bar" style="width:0.5%;background:var(--p)"></div></div>
+      <div class="tp-val" style="color:var(--pd)">+snippet retrieval</div>
     </div>
   </div>
 </section>
@@ -841,6 +846,30 @@ footer{background:var(--s1);border-top:1px solid var(--line);padding:32px 24px}
       </div>
     </div>
 
+    <!-- v2.8 -->
+    <div id="v2.8" class="tl-item">
+      <div class="tl-rail">
+        <div class="tl-dot done">v2.8</div>
+      </div>
+      <div class="tl-content">
+        <div class="tl-header">
+          <span class="tl-version">v2.8</span>
+          <span class="tl-name">Hybrid Depth — Snippet Retrieval</span>
+          <span class="tl-badge done">✓ Complete</span>
+        </div>
+        <div class="tl-desc">Returns not just relevant files, but the exact code snippets within those files that match the query. Hybrid approach combining file-level and snippet-level retrieval. <code>--query --snippets</code> CLI flag returns top-k snippets with line numbers and smart context (2-3 lines before/after). MCP <code>query_context</code> tool enhanced with <code>snippets: true</code> option — response includes snippet text + line ranges. <code>src/retrieval/snippets.js</code> extracts relevant code blocks; hybrid scoring combines file score + snippet-local score. Performance <150ms for 1000-file repos.</div>
+        <div class="tl-tags">
+          <span class="tl-tag">snippet extraction</span>
+          <span class="tl-tag">hybrid scoring</span>
+          <span class="tl-tag">--query --snippets</span>
+          <span class="tl-tag">MCP enhancement</span>
+          <span class="tl-tag">smart context</span>
+          <span class="tl-tag">issue #21</span>
+        </div>
+        <div class="tl-impact">Precision boost — 10%+ improvement in precision@3 over full-file retrieval</div>
+      </div>
+    </div>
+
   </div>
 </section>
 
@@ -848,7 +877,7 @@ footer{background:var(--s1);border-top:1px solid var(--line);padding:32px 24px}
 
 <section class="section">
   <p class="section-ey">Final numbers</p>
-  <h2>v2.7.0 — Complete feature set</h2>
+  <h2>v2.8.0 — Complete feature set</h2>
 
   <div class="final-grid">
     <div class="final-stat">
@@ -877,7 +906,7 @@ footer{background:var(--s1);border-top:1px solid var(--line);padding:32px 24px}
 
 <footer>
   <div class="footer-inner">
-    <span class="footer-logo">sigmap v2.7.0 &middot; <span style="color:var(--gd)">Latest</span></span>
+    <span class="footer-logo">sigmap v2.8.0 &middot; <span style="color:var(--gd)">Latest</span></span>
     <div class="footer-links">
       <a href="quick-start.html">Quick start</a>
       <a href="cli.html">CLI reference</a>

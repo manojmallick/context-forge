@@ -6,7 +6,27 @@ Format: [Semantic Versioning](https://semver.org/)
 
 ---
 
-## [2.7.0] — upcoming · [#19](https://github.com/manojmallick/sigmap/issues/19) · branch: `feat/v2.7-ranking-optimization`
+## [2.8.0] — upcoming · [#21](https://github.com/manojmallick/sigmap/issues/21) · branch: `feat/v2.8-snippet-retrieval`
+
+### Planned additions
+- **Snippet extraction** — `src/retrieval/snippets.js`: extract relevant code blocks (functions, classes, methods) from ranked files
+- **Hybrid scoring** — combine file-level relevance with snippet-level relevance; snippets inherit file score + get their own local score
+- **`--query --snippets` CLI flag** — return top-k snippets (not full file sigs), with line numbers and context
+- **`query_context` MCP enhancement** — add `snippets: true` option; response includes snippet text + line ranges
+- **Smart context window** — include 2-3 lines before/after snippet for context
+- **Configuration** — `retrieval.snippets: { enabled: true, minLines: 3, maxSnippets: 5 }`
+- **`test/integration/snippets.test.js`** — 12 tests: snippet extraction, scoring, line number accuracy, context window
+
+### Go / No-go criteria
+- All tests green (21 extractor + all integration)
+- `--query "extract signatures" --snippets` returns 3-5 relevant snippets with correct line numbers
+- MCP `query_context` with `snippets: true` returns snippet text
+- Snippet relevance improves precision@3 by ≥10% over full-file retrieval
+- Performance: <150ms for 1000-file repos with snippets enabled
+
+---
+
+## [2.7.0] — 2026-04-05 · [#19](https://github.com/manojmallick/sigmap/issues/19)
 
 ### Planned additions
 - **Fine-tuned ranking weights** — optimize `exactToken`, `symbolMatch`, `prefixMatch`, `pathMatch`, and `recencyBoost` weights in `src/retrieval/ranker.js` based on benchmark-driven evaluation

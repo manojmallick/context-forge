@@ -110,17 +110,17 @@ AI agent session starts with full context
 
 ---
 
-## 🔭 What's next — v2.7 (in progress · [#19](https://github.com/manojmallick/sigmap/issues/19))
+## 🔭 What's next — v2.8 (in progress · [#21](https://github.com/manojmallick/sigmap/issues/21))
 
-### v2.7 — Ranking Optimization
+### v2.8 — Hybrid Depth: Snippet Retrieval
 
 | Feature | Description |
 |---|---|
-| **Fine-tuned ranking weights** | Optimize weights in `src/retrieval/ranker.js` for better precision based on benchmark evaluation |
-| **TF-IDF scoring** | Add term frequency-inverse document frequency scoring option for better semantic relevance |
-| **Weight presets** | `precision`, `balanced`, `recall` presets — configurable via `retrieval.preset` |
-| **Performance optimization** | <100ms query performance for 1000-file repos, optimized for large codebases (10K+ files) |
-| **Precision improvement** | Target ≥5% precision@5 improvement while maintaining hit@5 ≥ 0.80 |
+| **Snippet extraction** | Extract relevant code blocks (functions, classes, methods) from ranked files |
+| **Hybrid scoring** | Combine file-level + snippet-level relevance for precision |
+| **`--query --snippets`** | Return top-k snippets with line numbers and context (not full files) |
+| **MCP enhancement** | `query_context` with `snippets: true` returns snippet text + line ranges |
+| **Smart context** | Include 2-3 lines before/after each snippet for readability |
 
 ---
 | **`get_impact` MCP tool** | 9th MCP tool — `{ file, depth? }` → impacted files + signatures |
