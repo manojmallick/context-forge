@@ -25,15 +25,27 @@ Format: [Semantic Versioning](https://semver.org/)
 
 ---
 
-## [2.5.0] — upcoming · [#14](https://github.com/manojmallick/sigmap/issues/14) · branch: `feat/v2.5-impact-layer`
+## [2.5.0] — 2026-04-05
 
-### Planned additions
-- **`src/map/dep-graph.js`** — reverse-dependency graph built from the existing import-graph analysis. `getImpacted(filePath, graph)` walks the graph via BFS/DFS and returns every file that transitively imports the given file.
-- **`src/map/impact.js`** — `analyzeImpact(changedFiles, cwd)` → `{ changed, impacted, totalFiles }`. Aggregates dep-graph traversal with optional signature lookup.
-- **`--impact <file>` CLI flag** — prints all files impacted by changing `<file>`, with their signatures. Supports `--impact --json` (machine-readable) and `--impact --depth <n>` (BFS depth limit).
-- **`get_impact` MCP tool** (9th tool) — `{ file: string, depth?: number }` → list of impacted files + signatures, usable live in any MCP session.
-- **`impact` config key** — `{ depth: 0, includeSigs: true }` in `gen-context.config.json`.
-- **`test/integration/impact.test.js`** — 15 tests: direct deps, transitive deps, circular deps (no infinite loop), depth limit, unknown file returns `[]`, JSON output shape, MCP tool shape.
+### Added
+- **Impact analysis layer** — `src/graph/impact.js` provides dependency impact analysis: `getImpact(changedFile, graph)` → `{ changed, direct, transitive, tests, routes }`. Uses reverse dependency graph (BFS traversal) to find all files affected by a change.
+- **`--impact <file>` CLI flag** — prints all files impacted by changing `<file>`, with their signatures. Supports `--impact --json` (machine-readable output) and `--impact --depth <n>` (BFS depth limit).
+- **`get_impact` MCP tool** — 9th MCP tool; accepts `{ file: string, depth?: number }` and returns list of impacted files + signatures, usable live in any MCP session.
+- **Dependency graph builder** — `src/graph/builder.js` enhanced: `build(files, cwd)` now returns `{ forward, reverse }` maps; reverse map powers impact analysis.
+- **Impact config** — `config.impact.depth` (default: unlimited) and `config.impact.includeSigs` (default: true) added to `src/config/defaults.js`.
+- **`test/integration/impact.test.js`** — 20 integration tests: direct deps, transitive deps, circular dependency handling (no infinite loop), depth limit, unknown file returns empty, JSON output shape, MCP tool contract, formatImpact output.
+
+### Changed
+- `src/mcp/server.js` version bumped to `2.5.0`.
+- `src/mcp/tools.js` now includes `get_impact` tool definition (9th tool).
+- `test/integration/mcp-server.test.js` updated to assert 9 tools.
+
+### Validation gate
+- 21/21 extractor unit tests passed
+- 22/22 integration suites passed (0 failures, including new `impact.test.js`)
+- `--impact src/graph/impact.js` returns correct transitive dependencies
+- MCP `tools/list` returns 9 tools
+- No infinite loops on circular dependencies
 
 ---
 
