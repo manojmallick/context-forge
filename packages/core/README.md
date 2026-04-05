@@ -128,9 +128,13 @@ const health = score('/path/to/project');
 
 All existing CLI flags (`--generate`, `--watch`, `--mcp`, `--query`, `--analyze`, `--benchmark`, `--health`, …) are unchanged.
 
-## What's next — v2.5 Impact layer
+## What's next — v2.5-v2.6
 
-v2.5 adds `analyzeImpact(changedFiles, cwd)` to `packages/core` — given a list of changed files, it returns every file that transitively imports them. See [issue #14](https://github.com/manojmallick/sigmap/issues/14) and the [roadmap](https://manojmallick.github.io/sigmap/roadmap.html).
+v2.5 adds `analyzeImpact(changedFiles, cwd)` to `packages/core` — given a list of changed files, it returns every file that transitively imports them. See [issue #14](https://github.com/manojmallick/sigmap/issues/14).
+
+v2.6 adds benchmark and paper reporting capabilities — run evaluations against external repos and export metrics in LaTeX format for academic papers. See [issue #16](https://github.com/manojmallick/sigmap/issues/16).
+
+See the full [roadmap](https://manojmallick.github.io/sigmap/roadmap.html).
 
 ## Zero dependencies
 

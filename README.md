@@ -86,7 +86,9 @@ AI agent session starts with full context
 
 ---
 
-## 🔭 What's next — v2.5 (in progress · [#14](https://github.com/manojmallick/sigmap/issues/14))
+## 🔭 What's next — v2.5-v2.6 (in progress · [#14](https://github.com/manojmallick/sigmap/issues/14) · [#16](https://github.com/manojmallick/sigmap/issues/16))
+
+### v2.5 — Impact Layer
 
 | Feature | Description |
 |---|---|
@@ -95,6 +97,16 @@ AI agent session starts with full context
 | **`get_impact` MCP tool** | 9th MCP tool — `{ file, depth? }` → impacted files + signatures |
 | **`src/map/dep-graph.js`** | Reverse-dependency graph built from the import analysis; circular deps handled safely |
 | **15 new tests** | `impact.test.js` — direct deps, transitive deps, depth limit, JSON output |
+
+### v2.6 — Research Mode
+
+| Feature | Description |
+|---|---|
+| **`--benchmark --repo <path>`** | Run benchmarks against any external repository (express, flask, gin, spring-petclinic, rails) |
+| **`--report --paper`** | Generate paper-ready metrics: markdown + LaTeX tables for academic publishing |
+| **50 real eval tasks** | JSONL task file covering 5 real open-source repos — `benchmarks/tasks/retrieval-real.jsonl` |
+| **`src/eval/paper.js`** | Zero-dependency LaTeX table formatter for token reduction, hit@5, MRR, latency (p50/p95/p99) |
+| **8 new tests** | `paper.test.js` — report generation, LaTeX syntax validation, graceful failures |
 
 ## 🆕 What's new in 2.4
 

@@ -6,6 +6,25 @@ Format: [Semantic Versioning](https://semver.org/)
 
 ---
 
+## [2.6.0] — upcoming · [#16](https://github.com/manojmallick/sigmap/issues/16) · branch: `feat/v2.6-research-mode`
+
+### Planned additions
+- **`benchmarks/repos/`** — register 5 real open-source repos (express, flask, gin, spring-petclinic, rails) as git submodules or clone targets for evaluation
+- **`benchmarks/tasks/retrieval-real.jsonl`** — 50 real evaluation tasks across all 5 repos; structured JSONL format compatible with the v2.1 benchmark runner
+- **`--benchmark --repo <path>` CLI flag** — run benchmark against external repository; supports any git-cloned project
+- **`--report --paper` CLI flag** — generates `benchmarks/reports/paper-metrics.md`: token reduction table (baseline vs SigMap per repo), hit@5 and MRR per repo, latency table (p50, p95, p99 in ms), LaTeX-ready table block for copy-paste into academic papers
+- **`src/eval/paper.js`** — formats paper-ready markdown + LaTeX tables; zero dependencies
+- **`test/integration/paper.test.js`** — 8 tests: `--report --paper` creates the report file, report contains all required sections, LaTeX table block present and syntactically valid, `--benchmark --repo <missing>` fails gracefully
+
+### Go / No-go criteria
+- All tests green (21 extractor + all integration suites)
+- `--report --paper` generates a valid markdown file
+- LaTeX table block present in report
+- Overall hit@5 across all repos ≥ 0.75
+- `--benchmark --repo .` completes in < 30 s on SigMap repo
+
+---
+
 ## [2.5.0] — upcoming · [#14](https://github.com/manojmallick/sigmap/issues/14) · branch: `feat/v2.5-impact-layer`
 
 ### Planned additions
