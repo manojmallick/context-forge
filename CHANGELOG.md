@@ -6,7 +6,43 @@ Format: [Semantic Versioning](https://semver.org/)
 
 ---
 
-## [2.6.0] — upcoming · [#16](https://github.com/manojmallick/sigmap/issues/16) · branch: `feat/v2.6-research-mode`
+## [2.7.0] — upcoming · [#19](https://github.com/manojmallick/sigmap/issues/19) · branch: `feat/v2.7-ranking-optimization`
+
+### Planned additions
+- **Fine-tuned ranking weights** — optimize `exactToken`, `symbolMatch`, `prefixMatch`, `pathMatch`, and `recencyBoost` weights in `src/retrieval/ranker.js` based on benchmark-driven evaluation
+- **TF-IDF scoring option** — add TF-IDF (term frequency-inverse document frequency) as an alternative scoring method for better semantic relevance in large codebases
+- **Configurable weight presets** — `precision`, `balanced`, `recall` presets for different use cases; configurable via `retrieval.preset` in config
+- **`formatRankTable` and `formatRankJSON` improvements** — better output formatting for ranked results with score breakdown and relevance explanation
+- **Performance optimization** — optimize ranking algorithm for large codebases (10K+ files), target <100ms for --query on 1000-file repos
+- **Regression tests** — ensure hit@5 maintains ≥ 0.80 (no regression from v2.6)
+- **Precision improvement** — target precision@5 improvement of ≥ 5% over v2.6
+
+### Config additions
+```json
+{
+  "retrieval": {
+    "topK": 10,
+    "recencyBoost": 1.5,
+    "preset": "balanced",
+    "weights": {
+      "exactToken": 1.0,
+      "symbolMatch": 0.5,
+      "prefixMatch": 0.3,
+      "pathMatch": 0.8
+    }
+  }
+}
+```
+
+### Go / No-go criteria
+- All tests green (21 extractor + all integration suites)
+- Benchmark hit@5 ≥ 0.80 (no regression from v2.6)
+- Precision@5 improves by ≥ 5%
+- `--query` performance <100ms for 1000-file repos
+
+---
+
+## [2.6.0] — 2026-04-05 · [#16](https://github.com/manojmallick/sigmap/issues/16)
 
 ### Planned additions
 - **`benchmarks/repos/`** — register 5 real open-source repos (express, flask, gin, spring-petclinic, rails) as git submodules or clone targets for evaluation
