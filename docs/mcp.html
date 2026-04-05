@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>MCP Server Setup — SigMap</title>
-<meta name="description" content="Set up SigMap MCP server with Claude Code, Cursor, and Windsurf. 7 on-demand tools: read_context, search_signatures, get_map, explain_file, list_modules, create_checkpoint, get_routing.">
+<meta name="description" content="Set up SigMap MCP server with Claude Code, Cursor, and Windsurf. 8 on-demand tools: read_context, search_signatures, get_map, explain_file, list_modules, create_checkpoint, get_routing, query_context.">
 <meta property="og:title" content="SigMap MCP Server Setup — Claude Code, Cursor, Windsurf">
 <meta property="og:description" content="Configure SigMap's 7 MCP tools for Claude Code, Cursor, and Windsurf. Zero-dependency stdio server.">
 <meta property="og:url" content="https://manojmallick.github.io/sigmap/mcp.html">
@@ -179,7 +179,7 @@ code{font-family:'IBM Plex Mono',monospace;font-size:12px;background:var(--s3);p
 
 <div class="page-hero">
   <div class="hero-inner">
-    <div class="hero-badge"><span class="dot"></span>7 tools</div>
+    <div class="hero-badge"><span class="dot"></span>8 tools</div>
     <h1>MCP Server Setup</h1>
     <p class="hero-sub">Give Claude Code, Cursor, and Windsurf on-demand access to your codebase signatures. Zero npm install.</p>
   </div>
@@ -317,7 +317,7 @@ code{font-family:'IBM Plex Mono',monospace;font-size:12px;background:var(--s3);p
 
 <section class="section">
   <p class="section-ey">Reference</p>
-  <h2>7 available tools</h2>
+  <h2>8 available tools</h2>
   <p class="section-sub">All tools are available on-demand — your AI agent calls only what it needs, keeping token costs low.</p>
 
   <table class="tools-table">
@@ -372,6 +372,12 @@ code{font-family:'IBM Plex Mono',monospace;font-size:12px;background:var(--s3);p
         <td><span class="tc" style="font-size:11px">none</span></td>
         <td><span class="tool-example">get_routing()</span></td>
       </tr>
+      <tr>
+        <td><span class="tool-name">query_context</span></td>
+        <td>Ranks all files by relevance to a free-text query using TF-IDF scoring. Returns a scored table of the top-K files with matching signatures. New in v2.3.</td>
+        <td><span class="tool-arg">query</span> <span class="tc" style="font-size:11px">(required string)</span><br><span class="tool-arg">topK</span> <span class="tc" style="font-size:11px">(optional number, default 10)</span></td>
+        <td><span class="tool-example">query_context(query="authentication flow")</span></td>
+      </tr>
     </tbody>
   </table>
 </section>
@@ -424,7 +430,7 @@ code{font-family:'IBM Plex Mono',monospace;font-size:12px;background:var(--s3);p
 <section class="section">
   <p class="section-ey">Verification</p>
   <h2>Test the server</h2>
-  <p class="section-sub">Send a raw JSON-RPC request to confirm the server starts and returns all 7 tool definitions.</p>
+  <p class="section-sub">Send a raw JSON-RPC request to confirm the server starts and returns all 8 tool definitions.</p>
 
   <div class="terminal">
     <div class="term-bar">
@@ -447,8 +453,9 @@ code{font-family:'IBM Plex Mono',monospace;font-size:12px;background:var(--s3);p
       <div>      <span class="tc">{ </span><span class="tk">"name"</span><span class="tc">:</span> <span class="ts">"explain_file"</span> <span class="tc">},</span></div>
       <div>      <span class="tc">{ </span><span class="tk">"name"</span><span class="tc">:</span> <span class="ts">"list_modules"</span> <span class="tc">},</span></div>
       <div>      <span class="tc">{ </span><span class="tk">"name"</span><span class="tc">:</span> <span class="ts">"create_checkpoint"</span> <span class="tc">},</span></div>
-      <div>      <span class="tc">{ </span><span class="tk">"name"</span><span class="tc">:</span> <span class="ts">"get_routing"</span> <span class="tc">}</span></div>
-      <div>    <span class="tc">]</span>  <span class="ts">← 7 tools</span> <span class="tc">✓</span></div>
+      <div>      <span class="tc">{ </span><span class="tk">"name"</span><span class="tc">:</span> <span class="ts">"get_routing"</span> <span class="tc">},</span></div>
+      <div>      <span class="tc">{ </span><span class="tk">"name"</span><span class="tc">:</span> <span class="ts">"query_context"</span> <span class="tc">}</span></div>
+      <div>    <span class="tc">]</span>  <span class="ts">← 8 tools</span> <span class="tc">✓</span></div>
       <div>  <span class="tc">}</span></div>
       <div><span class="tc">}</span></div>
     </div>
@@ -505,7 +512,7 @@ code{font-family:'IBM Plex Mono',monospace;font-size:12px;background:var(--s3);p
 
 <footer>
   <div class="footer-inner">
-    <span class="footer-logo">sigmap v2.0.1</span>
+    <span class="footer-logo">sigmap v2.3.0</span>
     <div class="footer-links">
       <a href="quick-start.html">Quick start</a>
       <a href="cli.html">CLI reference</a>

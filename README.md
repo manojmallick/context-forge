@@ -11,7 +11,7 @@
 
 <!-- Status -->
 [![npm version](https://img.shields.io/npm/v/sigmap?color=7c6af7&label=latest&logo=npm)](https://www.npmjs.com/package/sigmap)
-[![Tests](https://img.shields.io/badge/tests-262%20passing-22c55e)](https://github.com/manojmallick/sigmap/tree/main/test)
+[![Tests](https://img.shields.io/badge/tests-325%20passing-22c55e)](https://github.com/manojmallick/sigmap/tree/main/test)
 [![Zero deps](https://img.shields.io/badge/dependencies-zero-22c55e)](package.json)
 [![Last commit](https://img.shields.io/github/last-commit/manojmallick/sigmap?color=7c6af7)](https://github.com/manojmallick/sigmap/commits/main)
 
@@ -41,7 +41,7 @@
 | [VS Code extension](#-vs-code-extension) | Status bar, stale alerts, commands |
 | [Languages supported](#-languages-supported) | 21 languages |
 | [Context strategies](#-context-strategies) | full / per-module / hot-cold |
-| [MCP server](#-mcp-server) | 7 on-demand tools |
+| [MCP server](#-mcp-server) | 8 on-demand tools |
 | [CLI reference](#-cli-reference) | All flags |
 | [Configuration](#-configuration) | Config file + .contextignore |
 | [Observability](#-observability) | Health score, reports, CI |
@@ -86,20 +86,18 @@ AI agent session starts with full context
 
 ---
 
-## 🆕 What's new in 2.0
+## 🆕 What's new in 2.3
 
 | Feature | Description |
 |---|---|
-| **Enriched signatures** | Return types, type hints, and schema field collapse (Python `@dataclass` / `BaseModel`) |
-| **Dependency map** | Compact import dependency section at the top of output (~50–100 extra tokens) |
-| **TODO/FIXME section** | Auto-harvested TODO/FIXME/HACK/XXX comments (max 20 entries) |
-| **Recent changes section** | Git-based recent changes summary in output |
-| **Test coverage markers** | Per-function `✓`/`✗` hints by scanning test directories |
-| **Structural diff mode** | `--diff <base-ref>` writes a signature-level diff section |
-| **Impact radius hints** | Reverse dependency annotations (used by: ...) |
-| **New helper extractors** | `deps.js`, `todos.js`, `coverage.js`, `prdiff.js` |
+| **`--query "<text>"` CLI** | Rank all context files by relevance to a free-text query — scored table + top-3 signature blocks |
+| **`--query --json`** | Machine-readable ranked results (`{ query, results[], totalResults }`) |
+| **`--query --top <n>`** | Limit results (default 10, configurable via `retrieval.topK`) |
+| **`query_context` MCP tool** | 8th MCP tool — `{ query, topK? }` returns ranked file list, usable live in any MCP session |
+| **`--analyze` / `--diagnose-extractors`** | Per-file breakdown of sigs/tokens/extractor/coverage; self-tests all 21 extractors (v2.2) |
+| **`--benchmark` / `--eval`** | Measure hit@5 and MRR retrieval quality against a JSONL task file (v2.1) |
 
-Several v2 enhancements (deps map, TODOs, recent changes) are enabled by default. All v2 sections can be tuned or disabled via `gen-context.config.json`.
+> **Previous v2.0 additions:** enriched signatures, dependency map, TODO/FIXME section, test coverage markers, structural diff mode, impact radius hints. See [CHANGELOG.md](CHANGELOG.md) for the full history.
 
 ---
 
@@ -258,7 +256,7 @@ Recently committed files are **hot** (auto-injected). Everything else is **cold*
 
 ## 🔌 MCP server
 
-> Introduced in v0.3, expanded to 7 tools through v1.4.
+> Introduced in v0.3, expanded to 8 tools through v2.3.
 
 Start the MCP server on stdio:
 
@@ -277,6 +275,7 @@ node gen-context.js --mcp
 | `list_modules` | — | Token-count table of all top-level module directories |
 | `create_checkpoint` | `{ summary: string }` | Write a session checkpoint to `.context/` |
 | `get_routing` | — | Full model routing table |
+| `query_context` | `{ query: string, topK?: number }` | Files ranked by relevance to the query (v2.3) |
 
 Reads files on every call — no stale state, no restart needed.
 
@@ -295,6 +294,19 @@ node gen-context.js --setup                   Generate + install git hook + star
 node gen-context.js --diff                    Generate context for git-changed files only
 node gen-context.js --diff --staged           Staged files only (pre-commit check)
 node gen-context.js --mcp                     Start MCP server on stdio
+
+node gen-context.js --query "<text>"          Rank files by relevance to a query
+node gen-context.js --query "<text>" --json   Ranked results as JSON
+node gen-context.js --query "<text>" --top <n> Limit results to top N files (default 10)
+
+node gen-context.js --analyze                 Per-file breakdown (sigs / tokens / extractor / coverage)
+node gen-context.js --analyze --json          Analysis as JSON
+node gen-context.js --analyze --slow          Include extraction timing per file
+node gen-context.js --diagnose-extractors     Self-test all 21 extractors against fixtures
+
+node gen-context.js --benchmark               Run retrieval quality benchmark (hit@5 / MRR)
+node gen-context.js --benchmark --json        Benchmark results as JSON
+node gen-context.js --eval                    Alias for --benchmark
 
 node gen-context.js --report                  Token reduction stats
 node gen-context.js --report --json           Structured JSON report (exits 1 if over budget)
@@ -464,7 +476,7 @@ grep "require(" gen-context.js | grep -v "^.*//.*require"
 
 # Gate 3 — MCP server responds correctly
 echo '{"jsonrpc":"2.0","method":"tools/list","id":1}' | node gen-context.js --mcp
-# Expected: valid JSON with 7 tools
+# Expected: valid JSON with 8 tools
 
 # Gate 4 — npm artifact is clean
 npm pack --dry-run
@@ -483,7 +495,9 @@ sigmap/
 │
 ├── src/
 │   ├── extractors/              ← 21 language extractors (one file per language)
-│   ├── mcp/                     ← MCP stdio server — 7 tools
+│   ├── retrieval/               ← query-aware ranker + tokenizer (v2.3)
+│   ├── eval/                    ← benchmark runner + scorer (v2.1), analyzer (v2.2)
+│   ├── mcp/                     ← MCP stdio server — 8 tools
 │   ├── security/                ← secret scanner — 10 patterns
 │   ├── routing/                 ← model routing hints
 │   ├── tracking/                ← NDJSON usage logger
@@ -499,7 +513,7 @@ sigmap/
 │   ├── fixtures/                ← one source file per language
 │   ├── expected/                ← expected extractor output
 │   ├── run.js                   ← zero-dep test runner
-│   └── integration/             ← 17 integration test files (241 tests)
+│   └── integration/             ← 20 integration test files (304 tests)
 │
 ├── docs/                        ← documentation site (GitHub Pages)
 │   ├── index.html               ← homepage

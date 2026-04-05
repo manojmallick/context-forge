@@ -163,7 +163,7 @@ footer{background:var(--s1);border-top:1px solid var(--line);padding:32px 24px}
 
 <div class="page-hero">
   <div class="hero-inner">
-    <div class="hero-badge"><span class="dot"></span>v2.0.1</div>
+    <div class="hero-badge"><span class="dot"></span>v2.3.0</div>
     <h1>CLI Reference</h1>
     <p class="hero-sub">Every flag, with examples. Run <code style="font-family:'IBM Plex Mono',monospace;font-size:15px;background:rgba(124,106,247,.12);padding:2px 8px;border-radius:5px;-webkit-text-fill-color:var(--pd)">sigmap --help</code> to see the full list.</p>
   </div>
@@ -185,7 +185,7 @@ footer{background:var(--s1);border-top:1px solid var(--line);padding:32px 24px}
       <span class="term-title">node gen-context.js --help</span>
     </div>
     <div class="term-body">
-      <div><span class="tp">SigMap v2.0.1</span></div>
+      <div><span class="tp">SigMap v2.3.0</span></div>
       <div>&nbsp;</div>
       <div><span class="tc">Usage:</span> <span class="tw">node gen-context.js [flag]</span></div>
       <div>&nbsp;</div>
@@ -195,6 +195,16 @@ footer{background:var(--s1);border-top:1px solid var(--line);padding:32px 24px}
       <div><span class="ts">  --diff                  </span><span class="tc">Context for git-changed files only</span></div>
       <div><span class="ts">  --diff --staged         </span><span class="tc">Context for staged files only (pre-commit)</span></div>
       <div><span class="ts">  --mcp                   </span><span class="tc">Start MCP server on stdio</span></div>
+      <div><span class="ts">  --query "&lt;text&gt;"        </span><span class="tc">Rank files by relevance to a query</span></div>
+      <div><span class="ts">  --query "&lt;text&gt;" --json </span><span class="tc">Ranked results as JSON</span></div>
+      <div><span class="ts">  --query "&lt;text&gt;" --top N</span><span class="tc">Limit to top N files (default 10)</span></div>
+      <div><span class="ts">  --analyze               </span><span class="tc">Per-file breakdown: sigs / tokens / extractor / coverage</span></div>
+      <div><span class="ts">  --analyze --json        </span><span class="tc">Analysis as JSON</span></div>
+      <div><span class="ts">  --analyze --slow        </span><span class="tc">Include extraction timing per file</span></div>
+      <div><span class="ts">  --diagnose-extractors   </span><span class="tc">Self-test all 21 extractors against fixtures</span></div>
+      <div><span class="ts">  --benchmark             </span><span class="tc">Run retrieval quality benchmark (hit@5 / MRR)</span></div>
+      <div><span class="ts">  --benchmark --json      </span><span class="tc">Benchmark results as JSON</span></div>
+      <div><span class="ts">  --eval                  </span><span class="tc">Alias for --benchmark</span></div>
       <div><span class="ts">  --report                </span><span class="tc">Token reduction stats</span></div>
       <div><span class="ts">  --report --json         </span><span class="tc">Token report as JSON (CI-compatible, exits 1 if over budget)</span></div>
       <div><span class="ts">  --report --history      </span><span class="tc">Historical usage trends</span></div>
@@ -524,6 +534,34 @@ footer{background:var(--s1);border-top:1px solid var(--line);padding:32px 24px}
     </div>
   </div>
 
+  <!-- --query -->
+  <div class="flag-section">
+    <h3>--query "&lt;text&gt;"</h3>
+    <p class="flag-desc">Ranks every file in the project by relevance to a free-text query using a zero-dependency TF-IDF approach. Prints a scored table of the top-K files, then the full signature blocks for the top 3. Add <code style="font-family:'IBM Plex Mono',monospace;font-size:12px;background:var(--s3);padding:2px 6px;border-radius:4px">--json</code> for machine-readable output or <code style="font-family:'IBM Plex Mono',monospace;font-size:12px;background:var(--s3);padding:2px 6px;border-radius:4px">--top N</code> to limit results. The MCP <code style="font-family:'IBM Plex Mono',monospace;font-size:12px;background:var(--s3);padding:2px 6px;border-radius:4px">query_context</code> tool exposes the same ranking live in any agent session.</p>
+    <div class="terminal">
+      <div class="term-bar">
+        <div class="term-dot" style="background:#ff5f57"></div>
+        <div class="term-dot" style="background:#febc2e"></div>
+        <div class="term-dot" style="background:#28c840"></div>
+        <span class="term-title">terminal</span>
+      </div>
+      <div class="term-body">
+        <div><span class="tc">$</span> <span class="tw">node gen-context.js --query "authentication middleware"</span></div>
+        <div>&nbsp;</div>
+        <div><span class="tp">Ranking 89 files for: "authentication middleware"</span></div>
+        <div>&nbsp;</div>
+        <div><span class="tc">Rank  Score   File</span></div>
+        <div><span class="ts">  1   0.94    src/middleware/auth.ts</span></div>
+        <div><span class="ts">  2   0.81    src/api/users.ts</span></div>
+        <div><span class="ts">  3   0.74    src/config/jwt.ts</span></div>
+        <div><span class="ts">  4   0.62    src/services/session.ts</span></div>
+        <div><span class="ts">  5   0.45    test/integration/auth.test.ts</span></div>
+        <div>&nbsp;</div>
+        <div><span class="tk">[sigmap]</span> <span class="ts">top 3 signature blocks ↓</span></div>
+      </div>
+    </div>
+  </div>
+
   <!-- --version -->
   <div class="flag-section">
     <h3>--version</h3>
@@ -537,7 +575,7 @@ footer{background:var(--s1);border-top:1px solid var(--line);padding:32px 24px}
       </div>
       <div class="term-body">
         <div><span class="tc">$</span> <span class="tw">node gen-context.js --version</span></div>
-        <div><span class="ts">sigmap/2.0.1</span></div>
+        <div><span class="ts">sigmap/2.3.0</span></div>
       </div>
     </div>
   </div>
@@ -571,7 +609,7 @@ footer{background:var(--s1);border-top:1px solid var(--line);padding:32px 24px}
 
 <footer>
   <div class="footer-inner">
-    <span class="footer-logo">sigmap v2.0.1</span>
+    <span class="footer-logo">sigmap v2.3.0</span>
     <div class="footer-links">
       <a href="quick-start.html">Quick start</a>
       <a href="cli.html">CLI reference</a>
