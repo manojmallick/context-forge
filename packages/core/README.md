@@ -1,6 +1,6 @@
 # sigmap-core
 
-Programmatic API for [SigMap](https://manojmallick.github.io/sigmap/) — zero-dependency code signature extraction, ranked retrieval, secret scanning, and project health scoring.
+Programmatic API for [SigMap](https://manojmallick.github.io/sigmap/) — zero-dependency code signature extraction, ranked retrieval, secret scanning, project health scoring, and multi-adapter output formatting (v3.0+).
 
 ## Installation
 
@@ -13,7 +13,7 @@ npm install sigmap        # installs the full package (CLI + core)
 ## Quick start
 
 ```js
-const { extract, rank, buildSigIndex, scan, score } = require('sigmap');
+const { extract, rank, buildSigIndex, scan, score, adapt } = require('sigmap');
 
 // 1. Extract signatures from any source file
 const sigs = extract('function hello() { return "world"; }', 'javascript');
@@ -128,9 +128,21 @@ const health = score('/path/to/project');
 
 All existing CLI flags (`--generate`, `--watch`, `--mcp`, `--query`, `--analyze`, `--benchmark`, `--health`, …) are unchanged.
 
-## What's next — v2.10
+## v3.0 — Multi-Adapter Architecture (released)
 
-v2.10 adds reporting charts and advanced metrics for benchmark visibility. This milestone focuses on chart-ready report output, precision@K/recall@K/MRR trends, and CI-friendly metrics artifacts. See [issue #25](https://github.com/manojmallick/sigmap/issues/25).
+v3.0 adds the `adapt()` function to `packages/core`, making the API **semver-stable**. Breaking changes now require v4.0.
+
+```js
+const { adapt } = require('sigmap');
+
+// Format context as an OpenAI system prompt
+const systemPrompt = adapt(context, 'openai', { version: '3.0.0' });
+
+// Format context as a Gemini system instruction
+const geminiInstruction = adapt(context, 'gemini');
+
+// All 6 adapters: copilot | claude | cursor | windsurf | openai | gemini
+```
 
 See the full [roadmap](https://manojmallick.github.io/sigmap/roadmap.html).
 

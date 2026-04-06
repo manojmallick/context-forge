@@ -6,7 +6,29 @@ Format: [Semantic Versioning](https://semver.org/)
 
 ---
 
-## [2.10.0] — upcoming · [#25](https://github.com/manojmallick/sigmap/issues/25) · branch: `feat/v2.10-reporting-charts-advanced-metrics`
+## [3.0.0] — 2026-04-06 — Platform: Multi-Adapter Architecture
+
+### Added
+- **Multi-adapter platform** — `packages/adapters/` with 6 output adapters: `copilot`, `claude`, `cursor`, `windsurf`, `openai`, `gemini`
+- **`--adapter <name>` CLI flag** — generate output for a specific adapter only (e.g. `node gen-context.js --adapter openai`)
+- **`adapt()` in packages/core** — programmatic API: `const { adapt } = require('sigmap'); adapt(context, 'openai')`
+- **New config key `adapters`** — replaces `outputs`; old `outputs` key is silently mapped for full backward compatibility
+- **OpenAI adapter** — formats context as an OpenAI system prompt, writes `.github/openai-context.md`
+- **Gemini adapter** — formats context as a Gemini system instruction, writes `.github/gemini-context.md`
+- **API stability guarantee** — `packages/core` API is now semver-stable; breaking changes require v4.0
+- **20 new integration tests** in `test/integration/adapters.test.js`
+
+### Changed
+- `packages/core/index.js` — adds `adapt()` export alongside existing `extract`, `rank`, `scan`, `score`, `buildSigIndex`
+- `writeOutputs()` in `gen-context.js` — now routes `openai`, `gemini` through adapter pipeline
+
+### Backward compat
+- `outputs: ["copilot","claude"]` config still works — automatically mirrored to `adapters`
+- All existing CLI flags unchanged
+
+---
+
+## [2.10.0] — 2026-04-06 · [#25](https://github.com/manojmallick/sigmap/issues/25)
 
 ### Planned additions
 - **Report charts** — add chart-ready output for token reduction, signatures per file, and budget utilization trends.

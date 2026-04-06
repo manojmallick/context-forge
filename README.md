@@ -123,20 +123,38 @@ AI agent session starts with full context
 | **Evaluation dashboard output** | Generate shareable HTML/JSON benchmark summaries from CLI runs |
 | **CI-friendly metrics export** | Persist machine-readable metrics for release gates and regression tracking |
 | **Release quality gates** | Add pass/fail thresholds for hit@5 and precision before publish |
+## 🔌 v3.0 — Platform: Multi-Adapter Architecture
 
----
-| **`get_impact` MCP tool** | 9th MCP tool — `{ file, depth? }` → impacted files + signatures |
-| **`src/map/dep-graph.js`** | Reverse-dependency graph built from the import analysis; circular deps handled safely |
-| **15 new tests** | `impact.test.js` — direct deps, transitive deps, depth limit, JSON output |
-
----
-
-## 🚀 Quick start
-
-**No install required — just Node.js 18+.**
+SigMap is now an **adapter platform**. Any AI assistant — Copilot, Claude, Cursor, Windsurf, OpenAI, or Gemini — plugs in through a standard interface.
 
 ```bash
-# 1. Copy gen-context.js into your project root
+# Generate for a specific AI assistant
+node gen-context.js --adapter copilot    # → .github/copilot-instructions.md
+node gen-context.js --adapter openai     # → .github/openai-context.md
+node gen-context.js --adapter gemini     # → .github/gemini-context.md
+node gen-context.js --adapter claude     # → CLAUDE.md (append)
+```
+
+```js
+// Programmatic API — fully semver-stable from v3.0
+const { adapt } = require('sigmap');
+const systemPrompt = adapt(context, 'openai', { version: '3.0.0' });
+```
+
+| Adapter | Output file | AI assistant |
+|---|---|---|
+| `copilot` | `.github/copilot-instructions.md` | GitHub Copilot |
+| `claude` | `CLAUDE.md` (append) | Claude / Claude Code |
+| `cursor` | `.cursorrules` | Cursor |
+| `windsurf` | `.windsurfrules` | Windsurf |
+| `openai` | `.github/openai-context.md` | Any OpenAI model |
+| `gemini` | `.github/gemini-context.md` | Google Gemini |
+
+**Backward compat:** existing `outputs` config key silently maps to `adapters` — no migration needed.
+
+See full roadmap: [manojmallick.github.io/sigmap/roadmap.html](https://manojmallick.github.io/sigmap/roadmap.html)
+
+---
 curl -O https://raw.githubusercontent.com/manojmallick/sigmap/main/gen-context.js
 
 # 2. Generate your context file

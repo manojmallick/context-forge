@@ -50,6 +50,13 @@ function loadConfig(cwd) {
       merged[key] = val;
     }
   }
+  // Backward compat (v3.0+): mirror outputs ↔ adapters
+  if (merged.adapters && !Array.isArray(merged.adapters)) merged.adapters = null;
+  if (!merged.adapters && Array.isArray(merged.outputs)) {
+    merged.adapters = merged.outputs.slice();
+  } else if (Array.isArray(merged.adapters) && !userConfig.outputs) {
+    merged.outputs = merged.adapters.filter((a) => ['copilot','claude','cursor','windsurf'].includes(a));
+  }
   return merged;
 }
 

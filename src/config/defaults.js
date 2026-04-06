@@ -11,6 +11,10 @@ const DEFAULTS = {
   // Output targets: 'copilot' | 'claude' | 'cursor' | 'windsurf'
   outputs: ['copilot'],
 
+  // Adapter targets (v3.0+): replaces 'outputs'. Same names, adds 'openai' | 'gemini'.
+  // Old 'outputs' config key is still accepted and silently maps to 'adapters'.
+  adapters: null,
+
   // Directories to scan (relative to project root)
   srcDirs: [
     'src', 'app', 'lib', 'packages', 'services', 'api',

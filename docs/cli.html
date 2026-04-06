@@ -185,7 +185,7 @@ footer{background:var(--s1);border-top:1px solid var(--line);padding:32px 24px}
       <span class="term-title">node gen-context.js --help</span>
     </div>
     <div class="term-body">
-      <div><span class="tp">SigMap v2.10.0</span></div>
+      <div><span class="tp">SigMap v3.0.0</span></div>
       <div>&nbsp;</div>
       <div><span class="tc">Usage:</span> <span class="tw">node gen-context.js [flag]</span></div>
       <div>&nbsp;</div>
@@ -205,6 +205,8 @@ footer{background:var(--s1);border-top:1px solid var(--line);padding:32px 24px}
       <div><span class="ts">  --benchmark             </span><span class="tc">Run retrieval quality benchmark (hit@5 / MRR)</span></div>
       <div><span class="ts">  --benchmark --json      </span><span class="tc">Benchmark results as JSON</span></div>
       <div><span class="ts">  --eval                  </span><span class="tc">Alias for --benchmark</span></div>
+      <div><span class="ts">  --adapter &lt;name&gt;        </span><span class="tc">Generate for one adapter: copilot|claude|cursor|windsurf|openai|gemini (v3.0+)</span></div>
+      <div><span class="ts">  --adapter &lt;name&gt; --json </span><span class="tc">Show adapter output path as JSON</span></div>
       <div><span class="ts">  --report                </span><span class="tc">Token reduction stats</span></div>
       <div><span class="ts">  --report --json         </span><span class="tc">Token report as JSON (CI-compatible, exits 1 if over budget)</span></div>
       <div><span class="ts">  --report --history      </span><span class="tc">Historical usage trends</span></div>
@@ -609,7 +611,7 @@ footer{background:var(--s1);border-top:1px solid var(--line);padding:32px 24px}
 
 <footer>
   <div class="footer-inner">
-    <span class="footer-logo">sigmap v2.10.0</span>
+    <span class="footer-logo">sigmap v3.0.0</span>
     <div class="footer-links">
       <a href="quick-start.html">Quick start</a>
       <a href="cli.html">CLI reference</a>
