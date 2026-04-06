@@ -199,6 +199,33 @@ function score(cwd) {
 }
 
 // ---------------------------------------------------------------------------
+// adapt(context, adapterName, opts?) → string   (v3.0+)
+// ---------------------------------------------------------------------------
+/**
+ * Format a context string using the named output adapter.
+ *
+ * @param {string} context     - Raw signature context string
+ * @param {string} adapterName - One of: 'copilot'|'claude'|'cursor'|'windsurf'|'openai'|'gemini'
+ * @param {object} [opts]      - Passed through to adapter.format()
+ * @returns {string} Formatted output string (empty string if adapter not found)
+ *
+ * @example
+ *   const { adapt } = require('sigmap');
+ *   const systemPrompt = adapt(context, 'openai', { version: '3.0.0' });
+ *
+ *   const copilotMd = adapt(context, 'copilot');
+ */
+function adapt(context, adapterName, opts = {}) {
+  try {
+    const adaptersPath = path.resolve(__dirname, '..', 'adapters', 'index.js');
+    const { adapt: _adapt } = require(adaptersPath);
+    return _adapt(context, adapterName, opts);
+  } catch (_) {
+    return '';
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Exports
 // ---------------------------------------------------------------------------
 module.exports = {
@@ -212,4 +239,6 @@ module.exports = {
   scan,
   /** Compute project health score */
   score,
+  /** Format context using a named output adapter (v3.0+) */
+  adapt,
 };
