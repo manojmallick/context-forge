@@ -3,3 +3,6 @@
 {"id":"flask-t003","query":"blueprint register endpoints url prefix","expected_files":["src/flask/blueprints.py","src/flask/sansio/blueprints.py"]}
 {"id":"flask-t004","query":"session interface cookie signing open save","expected_files":["src/flask/sessions.py"]}
 {"id":"flask-t005","query":"render template Jinja2 template_rendered signal","expected_files":["src/flask/templating.py","src/flask/signals.py"]}
+{"id":"flask-h001","query":"keep user data across browser visits with a signed cookie","expected_files":["src/flask/sessions.py"],"split":"hard"}
+{"id":"flask-h002","query":"modular pieces of an application registered under a url prefix","expected_files":["src/flask/blueprints.py"],"split":"hard"}
+{"id":"flask-h003","query":"current request object accessible anywhere during handling","expected_files":["src/flask/ctx.py","src/flask/globals.py"],"split":"hard"}

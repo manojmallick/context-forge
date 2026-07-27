@@ -3,3 +3,6 @@
 {"id":"fastify-t003","query":"reply send status headers serialization","expected_files":["lib/reply.js"]}
 {"id":"fastify-t004","query":"hook lifecycle onRequest preHandler onResponse","expected_files":["lib/hooks.js"]}
 {"id":"fastify-t005","query":"custom content type parser and body parsing","expected_files":["lib/content-type-parser.js"]}
+{"id":"fastify-h001","query":"lifecycle callbacks that run around each incoming call","expected_files":["lib/hooks.js"],"split":"hard"}
+{"id":"fastify-h002","query":"what happens when no registered path matches the url","expected_files":["lib/four-oh-four.js"],"split":"hard"}
+{"id":"fastify-h003","query":"turn request body text into an object by mime","expected_files":["lib/content-type-parser.js"],"split":"hard"}

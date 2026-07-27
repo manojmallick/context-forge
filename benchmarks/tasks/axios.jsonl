@@ -3,3 +3,6 @@
 {"id":"axios-t003","query":"merge config defaults baseURL headers","expected_files":["lib/core/mergeConfig.js","lib/defaults/index.js"]}
 {"id":"axios-t004","query":"HTTP adapter fetch XHR send request","expected_files":["lib/adapters/http.js","lib/adapters/xhr.js"]}
 {"id":"axios-t005","query":"build URL params serialization query string","expected_files":["lib/helpers/buildURL.js","lib/core/buildFullPath.js"]}
+{"id":"axios-h001","query":"run custom logic before sending and after receiving","expected_files":["lib/core/InterceptorManager.js","lib/core/dispatchRequest.js"],"split":"hard"}
+{"id":"axios-h002","query":"combine per call options with instance defaults","expected_files":["lib/core/mergeConfig.js"],"split":"hard"}
+{"id":"axios-h003","query":"decide fulfilled or rejected based on status code","expected_files":["lib/core/settle.js"],"split":"hard"}

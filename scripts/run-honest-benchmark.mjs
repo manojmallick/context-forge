@@ -45,6 +45,7 @@ const JSON_OUT = process.argv.includes('--json');
 const runner = require(path.join(ROOT, 'src', 'eval', 'runner.js'));
 const scorer = require(path.join(ROOT, 'src', 'eval', 'scorer.js'));
 const { STOP } = require(path.join(ROOT, 'src', 'retrieval', 'bm25.js'));
+const { sizeBucket } = require(path.join(ROOT, 'src', 'eval', 'corpus.js'));
 
 // Dirs a grep agent never scans (ripgrep skips VCS + honors .gitignore).
 const SKIP_DIRS = new Set([
@@ -89,12 +90,16 @@ function countOccurrences(haystack, needle) {
 
 /**
  * Scan a repo once and rank files for every task's term set.
- * @returns {Map<string, string[]>} task id → top-10 relative file paths
+ * @returns {{ ranked: Map<string, string[]>, filesScanned: number }}
+ *   ranked: task id → top-10 relative file paths; filesScanned: repo size
+ *   basis for the A3 bucket (files the scan visited — NOT the budget-capped
+ *   context index, which measures maxTokens rather than the repo).
  */
 function grepRank(repoPath, tasks) {
   const perTask = new Map(tasks.map((t) => [t.id, new Map()])); // id → file → {cover, occ}
   const termSets = tasks.map((t) => ({ id: t.id, terms: terms(t.query) }));
   const ignored = gitignoreDirs(repoPath);
+  let filesScanned = 0;
 
   const walk = (dir) => {
     let entries;
@@ -108,6 +113,7 @@ function grepRank(repoPath, tasks) {
         continue;
       }
       if (!e.isFile()) continue;
+      filesScanned++;
       let buf;
       try {
         if (fs.statSync(full).size > MAX_FILE_BYTES) continue;
@@ -138,7 +144,7 @@ function grepRank(repoPath, tasks) {
       .slice(0, 10)
       .map(([file]) => file));
   }
-  return ranked;
+  return { ranked, filesScanned };
 }
 
 function loadTasks(file) {
@@ -152,6 +158,19 @@ const skipped = [];
 let nTasks = 0;
 const totals = { sigHit: 0, grepHit: 0, sigMrr: 0, grepMrr: 0 };
 
+// A3: per-split (easy/hard) and per-repo-size-bucket accumulators.
+const newAcc = () => ({ n: 0, sigHit: 0, grepHit: 0, sigMrr: 0, grepMrr: 0 });
+const splits = { easy: newAcc(), hard: newAcc() };
+const buckets = { small: newAcc(), medium: newAcc(), large: newAcc() };
+const accAdd = (acc, sigH, grepH, sigRr, grepRr) => {
+  acc.n++; acc.sigHit += sigH; acc.grepHit += grepH; acc.sigMrr += sigRr; acc.grepMrr += grepRr;
+};
+const accSummary = (acc) => (acc.n === 0 ? null : {
+  tasks: acc.n,
+  sigmap: { hitAt5: round(acc.sigHit / acc.n), mrr: round(acc.sigMrr / acc.n) },
+  grepBaseline: { hitAt5: round(acc.grepHit / acc.n), mrr: round(acc.grepMrr / acc.n) },
+});
+
 for (const f of taskFiles) {
   const name = f.replace('.jsonl', '');
   const repoPath = name === 'retrieval' ? ROOT : path.join(REPOS_DIR, name);
@@ -164,24 +183,33 @@ for (const f of taskFiles) {
   }
 
   const tasks = loadTasks(path.join(TASKS_DIR, f));
-  const grepRanked = grepRank(repoPath, tasks);
+  const { ranked: grepRanked, filesScanned } = grepRank(repoPath, tasks);
 
+  const bucket = sizeBucket(filesScanned);
   const row = { repo: name, tasks: tasks.length, sigHit: 0, grepHit: 0 };
   for (const t of tasks) {
     const expected = t.expected_files || [];
+    const split = t.split === 'hard' ? 'hard' : 'easy';
     const sig = runner.rank(t.query, sigIndex, 10).map((r) => r.file);
     const grep = grepRanked.get(t.id) || [];
-    row.sigHit += scorer.hitAtK(sig, expected, 5);
-    row.grepHit += scorer.hitAtK(grep, expected, 5);
-    totals.sigHit += scorer.hitAtK(sig, expected, 5) ? 1 : 0;
-    totals.grepHit += scorer.hitAtK(grep, expected, 5) ? 1 : 0;
-    totals.sigMrr += scorer.reciprocalRank(sig, expected);
-    totals.grepMrr += scorer.reciprocalRank(grep, expected);
+    const sigH = scorer.hitAtK(sig, expected, 5);
+    const grepH = scorer.hitAtK(grep, expected, 5);
+    const sigRr = scorer.reciprocalRank(sig, expected);
+    const grepRr = scorer.reciprocalRank(grep, expected);
+    row.sigHit += sigH;
+    row.grepHit += grepH;
+    totals.sigHit += sigH ? 1 : 0;
+    totals.grepHit += grepH ? 1 : 0;
+    totals.sigMrr += sigRr;
+    totals.grepMrr += grepRr;
+    accAdd(splits[split], sigH, grepH, sigRr, grepRr);
+    accAdd(buckets[bucket], sigH, grepH, sigRr, grepRr);
     nTasks++;
   }
   perRepo.push({
     repo: name,
     tasks: tasks.length,
+    bucket,
     sigmapHitAt5: round(row.sigHit / tasks.length),
     grepHitAt5: round(row.grepHit / tasks.length),
   });
@@ -210,6 +238,12 @@ const report = {
     grepBaseline: { hitAt5: round(grepHitAt5), mrr: round(totals.grepMrr / nTasks) },
     lift: round(grepHitAt5 > 0 ? sigHitAt5 / grepHitAt5 : 0, 2),
     deltaPts: round((sigHitAt5 - grepHitAt5) * 100, 1),
+    splits: { easy: accSummary(splits.easy), hard: accSummary(splits.hard) },
+    buckets: {
+      small: accSummary(buckets.small),
+      medium: accSummary(buckets.medium),
+      large: accSummary(buckets.large),
+    },
   },
   repos: perRepo,
   skipped,
@@ -228,6 +262,13 @@ if (JSON_OUT) {
   console.log(`\n  SigMap        hit@5 ${(s.sigmap.hitAt5 * 100).toFixed(1)}%   MRR ${s.sigmap.mrr.toFixed(3)}`);
   console.log(`  grep baseline hit@5 ${(s.grepBaseline.hitAt5 * 100).toFixed(1)}%   MRR ${s.grepBaseline.mrr.toFixed(3)}`);
   console.log(`  honest lift   ${s.lift}×  (+${s.deltaPts}pt over ${s.tasks} tasks, ${s.repos} repos)`);
+  const line = (label, a) => a && console.log(
+    `  ${label.padEnd(13)} hit@5 ${(a.sigmap.hitAt5 * 100).toFixed(1)}%  MRR ${a.sigmap.mrr.toFixed(3)}  vs grep ${(a.grepBaseline.hitAt5 * 100).toFixed(1)}%  (${a.tasks} tasks)`);
+  line('split easy', s.splits.easy);
+  line('split hard', s.splits.hard);
+  line('repos small', s.buckets.small);
+  line('repos medium', s.buckets.medium);
+  line('repos large', s.buckets.large);
   for (const sk of skipped) console.log(`  [skipped] ${sk.repo}: ${sk.reason}`);
 }
 
