@@ -1,13 +1,13 @@
 ---
 title: Retrieval benchmark
-description: Latest saved retrieval benchmark for SigMap v8.21.0. 85.6% hit@5 vs 42.7% single-shot grep baseline (2.00× honest lift) across 90 tasks on 18 repos, with R language support.
+description: Latest saved retrieval benchmark for SigMap v8.22.0. 82.2% hit@5 vs 44.8% single-shot grep baseline (1.59× honest lift) across 105 tasks on 18 repos, with R language support.
 head:
   - - meta
     - property: og:title
-      content: "SigMap retrieval benchmark — 85.6% hit@5"
+      content: "SigMap retrieval benchmark — 82.2% hit@5"
   - - meta
     - property: og:description
-      content: "Latest saved run: 85.6% hit@5 vs 42.7% single-shot grep baseline, 2.00x honest lift, 90 tasks, 18 repos."
+      content: "Latest saved run: 82.2% hit@5 vs 44.8% single-shot grep baseline, 1.59x honest lift, 105 tasks, 18 repos."
   - - meta
     - property: og:url
       content: "https://sigmap.io/guide/retrieval-benchmark"
@@ -15,23 +15,23 @@ head:
 
 # Retrieval benchmark
 
-::: info Official v8.21.0 benchmark snapshot
-**Benchmark ID:** sigmap-v8.21-main &nbsp;·&nbsp; **Date:** 2026-07-19 (with R language)
+::: info Official v8.22.0 benchmark snapshot
+**Benchmark ID:** sigmap-v8.22-main &nbsp;·&nbsp; **Date:** 2026-07-27 (with R language)
 
 | Metric | Value |
 |---|---:|
-| Hit@5 | **86%** vs 42.7% single-shot grep baseline |
+| Hit@5 | **82%** vs 44.8% single-shot grep baseline |
 | Graph-boosted hit@5 | **88%** |
-| Honest lift (vs grep agent) | **2.00×** |
-| Prompt reduction | **48%** (2.84 → 1.48) |
-| Task success proxy | **66.7%** |
+| Honest lift (vs grep agent) | **1.59×** |
+| Prompt reduction | **46.1%** (2.84 → 1.53) |
+| Task success proxy | **64.8%** |
 | Overall token reduction | **96.8%** |
 | GPT-4o overflow (without → with) | **16/21 → 0/21** |
 :::
 
-Latest saved run: **2026-07-19 (v8.21.0)**
+Latest saved run: **2026-07-27 (v8.22.0)**
 
-**Result:** SigMap finds the right file in the top 5 far more often than chance — **85.6% hit@5** vs **13.6%** random baseline across 90 tasks on 18 real repos.
+**Result:** SigMap finds the right file in the top 5 far more often than chance — **82.2% hit@5** vs **13.6%** random baseline across 105 tasks on 18 real repos.
 
 ## Why this benchmark matters
 
@@ -47,21 +47,45 @@ This benchmark isolates that first question: *did the right file appear in conte
 
 | Metric | Without SigMap | With SigMap |
 |---|:---:|:---:|
-| Average hit@5 (grep-agent baseline) | 42.7% | **85.6%** |
-| Graph-boosted hit@5 | — | **85.6%** |
-| Honest lift (vs single-shot grep, `benchmark:honest`) | — | **2.00x** |
+| Average hit@5 (grep-agent baseline) | 44.8% | **82.2%** |
+| Graph-boosted hit@5 | — | **82.2%** |
+| Honest lift (vs single-shot grep, `benchmark:honest`) | — | **1.59x** |
 | Random-selection hit@5 (data only, no longer quoted) | 13.6% | — |
-| Correct (rank 1) | ~1% | **66.7%** |
-| Partial (ranks 2–5) | ~13% | **18.9%** |
-| Wrong (not in top 5) | ~86% | **14.4%** |
+| Correct (rank 1) | ~1% | **64.8%** |
+| Partial (ranks 2–5) | ~13% | **17.1%** |
+| Wrong (not in top 5) | ~86% | **18.1%** |
 
 ## Quality tiers from the saved run
 
 | Tier | Tasks | Share |
 |---|---:|---:|
-| Correct | 60 / 90 | **66.7%** |
-| Partial | 17 / 90 | **18.9%** |
-| Wrong | 13 / 90 | **14.4%** |
+| Correct | 68 / 105 | **64.8%** |
+| Partial | 18 / 105 | **17.1%** |
+| Wrong | 19 / 105 | **18.1%** |
+
+## Hard split and size buckets (new in v8.22)
+
+Most benchmark queries share tokens with the filenames they expect (`absl Time
+Duration TimeZone` → `absl/time/time.h`) — so a high hit@5 partly measures
+filename matching. v8.22 adds a **no-leakage hard split**: a task may be
+labeled `"split": "hard"` only if its BM25-tokenized query shares **no stemmed
+token** with its expected files' basenames. `scripts/validate-task-corpus.mjs`
+enforces this in CI (it also measured that **90 of 110 pre-existing easy tasks
+leak**). `benchmark:honest` reports both splits, plus per-repo-size buckets
+(<200 / ≤1000 / >1000 files scanned on disk):
+
+| Slice | Tasks | SigMap hit@5 | Grep baseline |
+|---|---:|:---:|:---:|
+| Easy split | 110 | **76.4%** | 43.6% |
+| **Hard split** | 15 | **33.3%** | **53.3%** |
+| Small repos | 13 | 84.6% | 69.2% |
+| Medium repos | 52 | 44.2% | 46.2% |
+| Large repos | 60 | 91.7% | 38.3% |
+
+The hard split is published deliberately: with filename leakage removed, the
+single-shot grep baseline currently **beats** SigMap. That is the measured
+vocabulary-mismatch ceiling — the number repo-mined query expansion (planned
+for v9.0) exists to move. When it moves, this table is the proof.
 
 ## Per-repo results
 

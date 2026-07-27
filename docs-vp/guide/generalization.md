@@ -1,10 +1,10 @@
 ---
 title: Generalization — SigMap across languages, domains & repo sizes
-description: SigMap generalizes across 21 repos, 33 languages, and multiple domains with 85.6% hit@5 in the latest saved v8.21.0 retrieval run.
+description: SigMap generalizes across 21 repos, 33 languages, and multiple domains with 82.2% hit@5 in the latest saved v8.22.0 retrieval run.
 head:
   - - meta
     - property: og:title
-      content: "SigMap Generalization — 85.6% hit@5 across 33 languages with R support"
+      content: "SigMap Generalization — 82.2% hit@5 across 33 languages with R support"
   - - meta
     - property: og:description
       content: "SigMap's latest public snapshot spans 18 repos, 13 languages, and 9 domains without per-repo tuning."
@@ -19,15 +19,15 @@ head:
 SigMap was not tuned for one repo. This benchmark matters because it shows the same workflow transfers across different languages, repo sizes, and architectures without manual tuning.
 :::
 
-::: info Official v8.21.0 benchmark snapshot
-**Benchmark ID:** sigmap-v8.21-main &nbsp;·&nbsp; **Date:** 2026-07-19 (with R language)
+::: info Official v8.22.0 benchmark snapshot
+**Benchmark ID:** sigmap-v8.22-main &nbsp;·&nbsp; **Date:** 2026-07-27 (with R language)
 
 | Metric | Value |
 |---|---:|
-| Hit@5 | **86%** vs 42.7% single-shot grep baseline |
-| Honest lift (vs grep agent) | **2.00×** |
-| Prompt reduction | **48%** (2.84 → 1.48) |
-| Task success proxy | **66.7%** |
+| Hit@5 | **82%** vs 44.8% single-shot grep baseline |
+| Honest lift (vs grep agent) | **1.59×** |
+| Prompt reduction | **46.1%** (2.84 → 1.53) |
+| Task success proxy | **64.8%** |
 | Overall token reduction | **96.8%** |
 | GPT-4o overflow (without → with) | **16/21 → 0/21** |
 :::
@@ -37,13 +37,13 @@ The important part of SigMap's benchmark story is not just the topline score. It
 ::: info What "generalization" means here
 SigMap's signature extractors are hand-written regex patterns, not ML models. Generalization
 means: *do the patterns hold up on codebases the authors never inspected?* The answer across
-these 90 tasks is yes — 85.6% hit@5 with no per-repo tuning in the latest saved v8.21.0 run.
+these 105 tasks is yes — 82.2% hit@5 with no per-repo tuning in the latest saved v8.22.0 run.
 :::
 
 - **21 repos** (including 3 R language repos)
 - **33 languages** (added R and GDScript)
 - **multiple domains**
-- **85.6%** overall hit@5
+- **82.2%** overall hit@5
 - **no per-repo tuning**
 
 That snapshot is shared with the [retrieval benchmark](/guide/retrieval-benchmark) and the [task benchmark](/guide/task-benchmark), so the public docs now use one release number set instead of mixing older runs.
@@ -67,7 +67,7 @@ SigMap uses hand-written extractors and lightweight ranking rather than a hosted
 
 ## Practical takeaway
 
-If you want one number to carry into launch messaging, use the shared `v8.21.0` snapshot rather than an older per-page variant:
+If you want one number to carry into launch messaging, use the shared `v8.22.0` snapshot rather than an older per-page variant:
 
 | Domain | Repos | Hit@5 | Example repo |
 |---|---|---|---|

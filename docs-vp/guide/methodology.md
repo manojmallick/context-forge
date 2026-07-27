@@ -21,7 +21,7 @@ This page explains what we measure, how we measure it, and why we chose these me
 
 SigMap is evaluated on **90 real-world coding tasks** across **18 open-source repositories** spanning **8 programming languages**. The benchmark answers: "Does SigMap help developers finish coding tasks with fewer retries?"
 
-## Test set: 90 tasks across 18 repos
+## Test set: 105 tasks across 18 repos
 
 The benchmark includes 5 tasks per repository, distributed across multiple languages and project types:
 
@@ -62,9 +62,9 @@ Example tasks:
 
 **Metric:** Hit@5 — the right file appears in the top 5 ranked results
 
-**Baseline:** Single-shot grep agent = 42.7% hit@5 — whole-repo term scan ranked by coverage then occurrences (`npm run benchmark:honest`). The old random-selection figure (~13.6%) remains in the reports as data but is no longer the quoted comparison.
+**Baseline:** Single-shot grep agent = 44.8% hit@5 — whole-repo term scan ranked by coverage then occurrences (`npm run benchmark:honest`). The old random-selection figure (~13.6%) remains in the reports as data but is no longer the quoted comparison.
 
-**SigMap score:** 85.6% — a measured 2.00× honest lift over the grep baseline
+**SigMap score:** 82.2% — a measured 1.59× honest lift over the grep baseline
 
 ### 2. Task success proxy (correct rank)
 
@@ -78,7 +78,7 @@ Example tasks:
 - **Wrong** (not in top 5) — likely multiple retries
 
 **SigMap breakdown:**
-- Correct: 66.7% of tasks
+- Correct: 64.8% of tasks
 - Partial: 26.7% of tasks
 - Wrong: 21.1% of tasks
 
@@ -90,7 +90,7 @@ Example tasks:
 
 **Metric:** Average prompts per task
 - **Without SigMap:** 2.84 prompts/task (cold start, no context)
-- **With SigMap:** 1.48 prompts/task
+- **With SigMap:** 1.53 prompts/task
 - **Reduction:** 41.0%
 
 ### 4. Token reduction
@@ -121,7 +121,7 @@ Example tasks:
 
 All benchmarks are reproducible:
 
-- **Task set:** 90 tasks committed in `benchmarks/tasks/`
+- **Task set:** 105 tasks committed in `benchmarks/tasks/`
 - **Repositories:** 18 open-source projects cloned from GitHub
 - **Scripts:** Benchmark runners in `scripts/run-*.mjs`
 - **Raw data:** Available in [Zenodo archive](https://zenodo.org/records/19898842)

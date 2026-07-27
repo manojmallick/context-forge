@@ -7,7 +7,7 @@ head:
       content: "SigMap Roadmap — version history and upcoming features"
   - - meta
     - property: og:description
-      content: "92 versions shipped. See what changed in each release and what is coming next."
+      content: "93 versions shipped. See what changed in each release and what is coming next."
   - - meta
     - property: og:url
       content: "https://sigmap.io/guide/roadmap"
@@ -20,7 +20,7 @@ head:
 ---
 # Roadmap
 
-Ninety-two versions shipped. MIT open source from day one.
+Ninety-three versions shipped. MIT open source from day one.
 
 **Stats:** 96.8% overall token reduction · 85.6% retrieval hit@5 (2.00× measured lift vs single-shot grep) · 98.0% test-discovery F1 · installed-library grounding (JS/TS + Python) · method-level call-graph (JS/TS, Python, Java, Go, Rust) · 20 MCP tools · 33 languages · 17-language source resolver · 0 npm deps
 
@@ -828,6 +828,16 @@ Two milestones in one release. **`verify-ai-output` Reliable MVP** (#232) grows 
 
 ---
 
+### v8.22.0 — Hard Corpus: no-leakage split, leakage gate, size buckets ✓ (2026-07-28)
+
+**Minor release — the benchmark corpus stops grading itself on filename matching.** (1) **A3 leakage criterion:** new `src/eval/corpus.js` — a task *leaks* when its BM25-tokenized query shares a stemmed token with the tokenized basenames of its expected files; the criterion reuses the production tokenizer, so `payments` leaks against `payment.js` and camelCase basenames split exactly as the ranker sees them. `scripts/validate-task-corpus.mjs` is the CI gate: exit 1 if any `split: "hard"` task leaks (easy-split leakage is reported as info — it measured **90 of 110 pre-existing tasks leaking**). (2) **Hard split:** task JSONL carries an optional `split` field (`easy` default); 15 hand-authored, leak-free hard tasks land across express, flask, axios, fastify, and gin. (3) **Size buckets:** `benchmark:honest` now reports hit@5/MRR per split *and* per repo-size bucket (small <200 / medium ≤1000 / large >1000 files **scanned on disk** — deliberately not the budget-capped context index, which measures `maxTokens` rather than the repo). The result is the honest number the split exists to expose: **hard-split hit@5 33.3% vs the grep baseline's 53.3%** — with leakage removed, grep currently wins, which is the measured vocabulary-mismatch ceiling that repo-mined query expansion (B2, v9.0) is scheduled to attack. Also ships the MiniMax LLM-ablation provider (`MINIMAX_API_KEY`, OpenAI-compatible, default MiniMax-M3) — thanks **@octo-patch** (PR #504).
+
+**Tags:** `corpus.js` · `queryLeakage` · `validateTasks` · `sizeBucket` · `validate-task-corpus.mjs` · `split: hard` · `benchmark:honest splits/buckets` · `minimax ablation provider` · `#505` · `PR #506` · `PR #504`
+
+**Impact:** the corpus's leakage rate is now measured (90/110 easy tasks) and gated for hard tasks; the semantic-retrieval gap has a hard number (33.3% vs 53.3%); 8 new integration tests (128 files); zero new dependencies.
+
+---
+
 ### v8.21.0 — Semantic Bridge II: Go/Rust/Java doc hints, centrality blend ✓ (2026-07-19)
 
 **Minor release — the doc-comment bridge reaches three more languages, and the import graph gains a principled ranking prior.** (1) **B1b:** `buildDocHints` lands in the Go extractor (godoc `//` blocks above top-level `func`/`type`, compiler directives `//go:`/`nolint` skipped), the Rust extractor (`///` blocks above `pub fn`/`struct`/`enum`/`trait` and impl methods, `#[attr]` lines between doc and declaration tolerated), and the Java extractor (Javadoc on type declarations *and* public/protected members; tag-only blocks produce no hint) — first prose sentence, 60-char cap, `  # <hint>` after the anchor, byte-format identical to the Python/JS/TS hints. Hints are mined from the original source since `extract()` strips comments before matching. (2) **B3:** new `src/graph/centrality.js` — zero-dependency power iteration over the forward import graph (damping 0.85, 20 iterations, deterministic), max-normalized; `rank()` blends `0.3 × centrality` onto **positively-scored files only** as a tie-breaker (`signals.centrality`), gated by the new opt-in `retrieval.centralityBlend` and wired like `callGraphBoost` (MCP `query_context` + CLI `ask`/`--query`, non-fatal). The `benchmark:centrality-blend` A/B measured **both arms at 77.8% hit@5 (+0 tasks)** over 90 tasks / 18 repos — non-regressing but neutral on the lexical corpus, so the flag ships **off** per the measure gate; the v8.22 hard-split corpus is the next chance to show a real delta.
@@ -1478,7 +1488,7 @@ Alongside it: the **token budget now keeps full signatures** (#240) — when con
 
 ---
 
-## Current milestone — Phase 2 "buy the A+" 🚧 NEXT — Phase 1 grounding banked (G1/D8/G2); the §3.5 in-boundary backlog D1–D9 is complete (v8.12) and method-level blast-radius scoring shipped (GR2, v8.13) and the call-graph now covers Java/Go/Rust (GR1, v8.14) with the ranking boost measured and shipped dark (v8.15). Evidence Pack schema v2 shipped (v8.16). Retrieval surface-enrichment shipped measure-gated (v8.18) — every Phase-2 quality-ceiling row is now done or gate-closed. Honest Numbers shipped (v8.19): the published lift is now measured vs a grep-agent baseline, with claim-hygiene guards. Semantic Bridge I shipped (v8.20): JS/TS doc hints (Python-parity, −0.9pt on the lexical corpus, default-on per the anchors precedent) + `sigmap memory`. Semantic Bridge II shipped (v8.21): Go/Rust/Java doc hints (6 hint languages total) + the import-graph centrality blend (measured +0 → shipped dark behind `retrieval.centralityBlend`). Next: the v8.22 hard-split corpus (A3) to measure the semantic upside the hints exist for, then pull-based v10 items only (enterprise, IDE plugins — built if users ask) and the no-code growth lane
+## Current milestone — Phase 2 "buy the A+" 🚧 NEXT — Phase 1 grounding banked (G1/D8/G2); the §3.5 in-boundary backlog D1–D9 is complete (v8.12) and method-level blast-radius scoring shipped (GR2, v8.13) and the call-graph now covers Java/Go/Rust (GR1, v8.14) with the ranking boost measured and shipped dark (v8.15). Evidence Pack schema v2 shipped (v8.16). Retrieval surface-enrichment shipped measure-gated (v8.18) — every Phase-2 quality-ceiling row is now done or gate-closed. Honest Numbers shipped (v8.19): the published lift is now measured vs a grep-agent baseline, with claim-hygiene guards. Semantic Bridge I shipped (v8.20): JS/TS doc hints (Python-parity, −0.9pt on the lexical corpus, default-on per the anchors precedent) + `sigmap memory`. Semantic Bridge II shipped (v8.21): Go/Rust/Java doc hints (6 hint languages total) + the import-graph centrality blend (measured +0 → shipped dark behind `retrieval.centralityBlend`). Hard Corpus shipped (v8.22): the no-leakage hard split + leakage gate measured the vocabulary-mismatch ceiling directly (hard-split 33.3% vs grep 53.3% — grep wins when filename leakage is removed). Next: v8.23 "Agent Economy" (budget ledger, sigmap tune, skills install) per the improvement plan, with B2 repo-mined expansion (v9.0) aimed at the measured hard-split gap; pull-based v10 items only (enterprise, IDE plugins — built if users ask) and the no-code growth lane
 
 **v8.0 "Evidence Pack & the Pivot" ✓ COMPLETE** — E1 Evidence Pack in v7.26.0, D3 +2 MCP tools (15→17) in v7.27.0, E3 `doctor` in v7.28.0, E4 `mcp install` in v7.29.0, and **v7.30.0** the repositioning pivot: every public surface now states *"the deterministic, verifiable grounding layer for AI code work"* (token reduction demoted to proof) plus **agent recipes** framing Claude Code, Cursor, Cline, Continue, Aider, OpenHands, and Codex CLI as consumers. The v8.0 exit gate is met: a cold user reaches a useful answer in <5 min, an agent consumes the Evidence Pack JSON with zero copy-paste, and no public surface still calls SigMap a "compression tool".
 

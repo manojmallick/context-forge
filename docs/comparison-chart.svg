@@ -5,7 +5,7 @@
 
   <!-- Title -->
   <text x="350" y="26" text-anchor="middle" font-size="13" font-weight="700" fill="#1a1523">Without SigMap vs With SigMap — 3 RAG quality metrics</text>
-  <text x="350" y="42" text-anchor="middle" font-size="11" fill="#9ca3af">90 tasks · 18 real repos · no LLM API</text>
+  <text x="350" y="42" text-anchor="middle" font-size="11" fill="#9ca3af">105 tasks · 18 real repos · no LLM API</text>
 
   <!-- Legend -->
   <rect x="195" y="50" width="12" height="12" fill="#ef4444" rx="2"/>
@@ -23,20 +23,20 @@
   <!-- Without row -->
   <text x="105" y="103" text-anchor="end" font-size="11" fill="#9ca3af">Without</text>
   <rect x="112" y="90" width="462" height="20" fill="#fee2e2" rx="4"/>
-  <!-- 42.7% of 462 = 197 (single-shot grep baseline) -->
-  <rect x="112" y="90" width="197" height="20" fill="#ef4444" rx="4"/>
-  <text x="315" y="104" font-size="11" font-weight="600" fill="#ef4444">42.7%</text>
+  <!-- 44.8% of 462 = 207 (single-shot grep baseline) -->
+  <rect x="112" y="90" width="207" height="20" fill="#ef4444" rx="4"/>
+  <text x="315" y="104" font-size="11" font-weight="600" fill="#ef4444">44.8%</text>
 
   <!-- With row -->
   <text x="105" y="126" text-anchor="end" font-size="11" fill="#7c6af7">SigMap</text>
   <rect x="112" y="113" width="462" height="20" fill="#ede9fe" rx="4"/>
-  <!-- 85.6% of 462 = 395 -->
-  <rect x="112" y="113" width="395" height="20" fill="#7c6af7" rx="4"/>
-  <text x="466" y="127" text-anchor="end" font-size="11" font-weight="700" fill="#fff">85.6%</text>
+  <!-- 82.2% of 462 = 380 -->
+  <rect x="112" y="113" width="380" height="20" fill="#7c6af7" rx="4"/>
+  <text x="466" y="127" text-anchor="end" font-size="11" font-weight="700" fill="#fff">82.2%</text>
 
   <!-- Badge -->
   <rect x="588" y="95" width="94" height="32" fill="#7c6af7" rx="6"/>
-  <text x="635" y="108" text-anchor="middle" font-size="11" font-weight="700" fill="#fff">+2.00× lift</text>
+  <text x="635" y="108" text-anchor="middle" font-size="11" font-weight="700" fill="#fff">+1.59× lift</text>
   <text x="635" y="121" text-anchor="middle" font-size="9" fill="#ded9ff">vs grep agent</text>
 
   <!-- ═══════════════════════════════════════════ -->
@@ -53,13 +53,13 @@
   <!-- With row -->
   <text x="105" y="196" text-anchor="end" font-size="11" fill="#22c55e">SigMap</text>
   <rect x="112" y="183" width="462" height="20" fill="#dcfce7" rx="4"/>
-  <!-- 66.7% of 462 = 308 -->
-  <rect x="112" y="183" width="308" height="20" fill="#22c55e" rx="4"/>
-  <text x="419" y="197" text-anchor="end" font-size="11" font-weight="700" fill="#fff">66.7% (proxy)</text>
+  <!-- 64.8% of 462 = 299 -->
+  <rect x="112" y="183" width="299" height="20" fill="#22c55e" rx="4"/>
+  <text x="419" y="197" text-anchor="end" font-size="11" font-weight="700" fill="#fff">64.8% (proxy)</text>
 
   <!-- Badge -->
   <rect x="588" y="165" width="94" height="32" fill="#22c55e" rx="6"/>
-  <text x="635" y="178" text-anchor="middle" font-size="11" font-weight="700" fill="#fff">×6.8 better</text>
+  <text x="635" y="178" text-anchor="middle" font-size="11" font-weight="700" fill="#fff">×6.5 better</text>
   <text x="635" y="191" text-anchor="middle" font-size="9" fill="#bbf7d0">correctness</text>
 
   <!-- ═══════════════════════════════════════════ -->

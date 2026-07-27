@@ -1,18 +1,18 @@
 {
-  "generated": "2026-07-19T13:50:28.698Z",
+  "generated": "2026-07-27T22:46:48.940Z",
   "repos": [
     {
       "repo": "express",
       "fileCount": 6,
       "sigCount": 6,
-      "tasks": 5,
+      "tasks": 8,
       "hitAt5": 1,
-      "mrr": 0.8,
+      "mrr": 0.781,
       "randomBaseline": 0.833,
       "improvement": 1.2,
       "tiers": {
-        "correct": 3,
-        "partial": 2,
+        "correct": 5,
+        "partial": 3,
         "wrong": 0
       },
       "taskDetails": [
@@ -67,6 +67,37 @@
           "top1": "lib/application.js",
           "firstHitRank": 1,
           "tier": "correct"
+        },
+        {
+          "id": "express-h001",
+          "query": "why does my middleware chain stop when a handler throws",
+          "expected": [
+            "lib/application.js"
+          ],
+          "top1": "lib/application.js",
+          "firstHitRank": 1,
+          "tier": "correct"
+        },
+        {
+          "id": "express-h002",
+          "query": "where are template engines registered and pages rendered",
+          "expected": [
+            "lib/view.js",
+            "lib/application.js"
+          ],
+          "top1": "lib/application.js",
+          "firstHitRank": 1,
+          "tier": "correct"
+        },
+        {
+          "id": "express-h003",
+          "query": "how does the framework decide which content type the client accepts",
+          "expected": [
+            "lib/request.js"
+          ],
+          "top1": "lib/utils.js",
+          "firstHitRank": 4,
+          "tier": "partial"
         }
       ]
     },
@@ -74,15 +105,15 @@
       "repo": "flask",
       "fileCount": 19,
       "sigCount": 20,
-      "tasks": 5,
-      "hitAt5": 1,
-      "mrr": 1,
+      "tasks": 8,
+      "hitAt5": 0.875,
+      "mrr": 0.893,
       "randomBaseline": 0.263,
-      "improvement": 3.8,
+      "improvement": 3.3,
       "tiers": {
-        "correct": 5,
+        "correct": 7,
         "partial": 0,
-        "wrong": 0
+        "wrong": 1
       },
       "taskDetails": [
         {
@@ -138,6 +169,37 @@
           "top1": "src/flask/templating.py",
           "firstHitRank": 1,
           "tier": "correct"
+        },
+        {
+          "id": "flask-h001",
+          "query": "keep user data across browser visits with a signed cookie",
+          "expected": [
+            "src/flask/sessions.py"
+          ],
+          "top1": "src/flask/sessions.py",
+          "firstHitRank": 1,
+          "tier": "correct"
+        },
+        {
+          "id": "flask-h002",
+          "query": "modular pieces of an application registered under a url prefix",
+          "expected": [
+            "src/flask/blueprints.py"
+          ],
+          "top1": "src/flask/sansio/scaffold.py",
+          "firstHitRank": 7,
+          "tier": "wrong"
+        },
+        {
+          "id": "flask-h003",
+          "query": "current request object accessible anywhere during handling",
+          "expected": [
+            "src/flask/ctx.py",
+            "src/flask/globals.py"
+          ],
+          "top1": "src/flask/ctx.py",
+          "firstHitRank": 1,
+          "tier": "correct"
         }
       ]
     },
@@ -145,13 +207,13 @@
       "repo": "gin",
       "fileCount": 107,
       "sigCount": 78,
-      "tasks": 5,
+      "tasks": 8,
       "hitAt5": 1,
-      "mrr": 0.75,
+      "mrr": 0.844,
       "randomBaseline": 0.047,
       "improvement": 21.4,
       "tiers": {
-        "correct": 3,
+        "correct": 6,
         "partial": 2,
         "wrong": 0
       },
@@ -209,6 +271,36 @@
             "logger.go"
           ],
           "top1": "recovery.go",
+          "firstHitRank": 1,
+          "tier": "correct"
+        },
+        {
+          "id": "gin-h001",
+          "query": "match incoming url path segments with wildcards efficiently",
+          "expected": [
+            "tree.go"
+          ],
+          "top1": "tree.go",
+          "firstHitRank": 1,
+          "tier": "correct"
+        },
+        {
+          "id": "gin-h002",
+          "query": "shared prefix grouping of endpoint registrations",
+          "expected": [
+            "routergroup.go"
+          ],
+          "top1": "routergroup.go",
+          "firstHitRank": 1,
+          "tier": "correct"
+        },
+        {
+          "id": "gin-h003",
+          "query": "restrict access with username password challenge",
+          "expected": [
+            "auth.go"
+          ],
+          "top1": "auth.go",
           "firstHitRank": 1,
           "tier": "correct"
         }
@@ -359,15 +451,15 @@
       "repo": "axios",
       "fileCount": 25,
       "sigCount": 29,
-      "tasks": 5,
-      "hitAt5": 0.8,
-      "mrr": 0.465,
+      "tasks": 8,
+      "hitAt5": 0.5,
+      "mrr": 0.291,
       "randomBaseline": 0.2,
-      "improvement": 4,
+      "improvement": 2.5,
       "tiers": {
         "correct": 1,
         "partial": 3,
-        "wrong": 1
+        "wrong": 4
       },
       "taskDetails": [
         {
@@ -424,6 +516,37 @@
           "top1": "lib/helpers/AxiosURLSearchParams.js",
           "firstHitRank": 2,
           "tier": "partial"
+        },
+        {
+          "id": "axios-h001",
+          "query": "run custom logic before sending and after receiving",
+          "expected": [
+            "lib/core/InterceptorManager.js",
+            "lib/core/dispatchRequest.js"
+          ],
+          "top1": "lib/adapters/http.js",
+          "firstHitRank": null,
+          "tier": "wrong"
+        },
+        {
+          "id": "axios-h002",
+          "query": "combine per call options with instance defaults",
+          "expected": [
+            "lib/core/mergeConfig.js"
+          ],
+          "top1": "lib/axios.js",
+          "firstHitRank": null,
+          "tier": "wrong"
+        },
+        {
+          "id": "axios-h003",
+          "query": "decide fulfilled or rejected based on status code",
+          "expected": [
+            "lib/core/settle.js"
+          ],
+          "top1": "lib/core/AxiosError.js",
+          "firstHitRank": null,
+          "tier": "wrong"
         }
       ]
     },
@@ -1144,15 +1267,15 @@
       "repo": "fastify",
       "fileCount": 31,
       "sigCount": 28,
-      "tasks": 5,
-      "hitAt5": 0.8,
-      "mrr": 0.833,
+      "tasks": 8,
+      "hitAt5": 0.625,
+      "mrr": 0.667,
       "randomBaseline": 0.161,
-      "improvement": 5,
+      "improvement": 3.9,
       "tiers": {
-        "correct": 4,
+        "correct": 5,
         "partial": 0,
-        "wrong": 1
+        "wrong": 3
       },
       "taskDetails": [
         {
@@ -1198,6 +1321,36 @@
         {
           "id": "fastify-t005",
           "query": "custom content type parser and body parsing",
+          "expected": [
+            "lib/content-type-parser.js"
+          ],
+          "top1": "lib/content-type-parser.js",
+          "firstHitRank": 1,
+          "tier": "correct"
+        },
+        {
+          "id": "fastify-h001",
+          "query": "lifecycle callbacks that run around each incoming call",
+          "expected": [
+            "lib/hooks.js"
+          ],
+          "top1": "lib/four-oh-four.js",
+          "firstHitRank": 6,
+          "tier": "wrong"
+        },
+        {
+          "id": "fastify-h002",
+          "query": "what happens when no registered path matches the url",
+          "expected": [
+            "lib/four-oh-four.js"
+          ],
+          "top1": "lib/content-type.js",
+          "firstHitRank": null,
+          "tier": "wrong"
+        },
+        {
+          "id": "fastify-h003",
+          "query": "turn request body text into an object by mime",
           "expected": [
             "lib/content-type-parser.js"
           ],

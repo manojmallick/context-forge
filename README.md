@@ -59,10 +59,10 @@ That map is exactly what agentic grep is worst at: reproducible, auditable conte
 
 **Proof it pays off** (full benchmark below):
 <!--SM:whyMetrics-->
-- **85.6% hit@5** — right file in top 5 results (vs 42.7% single-shot grep baseline — 2.00× lift)
+- **82.2% hit@5** — right file in top 5 results (vs 44.8% single-shot grep baseline — 1.59× lift)
 - **96.8% token reduction** — average across 21 real repos
-- **66.7% task-success proxy** — modeled from retrieval tiers, not measured LLM sessions
-- **1.48 prompts per task** — down from 2.84 (48.0% fewer retries, modeled)
+- **64.8% task-success proxy** — modeled from retrieval tiers, not measured LLM sessions
+- **1.53 prompts per task** — down from 2.84 (46.1% fewer retries, modeled)
 <!--/SM:whyMetrics-->
 - **<!--SM:languages-->33<!--/SM:languages--> languages supported** — TypeScript, Python, Go, Rust, Java, R, and more
 - **No vendor lock-in** — works with any AI assistant or local LLM
@@ -98,7 +98,7 @@ sigmap verify answer.md --report        # standalone red/amber/green HTML report
 | Without SigMap | With SigMap |
 |---|---|
 | ❌ Non-reproducible agent guesses | ✅ Deterministic map — same input, same output, every time |
-| ❌ "Trust me" AI answers | ✅ Grounded — right file in context <!--SM:hitWhole-->86%<!--/SM:hitWhole--> of the time, every symbol on a real line anchor |
+| ❌ "Trust me" AI answers | ✅ Grounded — right file in context <!--SM:hitWhole-->82%<!--/SM:hitWhole--> of the time, every symbol on a real line anchor |
 | ❌ Embeddings / vector DB required | ✅ Zero deps, no infra, fully offline |
 
 ---
@@ -122,13 +122,13 @@ Ask → Rank → Context → Validate → Judge → Learn
 
 <!--SM:benchmarkBlock-->
 ```
-Benchmark : sigmap-v8.21-main (21 repositories, including R language)
-Date      : 2026-07-19
+Benchmark : sigmap-v8.22-main (21 repositories, including R language)
+Date      : 2026-07-27
 
-Hit@5          : 85.6%   (grep-agent baseline 42.7%  — 2.00× lift)
+Hit@5          : 82.2%   (grep-agent baseline 44.8%  — 1.59× lift)
 Token reduction: 96.8%   (across 21 repos)
-Prompt reduction : 48.0% (2.84 → 1.48 prompts per task, modeled)
-Task success   : 66.7%   (proxy — modeled from retrieval tiers)
+Prompt reduction : 46.1% (2.84 → 1.53 prompts per task, modeled)
+Task success   : 64.8%   (proxy — modeled from retrieval tiers)
 Repos tested   : 21 (JavaScript, Python, Go, Rust, Java, R, C++, C#, Dart, Swift, Ruby, PHP, Scala, Kotlin, and more)
 ```
 <!--/SM:benchmarkBlock-->
