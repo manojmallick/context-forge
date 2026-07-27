@@ -3,3 +3,6 @@
 {"id":"express-t003","query":"parse incoming request path params query string","expected_files":["lib/request.js"]}
 {"id":"express-t004","query":"define router group nested routes use method","expected_files":["lib/application.js","lib/express.js"]}
 {"id":"express-t005","query":"render template view engine lookup","expected_files":["lib/view.js","lib/application.js"]}
+{"id":"express-h001","query":"why does my middleware chain stop when a handler throws","expected_files":["lib/application.js"],"split":"hard"}
+{"id":"express-h002","query":"where are template engines registered and pages rendered","expected_files":["lib/view.js","lib/application.js"],"split":"hard"}
+{"id":"express-h003","query":"how does the framework decide which content type the client accepts","expected_files":["lib/request.js"],"split":"hard"}
