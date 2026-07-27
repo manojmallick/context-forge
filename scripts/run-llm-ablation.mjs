@@ -13,10 +13,12 @@
  * Providers (auto-detected from the present key; --provider overrides):
  *   anthropic — ANTHROPIC_API_KEY            (default model claude-sonnet-4-6)
  *   gemini    — GEMINI_API_KEY / GOOGLE_API_KEY  (default model gemini-2.5-flash)
+ *   minimax   — MINIMAX_API_KEY               (default model MiniMax-M3)
  *
  * Usage:
  *   ANTHROPIC_API_KEY=sk-...  node scripts/run-llm-ablation.mjs
  *   GEMINI_API_KEY=...        node scripts/run-llm-ablation.mjs            # AI Studio key
+ *   MINIMAX_API_KEY=...       node scripts/run-llm-ablation.mjs            # OpenAI-compatible API
  *   GEMINI_API_KEY=...        node scripts/run-llm-ablation.mjs --save --model gemini-2.5-pro
  *   GEMINI_API_KEY=...        node scripts/run-llm-ablation.mjs --verbose   # print flagged items per arm
  *   GEMINI_API_KEY=...        node scripts/run-llm-ablation.mjs --runs 5    # average 5 passes (mean ± range)
@@ -43,12 +45,18 @@ const RUNS = Math.max(1, parseInt(flag('--runs') || '1', 10));
 
 const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY;
 const GEMINI_KEY = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
+const MINIMAX_KEY = process.env.MINIMAX_API_KEY;
+const MINIMAX_BASE_URL = (process.env.MINIMAX_BASE_URL || 'https://api.minimax.io/v1').replace(/\/+$/, '');
 
-const DEFAULT_MODEL = { anthropic: 'claude-sonnet-4-6', gemini: 'gemini-2.5-flash' };
+const DEFAULT_MODEL = {
+  anthropic: 'claude-sonnet-4-6',
+  gemini: 'gemini-2.5-flash',
+  minimax: 'MiniMax-M3',
+};
 
 // Resolve the provider: explicit flag, else whichever key is present (Gemini first).
 let provider = flag('--provider');
-if (!provider) provider = GEMINI_KEY ? 'gemini' : ANTHROPIC_KEY ? 'anthropic' : null;
+if (!provider) provider = GEMINI_KEY ? 'gemini' : ANTHROPIC_KEY ? 'anthropic' : MINIMAX_KEY ? 'minimax' : null;
 const MODEL = modelArg || (provider ? DEFAULT_MODEL[provider] : null);
 
 function loadTasks() {
@@ -84,7 +92,19 @@ async function geminiComplete(prompt) {
   return ((data.candidates || [])[0]?.content?.parts || []).map((p) => p.text || '').join('\n');
 }
 
-const COMPLETERS = { anthropic: anthropicComplete, gemini: geminiComplete };
+/** MiniMax OpenAI-compatible chat completions → completion text. */
+async function minimaxComplete(prompt) {
+  const res = await fetch(`${MINIMAX_BASE_URL}/chat/completions`, {
+    method: 'POST',
+    headers: { authorization: `Bearer ${MINIMAX_KEY}`, 'content-type': 'application/json' },
+    body: JSON.stringify({ model: MODEL, max_tokens: 1024, messages: [{ role: 'user', content: prompt }] }),
+  });
+  if (!res.ok) throw new Error(`MiniMax API ${res.status}: ${await res.text()}`);
+  const data = await res.json();
+  return data.choices?.[0]?.message?.content || '';
+}
+
+const COMPLETERS = { anthropic: anthropicComplete, gemini: geminiComplete, minimax: minimaxComplete };
 
 async function main() {
   const tasks = loadTasks();
@@ -100,6 +120,7 @@ async function main() {
     console.log('  Run live with one of:');
     console.log('    ANTHROPIC_API_KEY=sk-...  npm run benchmark:llm-ablation');
     console.log('    GEMINI_API_KEY=...        npm run benchmark:llm-ablation   # AI Studio key');
+    console.log('    MINIMAX_API_KEY=...       npm run benchmark:llm-ablation   # OpenAI-compatible API');
     process.exit(0);
   }
 

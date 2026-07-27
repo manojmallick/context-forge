@@ -124,7 +124,7 @@ function estimateTokens(sigs) {
 
 /**
  * Load tasks from a JSONL file.
- * Each line: { id, query, expected_files, repo }
+ * Each line: { id, query, expected_files, repo, split? ('easy'|'hard') }
  * Invalid or blank lines are silently skipped.
  * @param {string} tasksFile - absolute or relative path
  * @returns {Array<{id:string, query:string, expected:string[], repo:string}>}
@@ -144,6 +144,7 @@ function loadTasks(tasksFile) {
           query: obj.query,
           expected: obj.expected_files,
           repo: obj.repo || '.',
+          split: obj.split === 'hard' ? 'hard' : 'easy',
         });
       }
     } catch {

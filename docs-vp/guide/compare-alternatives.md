@@ -45,7 +45,7 @@ RepoMix compresses files. SigMap extracts what matters and ranks by relevance.
 | | SigMap | RepoMix |
 |---|---|---|
 | Token reduction | **97–98%** | ~90% |
-| Retrieval accuracy (hit@5) | **85.6%** | n/a — no ranking (packs everything) |
+| Retrieval accuracy (hit@5) | **82.2%** | n/a — no ranking (packs everything) |
 | Query-aware context | **Yes** — ranked per query | No — same output every time |
 | Dependency graph | **Yes** — import-aware BFS | No |
 | Learn from usage | **Yes** — `sigmap learn` | No |
@@ -79,7 +79,7 @@ Some teams maintain a hand-written `AGENTS.md` or instructions file. SigMap gene
 |---|---|---|
 | Keeps up with code changes | **Yes** — regenerates on every commit | Manual update required |
 | Structured by module | **Yes** — per-module signature blocks | Usually flat text |
-| Benchmark-tested accuracy | **85.6% hit@5** (2.00× vs grep baseline) | Not measured |
+| Benchmark-tested accuracy | **82.2% hit@5** (1.59× vs grep baseline) | Not measured |
 | Time to set up | **30 seconds** | Hours |
 
 ## What SigMap does not replace

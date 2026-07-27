@@ -14,6 +14,7 @@ const { spawnSync, execFileSync } = require('child_process');
 const ROOT = path.resolve(__dirname, '../..');
 const SCRIPT = path.join(ROOT, 'scripts', 'run-llm-ablation.mjs');
 const { buildGrounding, scoreAnswer, scoreAnswerDetail, runAblation, aggregateRuns } = require(path.join(ROOT, 'src/eval/llm-ablation'));
+const { resolvePrice, listModels } = require(path.join(ROOT, 'src/tracking/pricing'));
 
 let passed = 0, failed = 0;
 function test(name, fn) {
@@ -154,6 +155,14 @@ test('aggregateRuns: single run mean equals that run', () => {
   assert.strictEqual(a.deltaPer100.mean, 10);
 });
 
+// ── MiniMax provider metadata ──────────────────────────────────────────────
+test('MiniMax models: target input pricing is registered', () => {
+  assert.ok(listModels().includes('minimax-m3'));
+  assert.ok(listModels().includes('minimax-m2.7'));
+  assert.strictEqual(resolvePrice('MiniMax-M3').perMtok, 0.6);
+  assert.strictEqual(resolvePrice('MiniMax-M2.7').perMtok, 0.3);
+});
+
 // ── corpus shape (fact questions, not code-writing) ─────────────────────────
 test('corpus: checkable repo-fact questions — no example-code tasks', () => {
   const corpus = JSON.parse(fs.readFileSync(path.join(ROOT, 'benchmarks', 'llm-ablation-tasks.json'), 'utf8'));
@@ -171,11 +180,13 @@ test('script: exits 0 with guidance when no API key is set', () => {
   delete env.ANTHROPIC_API_KEY;
   delete env.GEMINI_API_KEY;
   delete env.GOOGLE_API_KEY;
+  delete env.MINIMAX_API_KEY;
   const res = spawnSync('node', [SCRIPT], { cwd: ROOT, encoding: 'utf8', env });
   assert.strictEqual(res.status, 0, res.stderr);
   assert.ok(/No API key set/.test(res.stdout), 'prints skip guidance');
   assert.ok(/harness is ready/.test(res.stdout));
   assert.ok(/GEMINI_API_KEY/.test(res.stdout), 'mentions the Gemini provider');
+  assert.ok(/MINIMAX_API_KEY/.test(res.stdout), 'mentions the MiniMax provider');
 });
 
 console.log(`\nllm-ablation: ${passed} passed, ${failed} failed`);

@@ -20,6 +20,8 @@ const PRICES = {
   'gpt-4o-mini': 0.15,
   'gemini-1.5-pro': 1.25,
   'gemini-1.5-flash': 0.075,
+  'minimax-m3': 0.6,
+  'minimax-m2.7': 0.3,
 };
 
 const DEFAULT_MODEL = 'claude-sonnet';

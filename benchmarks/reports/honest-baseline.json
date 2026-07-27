@@ -1,5 +1,5 @@
 {
-  "generated": "2026-07-19T13:50:48.154Z",
+  "generated": "2026-07-27T22:48:32.469Z",
   "methodology": {
     "corpus": "benchmarks/tasks/*.jsonl",
     "scorer": "src/eval/scorer.js hitAtK/reciprocalRank, k=5",
@@ -8,131 +8,209 @@
     "note": "Single-shot floor for agentic grep — a live agent iterates above this at the cost of extra turns and tokens."
   },
   "summary": {
-    "tasks": 110,
+    "tasks": 125,
     "repos": 19,
     "sigmap": {
-      "hitAt5": 0.855,
-      "mrr": 0.769
+      "hitAt5": 0.712,
+      "mrr": 0.641
     },
     "grepBaseline": {
-      "hitAt5": 0.427,
-      "mrr": 0.227
+      "hitAt5": 0.448,
+      "mrr": 0.229
     },
-    "lift": 2,
-    "deltaPts": 42.7
+    "lift": 1.59,
+    "deltaPts": 26.4,
+    "splits": {
+      "easy": {
+        "tasks": 110,
+        "sigmap": {
+          "hitAt5": 0.764,
+          "mrr": 0.686
+        },
+        "grepBaseline": {
+          "hitAt5": 0.436,
+          "mrr": 0.226
+        }
+      },
+      "hard": {
+        "tasks": 15,
+        "sigmap": {
+          "hitAt5": 0.333,
+          "mrr": 0.311
+        },
+        "grepBaseline": {
+          "hitAt5": 0.533,
+          "mrr": 0.248
+        }
+      }
+    },
+    "buckets": {
+      "small": {
+        "tasks": 13,
+        "sigmap": {
+          "hitAt5": 0.846,
+          "mrr": 0.75
+        },
+        "grepBaseline": {
+          "hitAt5": 0.692,
+          "mrr": 0.328
+        }
+      },
+      "medium": {
+        "tasks": 52,
+        "sigmap": {
+          "hitAt5": 0.442,
+          "mrr": 0.385
+        },
+        "grepBaseline": {
+          "hitAt5": 0.462,
+          "mrr": 0.245
+        }
+      },
+      "large": {
+        "tasks": 60,
+        "sigmap": {
+          "hitAt5": 0.917,
+          "mrr": 0.84
+        },
+        "grepBaseline": {
+          "hitAt5": 0.383,
+          "mrr": 0.194
+        }
+      }
+    }
   },
   "repos": [
     {
       "repo": "abseil-cpp",
       "tasks": 5,
+      "bucket": "large",
       "sigmapHitAt5": 1,
       "grepHitAt5": 0.8
     },
     {
       "repo": "akka",
       "tasks": 5,
+      "bucket": "large",
       "sigmapHitAt5": 1,
       "grepHitAt5": 0.4
     },
     {
       "repo": "axios",
-      "tasks": 5,
-      "sigmapHitAt5": 0.8,
+      "tasks": 8,
+      "bucket": "medium",
+      "sigmapHitAt5": 0.5,
       "grepHitAt5": 0
     },
     {
       "repo": "express",
-      "tasks": 5,
-      "sigmapHitAt5": 1,
-      "grepHitAt5": 1
+      "tasks": 8,
+      "bucket": "medium",
+      "sigmapHitAt5": 0.5,
+      "grepHitAt5": 0.875
     },
     {
       "repo": "fastapi",
       "tasks": 5,
+      "bucket": "large",
       "sigmapHitAt5": 0.8,
       "grepHitAt5": 0.8
     },
     {
       "repo": "fastify",
-      "tasks": 5,
-      "sigmapHitAt5": 0.8,
-      "grepHitAt5": 0.6
+      "tasks": 8,
+      "bucket": "medium",
+      "sigmapHitAt5": 0.625,
+      "grepHitAt5": 0.5
     },
     {
       "repo": "flask",
-      "tasks": 5,
-      "sigmapHitAt5": 1,
-      "grepHitAt5": 0.8
+      "tasks": 8,
+      "bucket": "medium",
+      "sigmapHitAt5": 0,
+      "grepHitAt5": 0.875
     },
     {
       "repo": "gin",
-      "tasks": 5,
+      "tasks": 8,
+      "bucket": "small",
       "sigmapHitAt5": 1,
-      "grepHitAt5": 0.8
+      "grepHitAt5": 0.875
     },
     {
       "repo": "laravel",
       "tasks": 5,
+      "bucket": "large",
       "sigmapHitAt5": 1,
       "grepHitAt5": 0.8
     },
     {
       "repo": "okhttp",
       "tasks": 5,
+      "bucket": "medium",
       "sigmapHitAt5": 1,
       "grepHitAt5": 0.4
     },
     {
       "repo": "rails",
       "tasks": 5,
+      "bucket": "large",
       "sigmapHitAt5": 1,
       "grepHitAt5": 0.2
     },
     {
       "repo": "retrieval",
       "tasks": 20,
+      "bucket": "large",
       "sigmapHitAt5": 0.85,
       "grepHitAt5": 0.1
     },
     {
       "repo": "riverpod",
       "tasks": 5,
+      "bucket": "large",
       "sigmapHitAt5": 1,
       "grepHitAt5": 0.4
     },
     {
       "repo": "rust-analyzer",
       "tasks": 5,
+      "bucket": "large",
       "sigmapHitAt5": 1,
       "grepHitAt5": 0.2
     },
     {
       "repo": "serilog",
       "tasks": 5,
-      "sigmapHitAt5": 0.2,
+      "bucket": "medium",
+      "sigmapHitAt5": 0,
       "grepHitAt5": 0
     },
     {
       "repo": "spring-petclinic",
       "tasks": 5,
-      "sigmapHitAt5": 1,
+      "bucket": "small",
+      "sigmapHitAt5": 0.6,
       "grepHitAt5": 0.4
     },
     {
       "repo": "svelte",
       "tasks": 5,
+      "bucket": "large",
       "sigmapHitAt5": 0.8,
       "grepHitAt5": 0.6
     },
     {
       "repo": "vapor",
       "tasks": 5,
+      "bucket": "medium",
       "sigmapHitAt5": 0,
       "grepHitAt5": 0.4
     },
     {
       "repo": "vue-core",
       "tasks": 5,
+      "bucket": "medium",
       "sigmapHitAt5": 1,
       "grepHitAt5": 0.4
     }

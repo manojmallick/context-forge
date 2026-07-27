@@ -10,6 +10,19 @@ Format: [Semantic Versioning](https://semver.org/)
 
 ---
 
+## [8.22.0] — 2026-07-28
+
+Minor release — **"Hard Corpus" (v8.22)**: the benchmark corpus gains a no-leakage hard split with a deterministic leakage gate, and per-repo-size buckets stop tiny repos from flattering the average. The headline retrieval number gets harder — and honest.
+
+### Added
+- **Hard-split corpus + leakage gate + size buckets (#505, PR #506):** new `src/eval/corpus.js` — a task "leaks" when its BM25-tokenized query shares a stemmed token with the tokenized basenames of its expected files; `validateTasks` flags leaky `split: "hard"` tasks as violations, and `sizeBucket` groups repos at 200/1000 scanned files (tertiles of the 43-repo corpus). New CI gate `scripts/validate-task-corpus.mjs` (exit 1 on hard-split leakage). `loadTasks` carries the optional `split` field (default `easy`). `benchmark:honest` now reports hit@5/MRR per split and per size bucket — buckets use files scanned on disk, not the budget-capped context index. 15 hand-authored hard tasks (express, flask, axios, fastify, gin), all leak-free. 8 new integration tests (128 test files).
+- **MiniMax LLM-ablation provider (PR #504)** — thanks @octo-patch: `MINIMAX_API_KEY` support in `scripts/run-llm-ablation.mjs` (OpenAI-compatible endpoint, default model MiniMax-M3, `MINIMAX_BASE_URL` override) plus a pricing entry and tests.
+
+### Changed
+- **Headline honesty, again:** the leakage gate measured that **90 of 110 pre-existing easy tasks leak filename tokens**, and the new hard split scores **33.3% hit@5 vs the grep baseline's 53.3%** — with leakage removed, grep currently wins; that measured vocabulary-mismatch ceiling is what B2 (repo-mined expansion, v9.0) exists to attack. Overall corpus (125 tasks): 72.8% hit@5, honest lift 1.63× (+28pt).
+
+---
+
 ## [8.21.0] — 2026-07-19
 
 Minor release — **"Semantic Bridge II" (v8.21)**: doc-comment hints reach Go, Rust, and Java, and the import graph gains a principled centrality prior for ranking — flag-gated and measured.

@@ -1,13 +1,13 @@
 ---
 title: Task benchmark
-description: Latest saved task benchmark for SigMap v8.21.0. 66.7% correct, 48% fewer prompts, 85.6% hit@5 across 90 tasks, with R language support.
+description: Latest saved task benchmark for SigMap v8.22.0. 64.8% correct, 46.1% fewer prompts, 82.2% hit@5 across 105 tasks, with R language support.
 head:
   - - meta
     - property: og:title
       content: "SigMap task benchmark — fewer retries, better context (with R language)"
   - - meta
     - property: og:description
-      content: "Latest saved run: 66.7% correct, 1.48 prompts per task, 48% prompt reduction, 90 tasks, 18+ repos with R support."
+      content: "Latest saved run: 64.8% correct, 1.53 prompts per task, 46.1% prompt reduction, 105 tasks, 18+ repos with R support."
   - - meta
     - property: og:url
       content: "https://sigmap.io/guide/task-benchmark"
@@ -15,21 +15,21 @@ head:
 
 # Task benchmark
 
-::: info Official v8.21.0 benchmark snapshot
-**Benchmark ID:** sigmap-v8.21-main &nbsp;·&nbsp; **Date:** 2026-07-19 (with R language)
+::: info Official v8.22.0 benchmark snapshot
+**Benchmark ID:** sigmap-v8.22-main &nbsp;·&nbsp; **Date:** 2026-07-27 (with R language)
 
 | Metric | Value |
 |---|---:|
-| Hit@5 | **86%** vs 42.7% single-shot grep baseline |
+| Hit@5 | **82%** vs 44.8% single-shot grep baseline |
 | Graph-boosted hit@5 | **88%** |
-| Honest lift (vs grep agent) | **2.00×** |
-| Prompt reduction | **48%** (2.84 → 1.48) |
-| Task success proxy | **66.7%** |
+| Honest lift (vs grep agent) | **1.59×** |
+| Prompt reduction | **46.1%** (2.84 → 1.53) |
+| Task success proxy | **64.8%** |
 | Token reduction (21 repos) | **96.8%** |
 | GPT-4o overflow (without → with) | **16/21 → 0/21** |
 :::
 
-Latest saved run: **2026-07-19 (v8.21.0)** — Now includes R language support (ggplot2, dplyr, shiny)
+Latest saved run: **2026-07-27 (v8.22.0)** — Now includes R language support (ggplot2, dplyr, shiny)
 
 This page answers the question people care about most:
 
@@ -39,8 +39,8 @@ This page answers the question people care about most:
 
 | Metric | Without SigMap | With SigMap |
 |---|:---:|:---:|
-| Task success proxy | 10% | **66.7%** |
-| Prompts per task | 2.84 | **1.48** |
+| Task success proxy | 10% | **64.8%** |
+| Prompts per task | 2.84 | **1.53** |
 | Prompt reduction | — | **48%** |
 | Retrieval hit@5 | 13.6% | **88%** |
 | Token reduction | — | **96.8%** |
@@ -63,7 +63,7 @@ The task benchmark models that outcome from the ranked file quality tiers:
 
 | Tier | Meaning | Tasks | Share |
 |---|---|---:|---:|
-| Correct | Right file was ranked first | 61 | **66.7%** |
+| Correct | Right file was ranked first | 61 | **64.8%** |
 | Partial | Right file was present but not first | 17 | **18.9%** |
 | Wrong | Right file never surfaced in top 5 | 13 | **14.4%** |
 
@@ -72,9 +72,9 @@ The task benchmark models that outcome from the ranked file quality tiers:
 | Metric | Value |
 |---|---:|
 | Average prompts without SigMap | 2.84 |
-| Average prompts with SigMap | **1.48** |
+| Average prompts with SigMap | **1.53** |
 | Reduction | **48%** |
-| Honest hit@5 lift | **2.00x** vs single-shot grep baseline (per-repo random lifts remain in the report as data) |
+| Honest hit@5 lift | **1.59x** vs single-shot grep baseline (per-repo random lifts remain in the report as data) |
 
 ## What changed in the v5 story
 

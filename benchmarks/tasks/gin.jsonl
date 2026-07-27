@@ -3,3 +3,6 @@
 {"id":"gin-t003","query":"request context abort next handler","expected_files":["context.go"]}
 {"id":"gin-t004","query":"render response JSON XML HTML template","expected_files":["render/json.go","render/html.go","context.go"]}
 {"id":"gin-t005","query":"recovery middleware panic handler logger","expected_files":["recovery.go","logger.go"]}
+{"id":"gin-h001","query":"match incoming url path segments with wildcards efficiently","expected_files":["tree.go"],"split":"hard"}
+{"id":"gin-h002","query":"shared prefix grouping of endpoint registrations","expected_files":["routergroup.go"],"split":"hard"}
+{"id":"gin-h003","query":"restrict access with username password challenge","expected_files":["auth.go"],"split":"hard"}

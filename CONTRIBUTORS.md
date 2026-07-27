@@ -35,6 +35,10 @@ To ensure proper attribution:
 
 We welcome contributions! See [Contributing](./docs/CONTRIBUTING.md) for guidelines.
 
+### Recent Contributors (v8.22.0)
+- **@manojmallick** — feat(eval,benchmarks): hard-split corpus + deterministic leakage gate (`src/eval/corpus.js`, `scripts/validate-task-corpus.mjs`) + repo-size buckets in `benchmark:honest`; 15 leak-free hard tasks; measured the hard-split ceiling (33.3% vs grep 53.3%) (#505, PR #506)
+- **@octo-patch** — feat(eval): MiniMax LLM-ablation provider — `MINIMAX_API_KEY`, OpenAI-compatible endpoint, default MiniMax-M3, pricing entry + tests (PR #504)
+
 ### Recent Contributors (v8.21.0)
 - **@manojmallick** — feat(extractors): Go/Rust/Java doc-comment hints (godoc/rustdoc/Javadoc first sentence as `  # <hint>` after the anchor; directives skipped, attributes tolerated, members covered) (#501, PR #502)
 - **@manojmallick** — feat(retrieval): import-graph centrality rank blend — zero-dep power iteration, opt-in `retrieval.centralityBlend`, A/B measure gate `benchmark:centrality-blend` (77.8% both arms → ships off) (#501, PR #502)
