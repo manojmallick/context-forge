@@ -7,7 +7,7 @@ head:
       content: "SigMap Roadmap — version history and upcoming features"
   - - meta
     - property: og:description
-      content: "94 versions shipped. See what changed in each release and what is coming next."
+      content: "95 versions shipped. See what changed in each release and what is coming next."
   - - meta
     - property: og:url
       content: "https://sigmap.io/guide/roadmap"
@@ -20,7 +20,7 @@ head:
 ---
 # Roadmap
 
-Ninety-four versions shipped. MIT open source from day one.
+Ninety-five versions shipped. MIT open source from day one.
 
 **Stats:** 96.8% overall token reduction · 82.2% retrieval hit@5 (1.59× measured lift vs single-shot grep) · 98.0% test-discovery F1 · installed-library grounding (JS/TS + Python) · method-level call-graph (JS/TS, Python, Java, Go, Rust) · 21 MCP tools · 33 languages · 17-language source resolver · 0 npm deps
 
@@ -828,6 +828,16 @@ Two milestones in one release. **`verify-ai-output` Reliable MVP** (#232) grows 
 
 ---
 
+### v8.24.0 — Trust Quick Wins I: sigmap redact ✓ (2026-07-28)
+
+**Minor release — the redaction engine goes standalone.** New `src/security/redact.js`: `redactText()` applies the existing 10-pattern secret bank to arbitrary text, masking only the matched substring (`[REDACTED:<pattern>]`) so surrounding context stays readable — the generation-time scanner's whole-line behavior is untouched. Findings carry 1-based line numbers and per-pattern counts. CLI `sigmap redact [file] [--json]` reads a file or stdin and keeps stdout pipe-clean (summary on stderr), so `git diff | sigmap redact` works as a pre-share hygiene step. A fitting validation: GitHub Push Protection rejected the first push of the test fixtures because the fake secrets pattern-matched real credential formats — fixtures are now assembled at runtime so no secret-shaped literal exists in any committed blob.
+
+**Tags:** `redact.js` · `redactText` · `sigmap redact` · `--json` · `stdin` · `#511` · `PR #512`
+
+**Impact:** the pattern bank now covers ad-hoc text, not just SigMap-generated surfaces; 6 new integration tests incl. an every-pattern sweep (130 files); zero new dependencies. Remaining v8.24 plan items (KNOWN_LIMITATIONS.md, SUCCESSION.md, issue triage) are non-code and land outside the release train.
+
+---
+
 ### v8.23.0 — Agent Economy I: sigmap budget, get_budget ✓ (2026-07-28)
 
 **Minor release — token savings become queryable *during* the session.** New `src/tracking/budget.js`: `budgetStatus()` turns the existing gain log into a session spend ledger — estimated SigMap-emitted tokens (spent/baseline/saved, op count), optional budget with remaining/percent-used, and generated-context age with a stale flag against `contextTtlDays`. Session identity is `SIGMAP_SESSION` (host-settable) or the UTC day bucket; `recordUsage` stamps every entry, and legacy entries match day buckets by timestamp prefix. Surfaces: `sigmap budget [--json] [--session] [--budget]` and the **21st MCP tool `get_budget`**, which advises degrade-gracefully tactics (terse encoding, `squeeze`, summarize-then-drop) at ≥80% budget. Scope honesty by design, per the improvement-plan audit: the ledger counts what SigMap emitted (chars/4, labeled `estimated-tokens` everywhere) — not the chat's total spend, which a CLI cannot see — and the unverifiable prompt-cache "injection TTL" idea was cut in favor of measurable context-file age. Config keys `sessionBudgetTokens` / `contextTtlDays`, both opt-in `null`.
@@ -1498,7 +1508,7 @@ Alongside it: the **token budget now keeps full signatures** (#240) — when con
 
 ---
 
-## Current milestone — Phase 2 "buy the A+" 🚧 NEXT — Phase 1 grounding banked (G1/D8/G2); the §3.5 in-boundary backlog D1–D9 is complete (v8.12) and method-level blast-radius scoring shipped (GR2, v8.13) and the call-graph now covers Java/Go/Rust (GR1, v8.14) with the ranking boost measured and shipped dark (v8.15). Evidence Pack schema v2 shipped (v8.16). Retrieval surface-enrichment shipped measure-gated (v8.18) — every Phase-2 quality-ceiling row is now done or gate-closed. Honest Numbers shipped (v8.19): the published lift is now measured vs a grep-agent baseline, with claim-hygiene guards. Semantic Bridge I shipped (v8.20): JS/TS doc hints (Python-parity, −0.9pt on the lexical corpus, default-on per the anchors precedent) + `sigmap memory`. Semantic Bridge II shipped (v8.21): Go/Rust/Java doc hints (6 hint languages total) + the import-graph centrality blend (measured +0 → shipped dark behind `retrieval.centralityBlend`). Hard Corpus shipped (v8.22): the no-leakage hard split + leakage gate measured the vocabulary-mismatch ceiling directly (hard-split 33.3% vs grep 53.3% — grep wins when filename leakage is removed). Agent Economy I shipped (v8.23): the `sigmap budget` spend ledger + `get_budget` MCP tool. Next: Agent Economy II (F2 `sigmap tune` config auto-recommendation, F3 usage-maximizer skill, F4 multi-client `skills install`) per the improvement plan, with B2 repo-mined expansion (v9.0) aimed at the measured hard-split gap; pull-based v10 items only (enterprise, IDE plugins — built if users ask) and the no-code growth lane
+## Current milestone — Phase 2 "buy the A+" 🚧 NEXT — Phase 1 grounding banked (G1/D8/G2); the §3.5 in-boundary backlog D1–D9 is complete (v8.12) and method-level blast-radius scoring shipped (GR2, v8.13) and the call-graph now covers Java/Go/Rust (GR1, v8.14) with the ranking boost measured and shipped dark (v8.15). Evidence Pack schema v2 shipped (v8.16). Retrieval surface-enrichment shipped measure-gated (v8.18) — every Phase-2 quality-ceiling row is now done or gate-closed. Honest Numbers shipped (v8.19): the published lift is now measured vs a grep-agent baseline, with claim-hygiene guards. Semantic Bridge I shipped (v8.20): JS/TS doc hints (Python-parity, −0.9pt on the lexical corpus, default-on per the anchors precedent) + `sigmap memory`. Semantic Bridge II shipped (v8.21): Go/Rust/Java doc hints (6 hint languages total) + the import-graph centrality blend (measured +0 → shipped dark behind `retrieval.centralityBlend`). Hard Corpus shipped (v8.22): the no-leakage hard split + leakage gate measured the vocabulary-mismatch ceiling directly (hard-split 33.3% vs grep 53.3% — grep wins when filename leakage is removed). Agent Economy I shipped (v8.23) and Trust Quick Wins I shipped (v8.24, `sigmap redact`). Next: Agent Economy II (F2 `sigmap tune` config auto-recommendation, F3 usage-maximizer skill, F4 multi-client `skills install`) per the improvement plan, with B2 repo-mined expansion (v9.0) aimed at the measured hard-split gap; pull-based v10 items only (enterprise, IDE plugins — built if users ask) and the no-code growth lane
 
 **v8.0 "Evidence Pack & the Pivot" ✓ COMPLETE** — E1 Evidence Pack in v7.26.0, D3 +2 MCP tools (15→17) in v7.27.0, E3 `doctor` in v7.28.0, E4 `mcp install` in v7.29.0, and **v7.30.0** the repositioning pivot: every public surface now states *"the deterministic, verifiable grounding layer for AI code work"* (token reduction demoted to proof) plus **agent recipes** framing Claude Code, Cursor, Cline, Continue, Aider, OpenHands, and Codex CLI as consumers. The v8.0 exit gate is met: a cold user reaches a useful answer in <5 min, an agent consumes the Evidence Pack JSON with zero copy-paste, and no public surface still calls SigMap a "compression tool".
 

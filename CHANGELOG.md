@@ -10,6 +10,18 @@ Format: [Semantic Versioning](https://semver.org/)
 
 ---
 
+## [8.24.0] — 2026-07-28
+
+Minor release — **"Trust Quick Wins I" (v8.24, G3a)**: the secret-redaction engine that already protects signatures, `get_lines`, and evidence packs becomes a standalone command for arbitrary text.
+
+### Added
+- **`sigmap redact` (#511, PR #512):** new `src/security/redact.js` — `redactText()` masks only the matched secret substring (`[REDACTED:<pattern name>]`), preserving surrounding text (unlike the generation-time scanner's whole-line replacement, which is unchanged). Findings carry 1-based line numbers with per-pattern counts. CLI: `sigmap redact [file] [--json]` — file argument or stdin; redacted text on stdout (pipe-clean), summary on stderr. Reuses the existing 10-pattern bank verbatim; zero new dependencies; never throws. 6 new integration tests including an every-pattern mask sweep (130 test files).
+
+### Changed
+- Test fixtures for secret patterns are assembled at runtime (no secret-shaped literals in committed blobs) — GitHub Push Protection rejected the first push over the fake samples, which validated the detection class this command implements.
+
+---
+
 ## [8.23.0] — 2026-07-28
 
 Minor release — **"Agent Economy I" (v8.23, F1)**: SigMap's token savings become queryable *during* a session. A spend ledger over the existing gain log, an optional budget threshold, and context-freshness age — as a CLI command and the 21st MCP tool.

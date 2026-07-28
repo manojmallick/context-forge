@@ -35,6 +35,9 @@ To ensure proper attribution:
 
 We welcome contributions! See [Contributing](./docs/CONTRIBUTING.md) for guidelines.
 
+### Recent Contributors (v8.24.0)
+- **@manojmallick** — feat(security): `sigmap redact` — standalone substring-level secret masking over files/stdin (10-pattern bank, pipe-clean stdout, `--json`); every-pattern test sweep (#511, PR #512)
+
 ### Recent Contributors (v8.23.0)
 - **@manojmallick** — feat(tracking,mcp): `sigmap budget` session spend ledger (estimated SigMap-emitted tokens, optional budget, context-age TTL) + `get_budget` MCP tool (21st); `SIGMAP_SESSION` identity; opt-in `sessionBudgetTokens`/`contextTtlDays` (#508, PR #509)
 

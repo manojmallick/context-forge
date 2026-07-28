@@ -1,13 +1,13 @@
 ---
 title: CLI reference
-description: Complete SigMap CLI reference. All commands and flags with examples — ask, evidence, budget, squeeze, conventions, plan, bench, judge, verify, verify-ai-output, verify-plan, review-pr, create, memory, note, status, doctor, validate, roots, daemon, history, --package, --global, --ci, --cost, --coverage, --watch, --diff, --callers, --callees, --mcp, --report, --health, weights --export/--import and more.
+description: Complete SigMap CLI reference. All commands and flags with examples — ask, evidence, budget, redact, squeeze, conventions, plan, bench, judge, verify, verify-ai-output, verify-plan, review-pr, create, memory, note, status, doctor, validate, roots, daemon, history, --package, --global, --ci, --cost, --coverage, --watch, --diff, --callers, --callees, --mcp, --report, --health, weights --export/--import and more.
 head:
   - - meta
     - property: og:title
       content: "SigMap CLI Reference — every command and flag with examples"
   - - meta
     - property: og:description
-      content: "All 80 SigMap commands and flags documented with examples. ask, evidence, gain, budget, squeeze, conventions, scaffold, plan, bench, judge, verify, verify-ai-output, verify-plan, review-pr, create, note, status, doctor, validate, roots, daemon, history, --ci, --cost, --coverage, --watch, --diff, --callers, --callees, --mcp, --report, --health, weights --export/--import and more."
+      content: "All 81 SigMap commands and flags documented with examples. ask, evidence, gain, budget, redact, squeeze, conventions, scaffold, plan, bench, judge, verify, verify-ai-output, verify-plan, review-pr, create, note, status, doctor, validate, roots, daemon, history, --ci, --cost, --coverage, --watch, --diff, --callers, --callees, --mcp, --report, --health, weights --export/--import and more."
   - - meta
     - property: og:url
       content: "https://sigmap.io/guide/cli"
@@ -19,7 +19,7 @@ head:
       content: "SigMap CLI Reference — every command and flag with examples"
   - - meta
     - name: twitter:description
-      content: "All 80 SigMap commands and flags documented with examples. ask, evidence, gain, budget, squeeze, conventions, scaffold, plan, bench, judge, verify, verify-ai-output, verify-plan, review-pr, create, note, status, doctor, validate, daemon, history, --ci, --cost, --coverage, --watch, --diff, --callers, --callees, --mcp, --report, --health, weights --export/--import and more."
+      content: "All 81 SigMap commands and flags documented with examples. ask, evidence, gain, budget, redact, squeeze, conventions, scaffold, plan, bench, judge, verify, verify-ai-output, verify-plan, review-pr, create, note, status, doctor, validate, daemon, history, --ci, --cost, --coverage, --watch, --diff, --callers, --callees, --mcp, --report, --health, weights --export/--import and more."
   - - meta
     - name: twitter:image:alt
       content: "SigMap CLI Reference"
@@ -894,6 +894,30 @@ Config: `sessionBudgetTokens` (budget threshold) and `contextTtlDays` (marks con
 
 ---
 
+## redact
+
+Mask secrets in **arbitrary text** — a log, a diff, an AI answer draft — before sharing it, using the same 10-pattern bank that already redacts signatures at generation time, `get_lines` output, and evidence packs. Unlike the generation-time scanner (which replaces whole signature lines), `redact` masks only the matched substring, so surrounding text stays readable. Redacted text goes to **stdout** (pipe-clean); the summary goes to stderr.
+
+```bash
+sigmap redact server.log              # redact a file
+git diff | sigmap redact              # redact a stream
+sigmap redact notes.md --json         # machine-readable result
+```
+
+```
+x [REDACTED:AWS Access Key] y
+[sigmap] redact: masked 2 secret(s) — AWS Access Key×1, Generic Secret×1
+```
+
+| Option | Description |
+|--------|-------------|
+| `--json` | Emit `{ text, redacted, findings: [{line, pattern}], counts }` instead of raw text |
+| *(no file)* | Read from stdin (piped input) |
+
+Patterns covered: AWS access/secret keys, GCP API keys, GitHub tokens, JWTs, DB connection strings, SSH private keys, Stripe keys, Twilio keys, and generic `password=`/`api_key=` assignments.
+
+---
+
 ## note
 
 Append a note to a cross-session decision log so an agent (or you) can recall *what we were doing and why* later. Notes are stored as append-only NDJSON at `.context/notes.ndjson` (text + ISO timestamp + git branch). Running `note` with no text lists recent notes.
@@ -1270,7 +1294,7 @@ sigmap bench --submit --json
  SigMap Community Benchmark Submission
 ────────────────────────────────────────────────────────
  SigMap version : 8.21.0
- Benchmark ID   : sigmap-v8.23-main
+ Benchmark ID   : sigmap-v8.24-main
  Submitted      : 2026-07-28
 ────────────────────────────────────────────────────────
  Canonical metrics (official release):

@@ -1,5 +1,5 @@
 {
-  "benchmark_id": "sigmap-v8.23-main",
+  "benchmark_id": "sigmap-v8.24-main",
   "benchmark_date": "2026-07-28",
   "source": "benchmarks/reports/{benchmark-matrix,task-benchmark,token-reduction,honest-baseline}.json",
   "repos_token": 21,
