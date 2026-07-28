@@ -14981,7 +14981,7 @@ __factories["./src/mcp/server"] = function(module, exports) {
 
   const SERVER_INFO = {
     name: 'sigmap',
-    version: '8.23.0',
+    version: '8.24.0',
     description: 'SigMap MCP server — code signatures on demand',
   };
 
@@ -17525,6 +17525,66 @@ __factories["./src/security/patterns"] = function(module, exports) {
   ];
 
   module.exports = { PATTERNS };
+  
+};
+
+// ── ./src/security/redact ──
+__factories["./src/security/redact"] = function(module, exports) {
+  
+  /**
+   * Standalone text redaction (v8.24 G3a) — the same pattern bank the
+   * generation-time scanner uses (security/patterns.js), applied to arbitrary
+   * text. Unlike scanner.js (which replaces whole signature lines), this masks
+   * only the matched secret substring so surrounding text stays readable.
+   *
+   * Zero dependencies; never throws — on any error the original text is
+   * returned unredacted.
+   */
+
+  const { PATTERNS } = __require('./src/security/patterns');
+
+  // Global variants of the pattern regexes (needed for replace-all per line).
+  const GLOBAL_PATTERNS = PATTERNS.map((p) => ({
+    name: p.name,
+    regex: new RegExp(p.regex.source, p.regex.flags.includes('g') ? p.regex.flags : p.regex.flags + 'g'),
+  }));
+
+  /**
+   * Redact secrets in arbitrary text.
+   * @param {string} text
+   * @returns {{
+   *   text: string, redacted: boolean,
+   *   findings: Array<{ line: number, pattern: string }>,
+   *   counts: Object<string, number>
+   * }}
+   */
+  function redactText(text) {
+    if (typeof text !== 'string' || text.length === 0) {
+      return { text: typeof text === 'string' ? text : '', redacted: false, findings: [], counts: {} };
+    }
+    try {
+      const findings = [];
+      const counts = {};
+      const lines = text.split('\n');
+      const out = lines.map((line, i) => {
+        let masked = line;
+        for (const p of GLOBAL_PATTERNS) {
+          p.regex.lastIndex = 0;
+          if (!p.regex.test(masked)) continue;
+          p.regex.lastIndex = 0;
+          masked = masked.replace(p.regex, `[REDACTED:${p.name}]`);
+          findings.push({ line: i + 1, pattern: p.name });
+          counts[p.name] = (counts[p.name] || 0) + 1;
+        }
+        return masked;
+      });
+      return { text: out.join('\n'), redacted: findings.length > 0, findings, counts };
+    } catch (_) {
+      return { text, redacted: false, findings: [], counts: {} };
+    }
+  }
+
+  module.exports = { redactText };
   
 };
 
@@ -20347,7 +20407,7 @@ function __tryGit(args, opts = {}) {
   catch (_) { return ''; }
 }
 
-const VERSION = '8.23.0';
+const VERSION = '8.24.0';
 const MARKER = '\n\n## Auto-generated signatures\n<!-- Updated by gen-context.js -->\n';
 
 function requireSourceOrBundled(key) {
@@ -22234,6 +22294,7 @@ Usage:
   ${cmd} memory --clear <store>            Clear one store: session|notes|weights|evidence|all (--json supported)
   ${cmd} budget                            Session spend ledger — estimated SigMap-emitted tokens, budget, context age (--json)
   ${cmd} budget --budget <tokens>          One-off budget override (config: sessionBudgetTokens, contextTtlDays)
+  ${cmd} redact [file]                     Mask secrets in a file or stdin (10-pattern bank); redacted text to stdout (--json)
   ${cmd} note "<text>"                     Append a note to the cross-session decision log
   ${cmd} note                              List recent notes (also: note --list <N>)
   ${cmd} status                            Show repo state — branch, dirty files, index freshness, notes
@@ -23712,6 +23773,42 @@ function main() {
     console.log(st.context.exists
       ? `  context   ${st.context.ageDays} day(s) old${st.context.stale ? `  ⚠ STALE (> ${st.context.ttlDays}d TTL) — re-run sigmap` : ''}`
       : '  context   none generated yet — run sigmap first');
+    process.exit(0);
+  }
+
+  if (args[0] === 'redact') {
+    const jsonOut = args.includes('--json');
+    const { redactText } = requireSourceOrBundled('./src/security/redact');
+    const fileArg = args.slice(1).find((a) => !a.startsWith('--'));
+    let input;
+    if (fileArg) {
+      try {
+        input = fs.readFileSync(path.resolve(cwd, fileArg), 'utf8');
+      } catch (err) {
+        console.error(`[sigmap] redact: cannot read ${fileArg}: ${err.message}`);
+        process.exit(1);
+      }
+    } else if (!process.stdin.isTTY) {
+      try {
+        input = fs.readFileSync(0, 'utf8');
+      } catch (err) {
+        console.error(`[sigmap] redact: cannot read stdin: ${err.message}`);
+        process.exit(1);
+      }
+    } else {
+      console.error('[sigmap] usage: sigmap redact <file>   or   <cmd> | sigmap redact');
+      process.exit(1);
+    }
+    const r = redactText(input);
+    if (jsonOut) {
+      process.stdout.write(JSON.stringify(r) + '\n');
+      process.exit(0);
+    }
+    process.stdout.write(r.text);
+    const parts = Object.entries(r.counts).map(([k, v]) => `${k}×${v}`);
+    console.error(r.redacted
+      ? `[sigmap] redact: masked ${r.findings.length} secret(s) — ${parts.join(', ')}`
+      : '[sigmap] redact: no secrets found');
     process.exit(0);
   }
 
