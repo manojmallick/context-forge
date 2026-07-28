@@ -61,12 +61,12 @@ function seedContext(dir) {
 
 // ── tools/list registration ────────────────────────────────────────────────
 
-test('tools/list registers 20 tools including both new ones', () => {
+test('tools/list registers 21 tools including both new ones', () => {
   withGitProject((dir) => {
     const res = mcp({ jsonrpc: '2.0', id: 1, method: 'tools/list' }, dir);
     const tools = res.find((r) => r.id === 1).result.tools;
     assert.strictEqual(tools.length, TOOLS.length, 'server list matches TOOLS');
-    assert.strictEqual(tools.length, 20, 'exactly 20 tools');
+    assert.strictEqual(tools.length, 21, 'exactly 21 tools');
     assert.ok(tools.some((t) => t.name === 'get_diff_context'), 'get_diff_context registered');
     assert.ok(tools.some((t) => t.name === 'get_architecture_overview'), 'get_architecture_overview registered');
   });

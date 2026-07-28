@@ -106,6 +106,14 @@ const DEFAULTS = {
   // Append run metrics to .context/usage.ndjson after each generate
   tracking: false,
 
+  // Session spend ledger (`sigmap budget` / MCP get_budget). Estimates only —
+  // counts tokens SigMap emitted (chars/4), not the host chat's total spend.
+  // Number → warn threshold for estimated SigMap-emitted tokens per session.
+  sessionBudgetTokens: null,
+
+  // Number of days before generated context counts as stale in budget output.
+  contextTtlDays: null,
+
   // MCP server configuration
   mcp: {
     autoRegister: true,

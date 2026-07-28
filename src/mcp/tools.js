@@ -387,6 +387,32 @@ const TOOLS = [
       required: ['content'],
     },
   },
+  {
+    name: 'get_budget',
+    description:
+      'Session spend ledger — estimated tokens SigMap has emitted this session ' +
+      '(chars/4 estimates from the local gain log), optional budget remaining, and ' +
+      'context freshness. Scope honesty: counts only SigMap output, NOT the whole ' +
+      "chat's spend. Check this mid-session and degrade gracefully when near budget: " +
+      'prefer terse encoding, squeeze large outputs, summarize-then-drop context. ' +
+      'Local-only; no LLM, no network.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        session: {
+          type: 'string',
+          description:
+            'Session key to report on (default: SIGMAP_SESSION env or the UTC day bucket).',
+        },
+        budgetTokens: {
+          type: 'number',
+          description:
+            'Budget override in estimated tokens (default: config sessionBudgetTokens).',
+        },
+      },
+      required: [],
+    },
+  },
 ];
 
 module.exports = { TOOLS };
