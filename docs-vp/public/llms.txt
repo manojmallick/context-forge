@@ -29,7 +29,7 @@ Cursor, GitHub Copilot, Aider, Windsurf, local LLMs, and MCP.
 - Token reduction: 96.8% average across benchmark repos
 - Task-success proxy: 64.8% (modeled from retrieval tiers, not measured LLM sessions)
 - Prompts per task: 1.53 vs 2.84 baseline (46.1% fewer, modeled)
-- Languages: 33 supported · MCP tools: 20
+- Languages: 33 supported · MCP tools: 21
 - Dependencies: zero npm runtime dependencies · fully offline
 
 ## Quick start

@@ -1,6 +1,6 @@
 ---
 title: MCP server setup
-description: Set up the SigMap MCP server for Claude Code, Cursor, and Windsurf. On-demand codebase access with 20 tools over stdio. Zero npm install.
+description: Set up the SigMap MCP server for Claude Code, Cursor, and Windsurf. On-demand codebase access with 21 tools over stdio. Zero npm install.
 head:
   - - meta
     - property: og:title
@@ -22,7 +22,7 @@ head:
 
 Give Claude Code, Cursor, and Windsurf on-demand access to your codebase signatures. Zero npm install.
 
-The SigMap MCP server exposes 20 tools over the stdio Model Context Protocol. Your AI agent calls only what it needs — keeping token costs low.
+The SigMap MCP server exposes 21 tools over the stdio Model Context Protocol. Your AI agent calls only what it needs — keeping token costs low.
 
 > **Setup time: under 2 minutes.** Use `sigmap --setup` for automatic configuration.
 
@@ -99,7 +99,7 @@ Stack both MCP servers for the two-layer context strategy — SigMap for always-
 ## 11 available tools
 
 ::: tip New in v6.3.0 — native tool registration
-Claude Code and Codex now receive the full tool list at MCP startup without a discovery round-trip. The server declares all 20 tools in the `initialize` response, so your AI sees them immediately. No config change needed — upgrade via `npm install -g sigmap@latest`.
+Claude Code and Codex now receive the full tool list at MCP startup without a discovery round-trip. The server declares all 21 tools in the `initialize` response, so your AI sees them immediately. No config change needed — upgrade via `npm install -g sigmap@latest`.
 :::
 
 All tools are available on-demand — your AI agent calls only what it needs.

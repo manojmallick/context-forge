@@ -26,7 +26,7 @@ Cursor, GitHub Copilot, Aider, Windsurf, local LLMs, and MCP.
 | Task-success proxy (modeled) | — | 64.8% |
 | Prompts per task | 2.84 | 1.53 (46.1% fewer) |
 | Supported languages | — | 33 |
-| MCP tools | — | 20 |
+| MCP tools | — | 21 |
 | npm runtime dependencies | — | 0 |
 
 ---
@@ -125,6 +125,8 @@ sigmap evidence "<query>" --markdown     Emit the Markdown handoff rendering to 
 sigmap evidence "<query>" --top <n> --budget <n> --out <path>   Tune ranked files / token budget / write rendered output
 sigmap memory                            List cross-session stores (.context/) — entries, size, age
 sigmap memory --clear <store>            Clear one store: session|notes|weights|evidence|all (--json supported)
+sigmap budget                            Session spend ledger — estimated SigMap-emitted tokens, budget, context age (--json)
+sigmap budget --budget <tokens>          One-off budget override (config: sessionBudgetTokens, contextTtlDays)
 sigmap note "<text>"                     Append a note to the cross-session decision log
 sigmap note                              List recent notes (also: note --list <N>)
 sigmap status                            Show repo state — branch, dirty files, index freshness, notes
@@ -138,7 +140,7 @@ sigmap --version                         Show version
 
 ---
 
-## MCP server — 20 tools
+## MCP server — 21 tools
 
 Start with `sigmap --mcp` (stdio JSON-RPC). Configure once:
 
@@ -306,6 +308,14 @@ Compress noisy tool, command, or agent output before it enters context — a sta
 Input:  { content: string }
 ```
 
+### get_budget
+
+Session spend ledger — estimated tokens SigMap has emitted this session (chars/4 estimates from the local gain log), optional budget remaining, and context freshness. Scope honesty: counts only SigMap output, NOT the whole chat's spend. Check this mid-session and degrade gracefully when near budget: prefer terse encoding, squeeze large outputs, summarize-then-drop context. Local-only; no LLM, no network.
+
+```
+Input:  { session?: string, budgetTokens?: number }
+```
+
 ---
 
 ## Configuration (gen-context.config.json)
@@ -334,6 +344,8 @@ watchDebounce = 300
 routing = false
 format = default
 tracking = false
+sessionBudgetTokens = null
+contextTtlDays = null
 mcp = {"autoRegister":true}
 depMap = true
 versionPins = true
