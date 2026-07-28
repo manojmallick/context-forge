@@ -175,10 +175,12 @@ function recordUsage(entry, cwd) {
     const baseline = Math.max(0, Number(entry.baselineTokens) || 0);
     const actual = Math.max(0, Number(entry.actualTokens) || 0);
     const saved = Math.max(0, baseline - actual);
+    const ts = new Date().toISOString();
     const record = {
-      ts: new Date().toISOString(),
+      ts,
       v: entry.version || '0.9.0',
       op: entry.op || 'generate',
+      session: entry.session || process.env.SIGMAP_SESSION || ts.slice(0, 10),
       baselineTokens: baseline,
       actualTokens: actual,
       savedTokens: saved,

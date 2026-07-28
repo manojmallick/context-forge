@@ -177,7 +177,7 @@ test('read_memory is registered as the 11th MCP tool (bundle path)', () => {
   const res = spawnSync('node', [SCRIPT, '--mcp', '--cwd', dir], { input: reqs, cwd: ROOT, encoding: 'utf8' });
   const lines = res.stdout.trim().split('\n').map((l) => JSON.parse(l));
   const tools = lines.find((l) => l.id === 1).result.tools;
-  assert.strictEqual(tools.length, 20);
+  assert.strictEqual(tools.length, 21);
   assert.ok(tools.some((t) => t.name === 'read_memory'));
   const text = lines.find((l) => l.id === 2).result.content[0].text;
   assert.ok(/seed note/.test(text));

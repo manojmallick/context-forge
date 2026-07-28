@@ -122,8 +122,8 @@ Ask → Rank → Context → Validate → Judge → Learn
 
 <!--SM:benchmarkBlock-->
 ```
-Benchmark : sigmap-v8.22-main (21 repositories, including R language)
-Date      : 2026-07-27
+Benchmark : sigmap-v8.23-main (21 repositories, including R language)
+Date      : 2026-07-28
 
 Hit@5          : 82.2%   (grep-agent baseline 44.8%  — 1.59× lift)
 Token reduction: 96.8%   (across 21 repos)
@@ -222,7 +222,7 @@ Use SigMap with open-source tools and fully self-hosted setups:
 | **JetBrains** | [Marketplace](https://plugins.jetbrains.com/plugin/31109-sigmap--ai-context-engine/) | [github.com/manojmallick/sigmap-jetbrains](https://github.com/manojmallick/sigmap-jetbrains) | IntelliJ IDEA, WebStorm, PyCharm, GoLand — tool window + actions |
 | **Neovim** | lazy.nvim / packer / vim-plug | [github.com/manojmallick/sigmap.nvim](https://github.com/manojmallick/sigmap.nvim) | `:SigMap`, `:SigMapQuery` float window, statusline widget |
 
-**MCP server** — 20 on-demand tools for Claude Code and Cursor:
+**MCP server** — 21 on-demand tools for Claude Code and Cursor:
 
 ```bash
 sigmap --mcp
@@ -269,7 +269,7 @@ SigMap treats coding agents as **consumers, not competitors**: it hands them a d
 
 | Agent | One-time setup | How it consumes SigMap |
 |---|---|---|
-| **Claude Code** | `sigmap mcp install claude` | 20 MCP tools (`search_signatures`, `get_lines`, `get_diff_context`, `squeeze_output`…) |
+| **Claude Code** | `sigmap mcp install claude` | 21 MCP tools (`search_signatures`, `get_lines`, `get_diff_context`, `squeeze_output`…) |
 | **Cursor** | `sigmap mcp install cursor` | MCP tools, plus the `cursor` adapter writes `.cursorrules` |
 | **Cline** | `sigmap mcp install cursor` | Reads `.cursorrules`; same MCP server |
 | **Continue** | `sigmap mcp install vscode` | MCP tools inside the Continue extension |

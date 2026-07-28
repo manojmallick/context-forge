@@ -343,14 +343,14 @@ test('CLI --impact unknown file: exits 0 with zero-impact message or valid outpu
 // MCP tests
 // ---------------------------------------------------------------------------
 
-test('MCP tools/list: returns 20 tools including get_impact', () => {
+test('MCP tools/list: returns 21 tools including get_impact', () => {
   const msgs = mcpCall({ jsonrpc: '2.0', method: 'tools/list', id: 1 });
   assert.ok(msgs.length > 0, 'should get at least one response');
   const res = msgs[0];
   assert.ok(res.result && Array.isArray(res.result.tools), 'should have tools array');
   const names = res.result.tools.map((t) => t.name);
   assert.ok(names.includes('get_impact'), `expected get_impact in tools, got: ${names}`);
-  assert.strictEqual(names.length, 20, `expected 20 tools, got ${names.length}: ${names}`);
+  assert.strictEqual(names.length, 21, `expected 21 tools, got ${names.length}: ${names}`);
 });
 
 test('MCP get_impact: returns string result for known file', () => {

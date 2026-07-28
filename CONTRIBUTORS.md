@@ -35,6 +35,9 @@ To ensure proper attribution:
 
 We welcome contributions! See [Contributing](./docs/CONTRIBUTING.md) for guidelines.
 
+### Recent Contributors (v8.23.0)
+- **@manojmallick** — feat(tracking,mcp): `sigmap budget` session spend ledger (estimated SigMap-emitted tokens, optional budget, context-age TTL) + `get_budget` MCP tool (21st); `SIGMAP_SESSION` identity; opt-in `sessionBudgetTokens`/`contextTtlDays` (#508, PR #509)
+
 ### Recent Contributors (v8.22.0)
 - **@manojmallick** — feat(eval,benchmarks): hard-split corpus + deterministic leakage gate (`src/eval/corpus.js`, `scripts/validate-task-corpus.mjs`) + repo-size buckets in `benchmark:honest`; 15 leak-free hard tasks; measured the hard-split ceiling (33.3% vs grep 53.3%) (#505, PR #506)
 - **@octo-patch** — feat(eval): MiniMax LLM-ablation provider — `MINIMAX_API_KEY`, OpenAI-compatible endpoint, default MiniMax-M3, pricing entry + tests (PR #504)

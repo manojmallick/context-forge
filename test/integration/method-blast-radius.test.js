@@ -177,7 +177,7 @@ test('get_method_impact direction callees + unknown symbol + missing arg', () =>
 });
 
 test('get_method_impact is registered as the 20th MCP tool', () => {
-  assert.strictEqual(TOOLS.length, 20, `expected 20 tools, got ${TOOLS.length}`);
+  assert.strictEqual(TOOLS.length, 21, `expected 21 tools, got ${TOOLS.length}`);
   const tool = TOOLS.find((t) => t.name === 'get_method_impact');
   assert.ok(tool, 'tool definition missing');
   assert.deepStrictEqual(tool.inputSchema.required, ['symbol']);

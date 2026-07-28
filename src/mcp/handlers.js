@@ -587,6 +587,41 @@ function readMemory(args, cwd) {
 }
 
 /**
+ * get_budget({ session?, budgetTokens? }) → string
+ *
+ * Session spend ledger (F1): estimated tokens SigMap emitted this session,
+ * optional budget remaining, and context freshness. Estimates only (chars/4);
+ * does NOT see the host chat's total spend.
+ */
+function getBudget(args, cwd) {
+  const { budgetStatus } = require('../tracking/budget');
+  let config = {};
+  try { config = require('../config/loader').loadConfig(cwd) || {}; } catch (_) {}
+  const opts = { config };
+  if (args && args.session) opts.session = String(args.session);
+  if (args && args.budgetTokens != null) opts.budgetTokens = Number(args.budgetTokens);
+  const s = budgetStatus(cwd, opts);
+
+  const out = ['# SigMap session spend (estimates — chars/4; SigMap-emitted tokens only)'];
+  out.push('');
+  out.push(`Session   : ${s.session}`);
+  out.push(`Ops       : ${s.ops}`);
+  out.push(`Spent     : ~${s.spentTokens.toLocaleString()} tokens (baseline ~${s.baselineTokens.toLocaleString()}, saved ~${s.savedTokens.toLocaleString()})`);
+  if (s.budgetTokens != null) {
+    out.push(`Budget    : ${s.budgetTokens.toLocaleString()} → remaining ~${s.remainingTokens.toLocaleString()} (${s.pctUsed}% used)${s.overBudget ? '  ⚠ OVER BUDGET' : ''}`);
+    if (s.overBudget || (s.pctUsed != null && s.pctUsed >= 80)) {
+      out.push('Advice    : prefer terse output, squeeze large inputs, summarize-then-drop context.');
+    }
+  } else {
+    out.push('Budget    : none set (config sessionBudgetTokens or budgetTokens arg)');
+  }
+  out.push(s.context.exists
+    ? `Context   : ${s.context.ageDays} day(s) old${s.context.stale ? ` — STALE (> ${s.context.ttlDays}d TTL); re-run sigmap` : ''}`
+    : 'Context   : no generated context found — run sigmap first');
+  return out.join('\n');
+}
+
+/**
  * get_callee_signatures — return the exact defining signature(s) of named
  * symbols from the index, so an agent never guesses a callee's parameter types.
  * Unknown names get a closest-match suggestion.
@@ -979,4 +1014,4 @@ function squeezeOutput(args, cwd) {
   return header + sq.squeezed;
 }
 
-module.exports = { readContext, searchSignatures, getMap, createCheckpoint, getRouting, explainFile, listModules, queryContext, getMethodImpact, getImpact, getLines, readMemory, getCalleeSignatures, notifyFileCreated, notifySymbolAdded, notifyFileDeleted, getDiffContext, getArchitectureOverview, verifySuggestion, squeezeOutput };
+module.exports = { readContext, searchSignatures, getMap, createCheckpoint, getRouting, explainFile, listModules, queryContext, getMethodImpact, getImpact, getLines, readMemory, getCalleeSignatures, notifyFileCreated, notifySymbolAdded, notifyFileDeleted, getDiffContext, getArchitectureOverview, verifySuggestion, squeezeOutput, getBudget };
