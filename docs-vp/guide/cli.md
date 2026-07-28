@@ -1,13 +1,13 @@
 ---
 title: CLI reference
-description: Complete SigMap CLI reference. All commands and flags with examples — ask, evidence, squeeze, conventions, plan, bench, judge, verify, verify-ai-output, verify-plan, review-pr, create, memory, note, status, doctor, validate, roots, daemon, history, --package, --global, --ci, --cost, --coverage, --watch, --diff, --callers, --callees, --mcp, --report, --health, weights --export/--import and more.
+description: Complete SigMap CLI reference. All commands and flags with examples — ask, evidence, budget, squeeze, conventions, plan, bench, judge, verify, verify-ai-output, verify-plan, review-pr, create, memory, note, status, doctor, validate, roots, daemon, history, --package, --global, --ci, --cost, --coverage, --watch, --diff, --callers, --callees, --mcp, --report, --health, weights --export/--import and more.
 head:
   - - meta
     - property: og:title
       content: "SigMap CLI Reference — every command and flag with examples"
   - - meta
     - property: og:description
-      content: "All 79 SigMap commands and flags documented with examples. ask, evidence, gain, squeeze, conventions, scaffold, plan, bench, judge, verify, verify-ai-output, verify-plan, review-pr, create, note, status, doctor, validate, roots, daemon, history, --ci, --cost, --coverage, --watch, --diff, --callers, --callees, --mcp, --report, --health, weights --export/--import and more."
+      content: "All 80 SigMap commands and flags documented with examples. ask, evidence, gain, budget, squeeze, conventions, scaffold, plan, bench, judge, verify, verify-ai-output, verify-plan, review-pr, create, note, status, doctor, validate, roots, daemon, history, --ci, --cost, --coverage, --watch, --diff, --callers, --callees, --mcp, --report, --health, weights --export/--import and more."
   - - meta
     - property: og:url
       content: "https://sigmap.io/guide/cli"
@@ -19,7 +19,7 @@ head:
       content: "SigMap CLI Reference — every command and flag with examples"
   - - meta
     - name: twitter:description
-      content: "All 79 SigMap commands and flags documented with examples. ask, evidence, gain, squeeze, conventions, scaffold, plan, bench, judge, verify, verify-ai-output, verify-plan, review-pr, create, note, status, doctor, validate, daemon, history, --ci, --cost, --coverage, --watch, --diff, --callers, --callees, --mcp, --report, --health, weights --export/--import and more."
+      content: "All 80 SigMap commands and flags documented with examples. ask, evidence, gain, budget, squeeze, conventions, scaffold, plan, bench, judge, verify, verify-ai-output, verify-plan, review-pr, create, note, status, doctor, validate, daemon, history, --ci, --cost, --coverage, --watch, --diff, --callers, --callees, --mcp, --report, --health, weights --export/--import and more."
   - - meta
     - name: twitter:image:alt
       content: "SigMap CLI Reference"
@@ -864,6 +864,36 @@ No new storage is introduced — this reads the same files `note`, `learn`/`weig
 
 ---
 
+## budget
+
+Session spend ledger over the existing gain log — the estimated tokens **SigMap itself emitted** this session (chars/4, always labeled estimates; a CLI cannot see the host chat's total spend), an optional budget with remaining/percent-used, and the age of the generated context. Session identity is the `SIGMAP_SESSION` env var when the host agent sets one, else the UTC day bucket. Also exposed to agents as the MCP tool `get_budget`, which adds degrade-gracefully advice (terse encoding, `squeeze`, summarize-then-drop) at ≥80% budget.
+
+```bash
+sigmap budget                        # human summary for the current session
+sigmap budget --json                 # machine-readable
+sigmap budget --budget 50000         # one-off budget override
+SIGMAP_SESSION=chat-42 sigmap budget # explicit session key
+```
+
+```
+[sigmap] session spend (estimates — chars/4; SigMap-emitted tokens only)
+  session   2026-07-28
+  ops       14
+  spent     ~3,900 tokens  (baseline ~41,200, saved ~37,300)
+  budget    50,000 → remaining ~46,100 (7.8% used)
+  context   0.2 day(s) old
+```
+
+| Option | Description |
+|--------|-------------|
+| `--json` | Emit the full status `{ session, unit, ops, spentTokens, baselineTokens, savedTokens, budgetTokens, remainingTokens, pctUsed, overBudget, context }` |
+| `--session <key>` | Report on a specific session key instead of the current one |
+| `--budget <tokens>` | Budget override for this invocation (persistent: config `sessionBudgetTokens`) |
+
+Config: `sessionBudgetTokens` (budget threshold) and `contextTtlDays` (marks context `STALE` past the TTL) — both opt-in, `null` by default.
+
+---
+
 ## note
 
 Append a note to a cross-session decision log so an agent (or you) can recall *what we were doing and why* later. Notes are stored as append-only NDJSON at `.context/notes.ndjson` (text + ISO timestamp + git branch). Running `note` with no text lists recent notes.
@@ -1240,8 +1270,8 @@ sigmap bench --submit --json
  SigMap Community Benchmark Submission
 ────────────────────────────────────────────────────────
  SigMap version : 8.21.0
- Benchmark ID   : sigmap-v8.22-main
- Submitted      : 2026-07-27
+ Benchmark ID   : sigmap-v8.23-main
+ Submitted      : 2026-07-28
 ────────────────────────────────────────────────────────
  Canonical metrics (official release):
  hit@5          : 82.2%

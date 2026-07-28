@@ -10,6 +10,18 @@ Format: [Semantic Versioning](https://semver.org/)
 
 ---
 
+## [8.23.0] — 2026-07-28
+
+Minor release — **"Agent Economy I" (v8.23, F1)**: SigMap's token savings become queryable *during* a session. A spend ledger over the existing gain log, an optional budget threshold, and context-freshness age — as a CLI command and the 21st MCP tool.
+
+### Added
+- **`sigmap budget` + MCP `get_budget` (#508, PR #509):** new `src/tracking/budget.js` — `budgetStatus()` sums the session's gain-log entries (estimated SigMap-emitted tokens: spent/baseline/saved, op count), computes remaining/pct against an optional budget, and reports generated-context age with a stale flag. Session identity: `SIGMAP_SESSION` env override, else UTC day bucket; `recordUsage` now stamps every entry with `session` (legacy entries match day buckets by timestamp prefix). New opt-in config keys `sessionBudgetTokens` and `contextTtlDays` (both default `null`). CLI: `sigmap budget [--json] [--session <key>] [--budget <tokens>]`. The MCP tool advises degrade-gracefully tactics (terse encoding, `squeeze`, summarize-then-drop) at ≥80% budget. 7 new integration tests (129 test files); tool-count guards advanced 20→21.
+
+### Changed
+- **Scope honesty by design:** the ledger counts tokens **SigMap emitted** (chars/4, labeled `estimated-tokens` on every surface) — not the host chat's total spend, which a CLI cannot see. Context freshness replaces the originally-planned prompt-cache "injection TTL", which was unverifiable and got cut in the plan audit.
+
+---
+
 ## [8.22.0] — 2026-07-28
 
 Minor release — **"Hard Corpus" (v8.22)**: the benchmark corpus gains a no-leakage hard split with a deterministic leakage gate, and per-repo-size buckets stop tiny repos from flattering the average. The headline retrieval number gets harder — and honest.

@@ -122,6 +122,7 @@ All tools are available on-demand — your AI agent calls only what it needs.
 | `get_architecture_overview` | One-call codebase map: module breakdown (files/tokens), most-depended-on hub files, dependency-cycle count, route totals. Extends `get_map`. New in v8.0. | none | `get_architecture_overview()` |
 | `verify_suggestion` | Ground an AI code suggestion before writing it — verify a snippet against the repo **and the libraries actually installed** in `node_modules` (the grounding moat); flags fake files/imports/symbols/scripts and reports the installed libraries verified against with pinned versions. New in v8.2. | `code` (required string) | `verify_suggestion(code="const r = Router()")` |
 | `squeeze_output` | Compress noisy tool/command/agent output — a stack trace, CI/build log, or JSON payload — before it enters context. Same deterministic, offline engine as `sigmap squeeze`: keeps the signal, strips the noise, enriches the top stack frame. Passes the input through unchanged when nothing is squeezable. New in v8.8. | `content` (required string) | `squeeze_output(content="Traceback…")` |
+| `get_budget` | Session spend ledger — estimated tokens SigMap emitted this session (chars/4, from the local gain log), optional budget remaining, and context freshness. Counts only SigMap output, not the whole chat. Advises degrade-gracefully tactics (terse, squeeze, summarize-then-drop) at ≥80% budget. New in v8.23. | `session` (optional string) · `budgetTokens` (optional number) | `get_budget(budgetTokens=50000)` |
 
 ## Your agent's live loop
 
