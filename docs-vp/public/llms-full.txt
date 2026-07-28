@@ -127,6 +127,7 @@ sigmap memory                            List cross-session stores (.context/) �
 sigmap memory --clear <store>            Clear one store: session|notes|weights|evidence|all (--json supported)
 sigmap budget                            Session spend ledger — estimated SigMap-emitted tokens, budget, context age (--json)
 sigmap budget --budget <tokens>          One-off budget override (config: sessionBudgetTokens, contextTtlDays)
+sigmap redact [file]                     Mask secrets in a file or stdin (10-pattern bank); redacted text to stdout (--json)
 sigmap note "<text>"                     Append a note to the cross-session decision log
 sigmap note                              List recent notes (also: note --list <N>)
 sigmap status                            Show repo state — branch, dirty files, index freshness, notes
