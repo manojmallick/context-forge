@@ -7,7 +7,7 @@ head:
       content: "SigMap Roadmap — version history and upcoming features"
   - - meta
     - property: og:description
-      content: "95 versions shipped. See what changed in each release and what is coming next."
+      content: "96 versions shipped. See what changed in each release and what is coming next."
   - - meta
     - property: og:url
       content: "https://sigmap.io/guide/roadmap"
@@ -20,7 +20,7 @@ head:
 ---
 # Roadmap
 
-Ninety-five versions shipped. MIT open source from day one.
+Ninety-six versions shipped. MIT open source from day one.
 
 **Stats:** 96.8% overall token reduction · 82.2% retrieval hit@5 (1.59× measured lift vs single-shot grep) · 98.0% test-discovery F1 · installed-library grounding (JS/TS + Python) · method-level call-graph (JS/TS, Python, Java, Go, Rust) · 21 MCP tools · 33 languages · 17-language source resolver · 0 npm deps
 
@@ -828,6 +828,16 @@ Two milestones in one release. **`verify-ai-output` Reliable MVP** (#232) grows 
 
 ---
 
+### v8.25.0 — Agent Economy II: sigmap tune ✓ (2026-08-18)
+
+**Minor release — the discovery stack becomes a config optimizer.** New `src/config/tune.js`: `buildTuneProposal(cwd)` packages `resolveSourceRoots`, the workspace-marker probe, and client-artifact detection into a deterministic recommended-config diff — one evidence-naming reason per change, explicit user choices never proposed against. Five rules: **srcDirs pin** (confidence-gated; pinned srcDirs are stable across runs and protected from token-budget drops), **monorepo** (reason names the marker found), **adapters** (additive, from `CLAUDE.md`/`.cursorrules`/`.windsurfrules`/`AGENTS.md`), **exclude** (curated vendored/generated dirs at root, defaults preserved), **autoMaxTokens** (fires only when a pinned budget sits below a labeled ~25-tokens/file estimate). `applyTuneProposal` merges into `gen-context.config.json` preserving every user key and is idempotent — a second `tune` proposes nothing. CLI: read-only by default (`--dry-run` alias), `--apply` writes and hands off to `sigmap validate`, `--json` for agents. This is F2 of the Agent Economy pillar — the direct answer to the #1 onboarding failure (bad/default config), built entirely from detection code that already existed.
+
+**Tags:** `sigmap tune` · `buildTuneProposal` · `applyTuneProposal` · `--apply` · `--json` · `F2` · `#514` · `PR #515`
+
+**Impact:** config onboarding is now one command; 10 new integration tests (131 files); zero new dependencies, zero new detection code.
+
+---
+
 ### v8.24.0 — Trust Quick Wins I: sigmap redact ✓ (2026-07-28)
 
 **Minor release — the redaction engine goes standalone.** New `src/security/redact.js`: `redactText()` applies the existing 10-pattern secret bank to arbitrary text, masking only the matched substring (`[REDACTED:<pattern>]`) so surrounding context stays readable — the generation-time scanner's whole-line behavior is untouched. Findings carry 1-based line numbers and per-pattern counts. CLI `sigmap redact [file] [--json]` reads a file or stdin and keeps stdout pipe-clean (summary on stderr), so `git diff | sigmap redact` works as a pre-share hygiene step. A fitting validation: GitHub Push Protection rejected the first push of the test fixtures because the fake secrets pattern-matched real credential formats — fixtures are now assembled at runtime so no secret-shaped literal exists in any committed blob.
@@ -1508,7 +1518,7 @@ Alongside it: the **token budget now keeps full signatures** (#240) — when con
 
 ---
 
-## Current milestone — Phase 2 "buy the A+" 🚧 NEXT — Phase 1 grounding banked (G1/D8/G2); the §3.5 in-boundary backlog D1–D9 is complete (v8.12) and method-level blast-radius scoring shipped (GR2, v8.13) and the call-graph now covers Java/Go/Rust (GR1, v8.14) with the ranking boost measured and shipped dark (v8.15). Evidence Pack schema v2 shipped (v8.16). Retrieval surface-enrichment shipped measure-gated (v8.18) — every Phase-2 quality-ceiling row is now done or gate-closed. Honest Numbers shipped (v8.19): the published lift is now measured vs a grep-agent baseline, with claim-hygiene guards. Semantic Bridge I shipped (v8.20): JS/TS doc hints (Python-parity, −0.9pt on the lexical corpus, default-on per the anchors precedent) + `sigmap memory`. Semantic Bridge II shipped (v8.21): Go/Rust/Java doc hints (6 hint languages total) + the import-graph centrality blend (measured +0 → shipped dark behind `retrieval.centralityBlend`). Hard Corpus shipped (v8.22): the no-leakage hard split + leakage gate measured the vocabulary-mismatch ceiling directly (hard-split 33.3% vs grep 53.3% — grep wins when filename leakage is removed). Agent Economy I shipped (v8.23) and Trust Quick Wins I shipped (v8.24, `sigmap redact`). Next: Agent Economy II (F2 `sigmap tune` config auto-recommendation, F3 usage-maximizer skill, F4 multi-client `skills install`) per the improvement plan, with B2 repo-mined expansion (v9.0) aimed at the measured hard-split gap; pull-based v10 items only (enterprise, IDE plugins — built if users ask) and the no-code growth lane
+## Current milestone — Phase 2 "buy the A+" 🚧 NEXT — Phase 1 grounding banked (G1/D8/G2); the §3.5 in-boundary backlog D1–D9 is complete (v8.12) and method-level blast-radius scoring shipped (GR2, v8.13) and the call-graph now covers Java/Go/Rust (GR1, v8.14) with the ranking boost measured and shipped dark (v8.15). Evidence Pack schema v2 shipped (v8.16). Retrieval surface-enrichment shipped measure-gated (v8.18) — every Phase-2 quality-ceiling row is now done or gate-closed. Honest Numbers shipped (v8.19): the published lift is now measured vs a grep-agent baseline, with claim-hygiene guards. Semantic Bridge I shipped (v8.20): JS/TS doc hints (Python-parity, −0.9pt on the lexical corpus, default-on per the anchors precedent) + `sigmap memory`. Semantic Bridge II shipped (v8.21): Go/Rust/Java doc hints (6 hint languages total) + the import-graph centrality blend (measured +0 → shipped dark behind `retrieval.centralityBlend`). Hard Corpus shipped (v8.22): the no-leakage hard split + leakage gate measured the vocabulary-mismatch ceiling directly (hard-split 33.3% vs grep 53.3% — grep wins when filename leakage is removed). Agent Economy I shipped (v8.23) and Trust Quick Wins I shipped (v8.24, `sigmap redact`). Agent Economy II shipped (v8.25): `sigmap tune` — the discovery stack packaged as a deterministic config optimizer (F2). Next: F3 usage-maximizer skill + F4 multi-client `skills install` to finish the Agent Economy pillar, the deferred trust docs (G1 KNOWN_LIMITATIONS, G2 SUCCESSION), then v9.0 — G4 tokenizer core + D1 arity verify + B2 repo-mined expansion aimed at the measured hard-split gap; pull-based v10 items only (enterprise, IDE plugins — built if users ask) and the no-code growth lane
 
 **v8.0 "Evidence Pack & the Pivot" ✓ COMPLETE** — E1 Evidence Pack in v7.26.0, D3 +2 MCP tools (15→17) in v7.27.0, E3 `doctor` in v7.28.0, E4 `mcp install` in v7.29.0, and **v7.30.0** the repositioning pivot: every public surface now states *"the deterministic, verifiable grounding layer for AI code work"* (token reduction demoted to proof) plus **agent recipes** framing Claude Code, Cursor, Cline, Continue, Aider, OpenHands, and Codex CLI as consumers. The v8.0 exit gate is met: a cold user reaches a useful answer in <5 min, an agent consumes the Evidence Pack JSON with zero copy-paste, and no public surface still calls SigMap a "compression tool".
 

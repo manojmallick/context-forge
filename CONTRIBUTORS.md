@@ -35,6 +35,9 @@ To ensure proper attribution:
 
 We welcome contributions! See [Contributing](./docs/CONTRIBUTING.md) for guidelines.
 
+### Recent Contributors (v8.25.0)
+- **@manojmallick** — feat(config): `sigmap tune` — deterministic config optimizer over the existing discovery stack (srcDirs pin · monorepo · adapters · exclude · autoMaxTokens), read-only by default, `--apply` merges preserving user keys, idempotent (#514, PR #515)
+
 ### Recent Contributors (v8.24.0)
 - **@manojmallick** — feat(security): `sigmap redact` — standalone substring-level secret masking over files/stdin (10-pattern bank, pipe-clean stdout, `--json`); every-pattern test sweep (#511, PR #512)
 

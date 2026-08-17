@@ -1,6 +1,6 @@
 ---
 title: CLI reference
-description: Complete SigMap CLI reference. All commands and flags with examples — ask, evidence, budget, redact, squeeze, conventions, plan, bench, judge, verify, verify-ai-output, verify-plan, review-pr, create, memory, note, status, doctor, validate, roots, daemon, history, --package, --global, --ci, --cost, --coverage, --watch, --diff, --callers, --callees, --mcp, --report, --health, weights --export/--import and more.
+description: Complete SigMap CLI reference. All commands and flags with examples — ask, evidence, budget, redact, tune, squeeze, conventions, plan, bench, judge, verify, verify-ai-output, verify-plan, review-pr, create, memory, note, status, doctor, validate, roots, daemon, history, --package, --global, --ci, --cost, --coverage, --watch, --diff, --callers, --callees, --mcp, --report, --health, weights --export/--import and more.
 head:
   - - meta
     - property: og:title
@@ -88,6 +88,7 @@ If you are new to the product, start with the workflow pages first:
 | Command / Flag | Description |
 |----------------|-------------|
 | `roots [--explain | --json | --fix]` | Auto-detect source roots for 17 languages and 50+ frameworks; shows confidence and scoring |
+| `tune [--apply | --json]` | Recommend config from repo detection — srcDirs pin, monorepo, adapters, exclude, budget — one reason per change; `--apply` writes |
 | `history` | Show usage log + benchmark trend sparklines (hit@5, token reduction) |
 | `note "<text>"` | Append a note to the cross-session decision log (`note` alone lists recent) |
 | `status` | Repo state — branch, dirty files, index freshness, notes |
@@ -877,7 +878,7 @@ SIGMAP_SESSION=chat-42 sigmap budget # explicit session key
 
 ```
 [sigmap] session spend (estimates — chars/4; SigMap-emitted tokens only)
-  session   2026-07-28
+  session   2026-08-17
   ops       14
   spent     ~3,900 tokens  (baseline ~41,200, saved ~37,300)
   budget    50,000 → remaining ~46,100 (7.8% used)
@@ -1193,6 +1194,47 @@ Writing to gen-context.config.json...
 
 ---
 
+## tune
+
+Deterministic config optimizer (v8.25.0). Packages the discovery stack (`resolveSourceRoots`, workspace markers, client-artifact probes) into a **recommended config diff** with one evidence-naming reason per change — the answer to the #1 onboarding failure: a bad or default config. Read-only by default; explicit user choices are never proposed against.
+
+```bash
+sigmap tune               # print recommendations (writes nothing)
+sigmap tune --apply       # merge them into gen-context.config.json
+sigmap tune --json        # machine-readable proposal (for agents)
+```
+
+```
+[sigmap] tune: 3 recommended change(s)
+  srcDirs        null → ["src"]
+                 reason: pin the 1 detected source root(s) [confidence medium] — explicit srcDirs are stable across runs and protected from budget drops
+  monorepo       false → true
+                 reason: workspace marker found: pnpm-workspace.yaml
+  adapters       ["copilot"] → ["copilot","claude","cursor"]
+                 reason: client files present: CLAUDE.md, .cursorrules
+
+  apply with: sigmap tune --apply   (then: sigmap validate)
+  detection: roots [src] · confidence medium · monorepo yes
+```
+
+Five rules, each deterministic:
+
+| Rule | Fires when | Reason names |
+|------|------------|--------------|
+| `srcDirs` | unpinned + detection confidence ≥ medium | the detected roots + confidence (pinned srcDirs are protected from token-budget drops) |
+| `monorepo` | a workspace marker exists and the mode is off | the marker found (`pnpm-workspace.yaml`, `turbo.json`, `nx.json`, `lerna.json`, package.json `workspaces`) |
+| `adapters` | a client artifact has no matching adapter | the files found (`CLAUDE.md`, `.cursorrules`, `.windsurfrules`, `AGENTS.md`) — additive only |
+| `exclude` | a curated vendored/generated dir sits unexcluded at root | the dirs found (`third_party`, `external(s)`, `generated`, `testdata`, …) — defaults preserved |
+| `autoMaxTokens` | a pinned budget is below the repo's ~25-tokens/file estimate | the file count (labeled heuristic) |
+
+| Option | Description |
+|--------|-------------|
+| `--apply` | Write the recommendations into `gen-context.config.json` (merges; every existing user key preserved; idempotent — a second `tune` proposes nothing) |
+| `--json` | Emit `{ changes: [{key, current, recommended, reason}], detection, configExists }` |
+| `--dry-run` | Alias of the read-only default |
+
+---
+
 ## history
 
 Display the last N usage log entries as a table with Unicode sparklines for token trend, retrieval hit@5, and token-reduction benchmark history. Requires `tracking: true` in `gen-context.config.json` (or `--track` on each run) for usage rows; benchmark rows appear automatically once any benchmark script has run.
@@ -1255,7 +1297,7 @@ sigmap compare --json
 ────────────────────────────────────────────
  SigMap vs Baseline
 ────────────────────────────────────────────
- hit@5         82.2% vs 44.8% grep   (1.59× lift)
+ hit@5         82.2% vs 44.0% grep   (1.87× lift)
  Avg prompts   1.53 vs 2.84
  Token story   96.8% overall reduction
 ────────────────────────────────────────────
@@ -1294,8 +1336,8 @@ sigmap bench --submit --json
  SigMap Community Benchmark Submission
 ────────────────────────────────────────────────────────
  SigMap version : 8.21.0
- Benchmark ID   : sigmap-v8.24-main
- Submitted      : 2026-07-28
+ Benchmark ID   : sigmap-v8.25-main
+ Submitted      : 2026-08-17
 ────────────────────────────────────────────────────────
  Canonical metrics (official release):
  hit@5          : 82.2%

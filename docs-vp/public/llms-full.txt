@@ -11,17 +11,17 @@ ranking keeps the relevant context in scope (cutting tokens ~97% as a side
 effect), with no LLM calls, embeddings, or vector database. Works with Claude,
 Cursor, GitHub Copilot, Aider, Windsurf, local LLMs, and MCP.
 
-# Version: 8.24.0 | Benchmark: sigmap-v8.24-main (2026-07-28)
+# Version: 8.25.0 | Benchmark: sigmap-v8.25-main (2026-08-17)
 # Source: auto-generated from package.json, version.json, benchmarks/latest.json, src/mcp/tools.js, src/config/defaults.js
 # Regenerate: npm run generate:llms   |   Validate: npm run validate:llms
 
 ---
 
-## Core metrics (benchmark: sigmap-v8.24-main, 2026-07-28)
+## Core metrics (benchmark: sigmap-v8.25-main, 2026-08-17)
 
 | Metric | Without SigMap | With SigMap |
 |--------|----------------|-------------|
-| Retrieval hit@5 | 44.8% (single-shot grep) | 82.2% (1.59× lift) |
+| Retrieval hit@5 | 44.0% (single-shot grep) | 82.2% (1.87× lift) |
 | Token reduction | — | 96.8% average |
 | Task-success proxy (modeled) | — | 64.8% |
 | Prompts per task | 2.84 | 1.53 (46.1% fewer) |
@@ -128,6 +128,8 @@ sigmap memory --clear <store>            Clear one store: session|notes|weights|
 sigmap budget                            Session spend ledger — estimated SigMap-emitted tokens, budget, context age (--json)
 sigmap budget --budget <tokens>          One-off budget override (config: sessionBudgetTokens, contextTtlDays)
 sigmap redact [file]                     Mask secrets in a file or stdin (10-pattern bank); redacted text to stdout (--json)
+sigmap tune                              Recommend config from repo detection — srcDirs, monorepo, adapters, exclude, budget (--json)
+sigmap tune --apply                      Write the recommendations into gen-context.config.json (merges; your keys preserved)
 sigmap note "<text>"                     Append a note to the cross-session decision log
 sigmap note                              List recent notes (also: note --list <N>)
 sigmap status                            Show repo state — branch, dirty files, index freshness, notes

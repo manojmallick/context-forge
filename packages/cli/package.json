@@ -1,6 +1,6 @@
 {
   "name": "sigmap-cli",
-  "version": "8.24.0",
+  "version": "8.25.0",
   "description": "SigMap CLI wrapper — thin adapter for programmatic CLI invocation",
   "main": "index.js",
   "keywords": [
