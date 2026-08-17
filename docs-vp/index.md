@@ -78,9 +78,9 @@ features:
 
 <div style="max-width:840px;margin:0 auto;padding:18px 24px 0;text-align:center">
 <div style="display:inline-flex;flex-wrap:wrap;gap:.5rem;justify-content:center;background:var(--vp-c-brand-soft,#ede9fe);border:1px solid rgba(124,106,247,.25);border-radius:999px;padding:.55rem .9rem;font-size:.9rem;color:var(--vp-c-text-1)">
-  <span><strong>Release:</strong> v8.26.0</span>
+  <span><strong>Release:</strong> v8.26.1</span>
   <span>·</span>
-  <span><strong>New — <code>sigmap skills install</code>:</strong> SigMap's optimal usage loop, installed as native agent skills in Claude Code, Cursor, Windsurf, Copilot, and AGENTS.md — ask before reading, read anchored ranges, verify before trusting, squeeze big pastes, watch the budget. One command, five clients, idempotent, human content never touched. The Agent Economy pillar is complete. Zero dependencies, offline, deterministic.</span>
+  <span><strong>New — extraction honesty:</strong> <a href="https://github.com/manojmallick/sigmap/blob/main/KNOWN_LIMITATIONS.md">KNOWN_LIMITATIONS.md</a> states plainly what each extractor tier can and cannot do — AST vs anchored-regex vs heuristic, the truncation caps, the known gaps, and what they mean for <code>verify</code> — drift-locked by a guard test. Plus v8.26's <code>sigmap skills install</code>: the optimal usage loop as native agent skills in five clients. Zero dependencies, offline, deterministic.</span>
 </div>
 <div style="margin-top:.4rem;display:inline-flex;flex-wrap:wrap;gap:.5rem;justify-content:center;background:var(--vp-c-default-soft,#f3f4f6);border:1px solid rgba(0,0,0,.08);border-radius:999px;padding:.55rem .9rem;font-size:.9rem;color:var(--vp-c-text-2)">
   <span><strong>Benchmark:</strong> sigmap-v8.26-main</span>

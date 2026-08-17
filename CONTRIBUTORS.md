@@ -35,6 +35,9 @@ To ensure proper attribution:
 
 We welcome contributions! See [Contributing](./docs/CONTRIBUTING.md) for guidelines.
 
+### Recent Contributors (v8.26.1)
+- **@manojmallick** — docs(trust): `KNOWN_LIMITATIONS.md` — three-tier extractor honesty table, truncation caps, verify implication; README tier label; drift-locked guard test (#520, PR #521)
+
 ### Recent Contributors (v8.26.0)
 - **@manojmallick** — feat(skills): `sigmap skills list|install` — usage-maximizer + config-optimizer playbooks emitted in 5 clients' native skill/rules formats (Claude/Cursor/Windsurf/Copilot/AGENTS.md above-marker block); presence-gated, idempotent (#517, PR #518)
 

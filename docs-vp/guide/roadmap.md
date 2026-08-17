@@ -7,7 +7,7 @@ head:
       content: "SigMap Roadmap — version history and upcoming features"
   - - meta
     - property: og:description
-      content: "97 versions shipped. See what changed in each release and what is coming next."
+      content: "98 versions shipped. See what changed in each release and what is coming next."
   - - meta
     - property: og:url
       content: "https://sigmap.io/guide/roadmap"
@@ -20,7 +20,7 @@ head:
 ---
 # Roadmap
 
-Ninety-seven versions shipped. MIT open source from day one.
+Ninety-eight versions shipped. MIT open source from day one.
 
 **Stats:** 96.8% overall token reduction · 82.2% retrieval hit@5 (1.59× measured lift vs single-shot grep) · 98.0% test-discovery F1 · installed-library grounding (JS/TS + Python) · method-level call-graph (JS/TS, Python, Java, Go, Rust) · 21 MCP tools · 33 languages · 17-language source resolver · 0 npm deps
 
@@ -828,6 +828,16 @@ Two milestones in one release. **`verify-ai-output` Reliable MVP** (#232) grows 
 
 ---
 
+### v8.26.1 — Trust Quick Wins II: KNOWN_LIMITATIONS.md ✓ (2026-08-18)
+
+**Patch release — Pillar-A honesty reaches the extraction layer (G1).** New [`KNOWN_LIMITATIONS.md`](https://github.com/manojmallick/sigmap/blob/main/KNOWN_LIMITATIONS.md): a three-tier extractor table grounded in code (Tier 1 AST — Python via `python_ast.py` with regex fallback; Tier 2 anchored regex — the 11 `withAnchor` brace languages, doc hints on 6; Tier 3 pattern/heuristic — the rest plus the generic fallback), the truncation caps (25 signatures/file, 8 members/block) and what falls off, the nested-paren regex gap named plainly as the G4/D1 precondition, and the honest `verify` framing: an index-missing real symbol flags `fake-symbol` at medium confidence — a conservative false positive, never a silent pass. README carries a compact "Extraction honesty" tier label. A guard test drift-locks the doc's counts to `version.json` and cross-checks the Tier-2 count against the extractors that actually call `withAnchor` — the honesty page cannot silently rot.
+
+**Tags:** `KNOWN_LIMITATIONS.md` · `extraction honesty` · `tier label` · `drift guard` · `G1` · `#520` · `PR #521`
+
+**Impact:** the credibility gap a skeptical reviewer finds first is closed in writing; 6 new guard checks (133 files); zero runtime changes.
+
+---
+
 ### v8.26.0 — Agent Economy III: sigmap skills, the pillar closes ✓ (2026-08-18)
 
 **Minor release — the optimal usage loop becomes installable behavior, and the Agent Economy pillar (F1→F4) is complete.** New `src/skills/skills.js`: two canonical, deterministic skill documents — **sigmap-usage-maximizer** (F3: `ask` before any file read · `get_lines` for anchored ranges · `verify_suggestion` before trusting generated code · `squeeze` big logs/traces/JSON · checkpoint via `create_checkpoint`/`note` · check `get_budget` and summarize-then-drop near budget; token accounting reads the F1 ledger, no LLM calls) and **sigmap-config-optimizer** (the F2 playbook: `tune` → review reasons → `--apply` → `validate`). The installer mirrors the `mcp/install.js` CLIENTS pattern across five clients: Claude Code, Cursor, Windsurf, and Copilot get sigmap-namespaced native files; Codex gets a marker-delimited `AGENTS.md` block inserted **above** the signatures marker — the spot the codex adapter preserves on regeneration, proven by an end-to-end test that regenerates and checks the block, the human content, and the fresh signatures all coexist. Plain `skills install` wires only detected clients (the `--setup` only-touch-existing precedent); `--client`/`--all` create; every install is idempotent.
@@ -1528,7 +1538,7 @@ Alongside it: the **token budget now keeps full signatures** (#240) — when con
 
 ---
 
-## Current milestone — Phase 2 "buy the A+" 🚧 NEXT — Phase 1 grounding banked (G1/D8/G2); the §3.5 in-boundary backlog D1–D9 is complete (v8.12) and method-level blast-radius scoring shipped (GR2, v8.13) and the call-graph now covers Java/Go/Rust (GR1, v8.14) with the ranking boost measured and shipped dark (v8.15). Evidence Pack schema v2 shipped (v8.16). Retrieval surface-enrichment shipped measure-gated (v8.18) — every Phase-2 quality-ceiling row is now done or gate-closed. Honest Numbers shipped (v8.19): the published lift is now measured vs a grep-agent baseline, with claim-hygiene guards. Semantic Bridge I shipped (v8.20): JS/TS doc hints (Python-parity, −0.9pt on the lexical corpus, default-on per the anchors precedent) + `sigmap memory`. Semantic Bridge II shipped (v8.21): Go/Rust/Java doc hints (6 hint languages total) + the import-graph centrality blend (measured +0 → shipped dark behind `retrieval.centralityBlend`). Hard Corpus shipped (v8.22): the no-leakage hard split + leakage gate measured the vocabulary-mismatch ceiling directly (hard-split 33.3% vs grep 53.3% — grep wins when filename leakage is removed). Agent Economy I shipped (v8.23) and Trust Quick Wins I shipped (v8.24, `sigmap redact`). Agent Economy II shipped (v8.25): `sigmap tune` — the discovery stack packaged as a deterministic config optimizer (F2). Agent Economy III shipped (v8.26): `sigmap skills` — the usage-maximizer and config-optimizer playbooks installable in 5 clients' native formats (F3+F4) — **the Agent Economy pillar is complete**. Next: the deferred trust docs (G1 KNOWN_LIMITATIONS, G2 SUCCESSION, G6 triage), then v9.0 — G4 tokenizer core + D1 arity verify + B2 repo-mined expansion aimed at the measured hard-split gap; pull-based v10 items only (enterprise, IDE plugins — built if users ask) and the no-code growth lane
+## Current milestone — Phase 2 "buy the A+" 🚧 NEXT — Phase 1 grounding banked (G1/D8/G2); the §3.5 in-boundary backlog D1–D9 is complete (v8.12) and method-level blast-radius scoring shipped (GR2, v8.13) and the call-graph now covers Java/Go/Rust (GR1, v8.14) with the ranking boost measured and shipped dark (v8.15). Evidence Pack schema v2 shipped (v8.16). Retrieval surface-enrichment shipped measure-gated (v8.18) — every Phase-2 quality-ceiling row is now done or gate-closed. Honest Numbers shipped (v8.19): the published lift is now measured vs a grep-agent baseline, with claim-hygiene guards. Semantic Bridge I shipped (v8.20): JS/TS doc hints (Python-parity, −0.9pt on the lexical corpus, default-on per the anchors precedent) + `sigmap memory`. Semantic Bridge II shipped (v8.21): Go/Rust/Java doc hints (6 hint languages total) + the import-graph centrality blend (measured +0 → shipped dark behind `retrieval.centralityBlend`). Hard Corpus shipped (v8.22): the no-leakage hard split + leakage gate measured the vocabulary-mismatch ceiling directly (hard-split 33.3% vs grep 53.3% — grep wins when filename leakage is removed). Agent Economy I shipped (v8.23) and Trust Quick Wins I shipped (v8.24, `sigmap redact`). Agent Economy II shipped (v8.25): `sigmap tune` — the discovery stack packaged as a deterministic config optimizer (F2). Agent Economy III shipped (v8.26): `sigmap skills` — the usage-maximizer and config-optimizer playbooks installable in 5 clients' native formats (F3+F4) — **the Agent Economy pillar is complete**. Trust Quick Wins II shipped (v8.26.1): KNOWN_LIMITATIONS.md + the README extraction-honesty tier label (G1). Next: G2 SUCCESSION + org migration and G6 triage (maintainer-driven, non-code), then v9.0 — G4 tokenizer core + D1 arity verify + B2 repo-mined expansion aimed at the measured hard-split gap; pull-based v10 items only (enterprise, IDE plugins — built if users ask) and the no-code growth lane
 
 **v8.0 "Evidence Pack & the Pivot" ✓ COMPLETE** — E1 Evidence Pack in v7.26.0, D3 +2 MCP tools (15→17) in v7.27.0, E3 `doctor` in v7.28.0, E4 `mcp install` in v7.29.0, and **v7.30.0** the repositioning pivot: every public surface now states *"the deterministic, verifiable grounding layer for AI code work"* (token reduction demoted to proof) plus **agent recipes** framing Claude Code, Cursor, Cline, Continue, Aider, OpenHands, and Codex CLI as consumers. The v8.0 exit gate is met: a cold user reaches a useful answer in <5 min, an agent consumes the Evidence Pack JSON with zero copy-paste, and no public surface still calls SigMap a "compression tool".
 
