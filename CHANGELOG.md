@@ -10,6 +10,18 @@ Format: [Semantic Versioning](https://semver.org/)
 
 ---
 
+## [8.26.1] — 2026-08-18
+
+Patch release — **"Trust Quick Wins II" (G1)**: the extraction layer gets the same honesty treatment the benchmarks got in v8.19.
+
+### Added
+- **`KNOWN_LIMITATIONS.md` + README extraction-honesty tiers (#520, PR #521):** one page stating plainly what each extractor tier can and cannot do — Tier 1 AST (Python via `python_ast.py`, regex fallback without `python3`), Tier 2 anchored regex (the 11 `withAnchor` brace languages, doc hints on 6), Tier 3 pattern/heuristic (the rest + generic fallback) — plus the truncation caps (25 signatures/file, 8 members/block) and what falls off, the nested-paren regex gap (the stated G4/D1 precondition), and the honest `verify` implication: a real symbol missing from the index flags `fake-symbol` at **medium** confidence — a conservative false positive, never a silent pass. README carries a compact "Extraction honesty" tier label linking the page. A 6-check guard test drift-locks the doc's counts to `version.json` and cross-checks the Tier-2 count against the extractors that actually call `withAnchor`.
+
+### Changed
+- 6 new guard checks (133 test files). No runtime code changed; the npm tarball is unaffected.
+
+---
+
 ## [8.26.0] — 2026-08-18
 
 Minor release — **"Agent Economy III" (v8.26, F3+F4)**: the optimal SigMap usage loop ships as installable agent skills in every client's native format — completing the Agent Economy pillar (F1 budget → F2 tune → F3+F4 skills).
