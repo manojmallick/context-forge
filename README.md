@@ -397,6 +397,18 @@ All implemented with zero external dependencies.
 
 [Full language table →](https://sigmap.io/guide/generalization.html)
 
+### Extraction honesty
+
+Not all 33 languages get the same depth — and we say so plainly:
+
+| Tier | Coverage | Depth |
+|------|----------|-------|
+| **AST** | Python (`python3` on PATH; regex fallback without) | Full parse |
+| **Anchored regex** | 11 brace languages (JS, TS, Go, Rust, Java, Kotlin, Swift, PHP, Scala, Dart, C#) | Declarations + `:start-end` line anchors; doc hints on 6 |
+| **Pattern/heuristic** | Everything else + generic fallback | Line-oriented patterns |
+
+Caps: 25 signatures/file · 8 members/block. Full details, known regex gaps, and what they mean for `verify`: **[KNOWN_LIMITATIONS.md](KNOWN_LIMITATIONS.md)**.
+
 ---
 
 ## License
