@@ -10,6 +10,18 @@ Format: [Semantic Versioning](https://semver.org/)
 
 ---
 
+## [8.26.0] — 2026-08-18
+
+Minor release — **"Agent Economy III" (v8.26, F3+F4)**: the optimal SigMap usage loop ships as installable agent skills in every client's native format — completing the Agent Economy pillar (F1 budget → F2 tune → F3+F4 skills).
+
+### Added
+- **`sigmap skills` (#517, PR #518):** new `src/skills/skills.js` — two canonical, deterministic skill documents: **sigmap-usage-maximizer** (F3 — the spend-minimizing loop: `ask` before any file read · `get_lines` for anchored ranges instead of whole files · `verify_suggestion` before trusting generated code · `squeeze` any big log/trace/JSON · checkpoint via `create_checkpoint`/`note` · check `get_budget` and, near budget, summarize-then-drop; token accounting reads the F1 ledger — no LLM calls) and **sigmap-config-optimizer** (the F2 playbook: `tune` → review the evidence-naming reasons → `tune --apply` → `validate`). Multi-client installer mirroring the `mcp/install.js` CLIENTS pattern: Claude Code (`.claude/skills/<skill>/SKILL.md`), Cursor (`.cursor/rules/*.mdc`), Windsurf (`.windsurf/rules/*.md`), GitHub Copilot (`.github/instructions/*.instructions.md`), and Codex — a marker-delimited block injected into `AGENTS.md` **above** the `## Auto-generated signatures` marker, so the codex adapter's regeneration preserves it (proven by an end-to-end regeneration test). Human content is never touched; every install is idempotent (`installed`/`updated`/`already`). CLI: `sigmap skills list` and `sigmap skills install [--client <name> | --all] [--json]` — plain `install` wires only clients whose parent artifact exists (the `--setup` only-touch-existing precedent); `--client`/`--all` create. Zero new dependencies.
+
+### Changed
+- 8 new integration tests (132 test files); bundle rebuilt (149 modules).
+
+---
+
 ## [8.25.0] — 2026-08-18
 
 Minor release — **"Agent Economy II" (v8.25, F2)**: the discovery stack becomes a config optimizer — one command that recommends (and can apply) the config a repo actually needs.

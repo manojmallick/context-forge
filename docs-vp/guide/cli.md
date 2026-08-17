@@ -1,6 +1,6 @@
 ---
 title: CLI reference
-description: Complete SigMap CLI reference. All commands and flags with examples — ask, evidence, budget, redact, tune, squeeze, conventions, plan, bench, judge, verify, verify-ai-output, verify-plan, review-pr, create, memory, note, status, doctor, validate, roots, daemon, history, --package, --global, --ci, --cost, --coverage, --watch, --diff, --callers, --callees, --mcp, --report, --health, weights --export/--import and more.
+description: Complete SigMap CLI reference. All commands and flags with examples — ask, evidence, budget, redact, tune, skills, squeeze, conventions, plan, bench, judge, verify, verify-ai-output, verify-plan, review-pr, create, memory, note, status, doctor, validate, roots, daemon, history, --package, --global, --ci, --cost, --coverage, --watch, --diff, --callers, --callees, --mcp, --report, --health, weights --export/--import and more.
 head:
   - - meta
     - property: og:title
@@ -89,6 +89,8 @@ If you are new to the product, start with the workflow pages first:
 |----------------|-------------|
 | `roots [--explain | --json | --fix]` | Auto-detect source roots for 17 languages and 50+ frameworks; shows confidence and scoring |
 | `tune [--apply | --json]` | Recommend config from repo detection — srcDirs pin, monorepo, adapters, exclude, budget — one reason per change; `--apply` writes |
+| `skills list` | List skill clients (Claude/Cursor/Windsurf/Copilot/AGENTS.md) with presence and install state (`--json`) |
+| `skills install [--client <name> \| --all]` | Install the SigMap agent playbooks in each client's native skill/rules format; plain `install` wires only detected clients |
 | `history` | Show usage log + benchmark trend sparklines (hit@5, token reduction) |
 | `note "<text>"` | Append a note to the cross-session decision log (`note` alone lists recent) |
 | `status` | Repo state — branch, dirty files, index freshness, notes |
@@ -1235,6 +1237,42 @@ Five rules, each deterministic:
 
 ---
 
+## skills
+
+Install SigMap's agent playbooks in each client's **native** skill/rules format (v8.26.0) — the multi-adapter idea applied to skills. Two skills ship: **sigmap-usage-maximizer** (the spend-minimizing loop: `ask` before any read → `get_lines` for anchored ranges → `verify_suggestion` before trusting → `squeeze` big pastes → checkpoint → watch `get_budget` and summarize-then-drop near budget) and **sigmap-config-optimizer** (the `tune` playbook: detect → review reasons → `--apply` → `validate`). Deterministic content with a version footer; installs are idempotent and human content is never touched.
+
+```bash
+sigmap skills list                     # clients, targets, install state
+sigmap skills install                  # wire every *detected* client
+sigmap skills install --client cursor  # force one client (creates dirs)
+sigmap skills install --all --json     # everything, machine-readable
+```
+
+```
+  claude     installed  .claude/skills/sigmap-usage-maximizer/SKILL.md
+  claude     installed  .claude/skills/sigmap-config-optimizer/SKILL.md
+  copilot    installed  .github/instructions/sigmap-usage-maximizer.instructions.md
+  copilot    installed  .github/instructions/sigmap-config-optimizer.instructions.md
+  codex      updated    AGENTS.md
+```
+
+| Client | Target |
+|--------|--------|
+| `claude` | `.claude/skills/<skill>/SKILL.md` (frontmatter name/description) |
+| `cursor` | `.cursor/rules/<skill>.mdc` |
+| `windsurf` | `.windsurf/rules/<skill>.md` |
+| `copilot` | `.github/instructions/<skill>.instructions.md` |
+| `codex` | marker-delimited block in `AGENTS.md`, inserted **above** the `## Auto-generated signatures` marker — survives `sigmap` regeneration |
+
+| Option | Description |
+|--------|-------------|
+| `--client <name>` | Install for one client, creating its dirs/files (like `mcp install`) |
+| `--all` | Install for every supported client |
+| *(no flag)* | Wire only clients whose parent artifact already exists (`.claude/`, `.cursor/`, `.windsurf/`, `.github/`, `AGENTS.md`) — the `--setup` precedent |
+| `--json` | Machine-readable list / install results (`installed` \| `updated` \| `already`) |
+
+---
+
 ## history
 
 Display the last N usage log entries as a table with Unicode sparklines for token trend, retrieval hit@5, and token-reduction benchmark history. Requires `tracking: true` in `gen-context.config.json` (or `--track` on each run) for usage rows; benchmark rows appear automatically once any benchmark script has run.
@@ -1336,7 +1374,7 @@ sigmap bench --submit --json
  SigMap Community Benchmark Submission
 ────────────────────────────────────────────────────────
  SigMap version : 8.21.0
- Benchmark ID   : sigmap-v8.25-main
+ Benchmark ID   : sigmap-v8.26-main
  Submitted      : 2026-08-17
 ────────────────────────────────────────────────────────
  Canonical metrics (official release):

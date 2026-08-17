@@ -35,6 +35,9 @@ To ensure proper attribution:
 
 We welcome contributions! See [Contributing](./docs/CONTRIBUTING.md) for guidelines.
 
+### Recent Contributors (v8.26.0)
+- **@manojmallick** — feat(skills): `sigmap skills list|install` — usage-maximizer + config-optimizer playbooks emitted in 5 clients' native skill/rules formats (Claude/Cursor/Windsurf/Copilot/AGENTS.md above-marker block); presence-gated, idempotent (#517, PR #518)
+
 ### Recent Contributors (v8.25.0)
 - **@manojmallick** — feat(config): `sigmap tune` — deterministic config optimizer over the existing discovery stack (srcDirs pin · monorepo · adapters · exclude · autoMaxTokens), read-only by default, `--apply` merges preserving user keys, idempotent (#514, PR #515)
 

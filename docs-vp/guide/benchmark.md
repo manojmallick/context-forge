@@ -1,13 +1,13 @@
 ---
 title: Benchmark overview
-description: Official v8.25.0 benchmark snapshot. 96.8% average token reduction across 21 repos, 82.2% retrieval hit@5, 46.1% fewer prompts, and R language support verified.
+description: Official v8.26.0 benchmark snapshot. 96.8% average token reduction across 21 repos, 82.2% retrieval hit@5, 46.1% fewer prompts, and R language support verified.
 head:
   - - meta
     - property: og:title
-      content: "SigMap benchmark overview — v8.25.0 snapshot with R language"
+      content: "SigMap benchmark overview — v8.26.0 snapshot with R language"
   - - meta
     - property: og:description
-      content: "Token, retrieval, quality, and task metrics from latest v8.25.0 benchmark run (2026-08-17) with 21 repositories including R language support."
+      content: "Token, retrieval, quality, and task metrics from latest v8.26.0 benchmark run (2026-08-17) with 21 repositories including R language support."
   - - meta
     - property: og:url
       content: "https://sigmap.io/guide/benchmark"
@@ -15,8 +15,8 @@ head:
 
 # Benchmark overview
 
-::: info Official v8.25.0 benchmark snapshot (21 repos, including R language)
-**Benchmark ID:** sigmap-v8.25-main &nbsp;·&nbsp; **Date:** 2026-08-17
+::: info Official v8.26.0 benchmark snapshot (21 repos, including R language)
+**Benchmark ID:** sigmap-v8.26-main &nbsp;·&nbsp; **Date:** 2026-08-17
 
 | Metric | Value |
 |---|---:|
@@ -38,9 +38,9 @@ This is the landing page for the public benchmark story. It answers four differe
 | SigMap reduces retries and wrong-context answers | [Task benchmark](/guide/task-benchmark) |
 | SigMap keeps large repos inside model limits | [Quality benchmark](/guide/quality-benchmark) |
 
-## Official v8.25.0 snapshot (with R language support)
+## Official v8.26.0 snapshot (with R language support)
 
-Latest saved benchmark run: **2026-08-17 (v8.25.0)**
+Latest saved benchmark run: **2026-08-17 (v8.26.0)**
 
 | Metric | Result |
 |---|---:|
