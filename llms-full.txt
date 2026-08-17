@@ -128,6 +128,8 @@ sigmap memory --clear <store>            Clear one store: session|notes|weights|
 sigmap budget                            Session spend ledger — estimated SigMap-emitted tokens, budget, context age (--json)
 sigmap budget --budget <tokens>          One-off budget override (config: sessionBudgetTokens, contextTtlDays)
 sigmap redact [file]                     Mask secrets in a file or stdin (10-pattern bank); redacted text to stdout (--json)
+sigmap tune                              Recommend config from repo detection — srcDirs, monorepo, adapters, exclude, budget (--json)
+sigmap tune --apply                      Write the recommendations into gen-context.config.json (merges; your keys preserved)
 sigmap note "<text>"                     Append a note to the cross-session decision log
 sigmap note                              List recent notes (also: note --list <N>)
 sigmap status                            Show repo state — branch, dirty files, index freshness, notes
