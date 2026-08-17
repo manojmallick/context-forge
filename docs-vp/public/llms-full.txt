@@ -11,13 +11,13 @@ ranking keeps the relevant context in scope (cutting tokens ~97% as a side
 effect), with no LLM calls, embeddings, or vector database. Works with Claude,
 Cursor, GitHub Copilot, Aider, Windsurf, local LLMs, and MCP.
 
-# Version: 8.25.0 | Benchmark: sigmap-v8.25-main (2026-08-17)
+# Version: 8.26.0 | Benchmark: sigmap-v8.26-main (2026-08-17)
 # Source: auto-generated from package.json, version.json, benchmarks/latest.json, src/mcp/tools.js, src/config/defaults.js
 # Regenerate: npm run generate:llms   |   Validate: npm run validate:llms
 
 ---
 
-## Core metrics (benchmark: sigmap-v8.25-main, 2026-08-17)
+## Core metrics (benchmark: sigmap-v8.26-main, 2026-08-17)
 
 | Metric | Without SigMap | With SigMap |
 |--------|----------------|-------------|

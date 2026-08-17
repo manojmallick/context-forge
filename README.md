@@ -122,7 +122,7 @@ Ask → Rank → Context → Validate → Judge → Learn
 
 <!--SM:benchmarkBlock-->
 ```
-Benchmark : sigmap-v8.25-main (21 repositories, including R language)
+Benchmark : sigmap-v8.26-main (21 repositories, including R language)
 Date      : 2026-08-17
 
 Hit@5          : 82.2%   (grep-agent baseline 44.0%  — 1.87× lift)

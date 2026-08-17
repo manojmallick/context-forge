@@ -78,12 +78,12 @@ features:
 
 <div style="max-width:840px;margin:0 auto;padding:18px 24px 0;text-align:center">
 <div style="display:inline-flex;flex-wrap:wrap;gap:.5rem;justify-content:center;background:var(--vp-c-brand-soft,#ede9fe);border:1px solid rgba(124,106,247,.25);border-radius:999px;padding:.55rem .9rem;font-size:.9rem;color:var(--vp-c-text-1)">
-  <span><strong>Release:</strong> v8.25.0</span>
+  <span><strong>Release:</strong> v8.26.0</span>
   <span>·</span>
-  <span><strong>New — <code>sigmap tune</code>:</strong> the discovery stack becomes a config optimizer — one command that recommends the config your repo actually needs (srcDirs pin, monorepo mode, adapters, excludes, budget), one evidence-naming reason per change. Read-only by default; <code>--apply</code> merges into your config without touching your keys; idempotent. Zero dependencies, offline, deterministic.</span>
+  <span><strong>New — <code>sigmap skills install</code>:</strong> SigMap's optimal usage loop, installed as native agent skills in Claude Code, Cursor, Windsurf, Copilot, and AGENTS.md — ask before reading, read anchored ranges, verify before trusting, squeeze big pastes, watch the budget. One command, five clients, idempotent, human content never touched. The Agent Economy pillar is complete. Zero dependencies, offline, deterministic.</span>
 </div>
 <div style="margin-top:.4rem;display:inline-flex;flex-wrap:wrap;gap:.5rem;justify-content:center;background:var(--vp-c-default-soft,#f3f4f6);border:1px solid rgba(0,0,0,.08);border-radius:999px;padding:.55rem .9rem;font-size:.9rem;color:var(--vp-c-text-2)">
-  <span><strong>Benchmark:</strong> sigmap-v8.25-main</span>
+  <span><strong>Benchmark:</strong> sigmap-v8.26-main</span>
   <span>·</span>
   <span>82.2% hit@5 · 96.8% token reduction · 2026-08-17</span>
 </div>
@@ -176,7 +176,7 @@ See the full [end-to-end walkthrough](/guide/walkthrough) to watch this in actio
 | Overall token reduction | — | **96.8%** |
 | GPT-4o overflow repos | 16/21 | **0/21** |
 
-Latest saved benchmark run: **2026-08-17 (v8.25.0)**.
+Latest saved benchmark run: **2026-08-17 (v8.26.0)**.
 
 </div>
 
