@@ -51,7 +51,7 @@ features:
     linkText: Task benchmark →
   - icon: 🎯
     title: Right file in context
-    details: 82.2% hit@5 across 21 repos and 105 tasks. A single-shot grep agent finds the right file 44.8% of the time — SigMap is a measured 1.59× better.
+    details: 82.2% hit@5 across 21 repos and 105 tasks. A single-shot grep agent finds the right file 44.0% of the time — SigMap is a measured 1.87× better.
     link: /guide/retrieval-benchmark
     linkText: Retrieval benchmark →
   - icon: ⚖️
@@ -78,14 +78,14 @@ features:
 
 <div style="max-width:840px;margin:0 auto;padding:18px 24px 0;text-align:center">
 <div style="display:inline-flex;flex-wrap:wrap;gap:.5rem;justify-content:center;background:var(--vp-c-brand-soft,#ede9fe);border:1px solid rgba(124,106,247,.25);border-radius:999px;padding:.55rem .9rem;font-size:.9rem;color:var(--vp-c-text-1)">
-  <span><strong>Release:</strong> v8.24.0</span>
+  <span><strong>Release:</strong> v8.25.0</span>
   <span>·</span>
-  <span><strong>New — Semantic Bridge II:</strong> doc-comment hints now cover <em>six</em> languages — godoc, rustdoc, and Javadoc first sentences ride each signature as <code># &lt;hint&gt;</code>, bridging English queries to code vocabulary deterministically. Plus an opt-in import-graph centrality ranking prior (<code>retrieval.centralityBlend</code>) — zero-dep power iteration, measured, shipped honest. Zero dependencies, offline, deterministic.</span>
+  <span><strong>New — <code>sigmap tune</code>:</strong> the discovery stack becomes a config optimizer — one command that recommends the config your repo actually needs (srcDirs pin, monorepo mode, adapters, excludes, budget), one evidence-naming reason per change. Read-only by default; <code>--apply</code> merges into your config without touching your keys; idempotent. Zero dependencies, offline, deterministic.</span>
 </div>
 <div style="margin-top:.4rem;display:inline-flex;flex-wrap:wrap;gap:.5rem;justify-content:center;background:var(--vp-c-default-soft,#f3f4f6);border:1px solid rgba(0,0,0,.08);border-radius:999px;padding:.55rem .9rem;font-size:.9rem;color:var(--vp-c-text-2)">
-  <span><strong>Benchmark:</strong> sigmap-v8.24-main</span>
+  <span><strong>Benchmark:</strong> sigmap-v8.25-main</span>
   <span>·</span>
-  <span>82.2% hit@5 · 96.8% token reduction · 2026-07-28</span>
+  <span>82.2% hit@5 · 96.8% token reduction · 2026-08-17</span>
 </div>
 </div>
 
@@ -172,11 +172,11 @@ See the full [end-to-end walkthrough](/guide/walkthrough) to watch this in actio
 |---|:---:|:---:|
 | Task success proxy | — (proxy, modeled from retrieval tiers) | **64.8%** |
 | Prompts per task | 2.84 | **1.53** |
-| Retrieval hit@5 | 44.8% (single-shot grep) | **82.2%** (1.59× honest lift) |
+| Retrieval hit@5 | 44.0% (single-shot grep) | **82.2%** (1.87× honest lift) |
 | Overall token reduction | — | **96.8%** |
 | GPT-4o overflow repos | 16/21 | **0/21** |
 
-Latest saved benchmark run: **2026-07-28 (v8.24.0)**.
+Latest saved benchmark run: **2026-08-17 (v8.25.0)**.
 
 </div>
 

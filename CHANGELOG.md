@@ -10,6 +10,18 @@ Format: [Semantic Versioning](https://semver.org/)
 
 ---
 
+## [8.25.0] — 2026-08-18
+
+Minor release — **"Agent Economy II" (v8.25, F2)**: the discovery stack becomes a config optimizer — one command that recommends (and can apply) the config a repo actually needs.
+
+### Added
+- **`sigmap tune` (#514, PR #515):** new `src/config/tune.js` — `buildTuneProposal(cwd)` packages the existing discovery stack (`resolveSourceRoots`, workspace markers, client-artifact probes) into a deterministic recommended-config diff with one evidence-naming reason per change. Five rules, explicit user choices never overridden: **srcDirs pin** (resolver roots, confidence-gated, never proposed against user-pinned dirs — pinned srcDirs are stable across runs and protected from token-budget drops), **monorepo** (fires when a workspace marker exists and the mode is off; reason names the marker — `pnpm-workspace.yaml`/`turbo.json`/`nx.json`/`lerna.json`/package.json `workspaces`), **adapters** (additive from client artifacts present: `CLAUDE.md`→claude, `.cursorrules`/`.cursor/`→cursor, `.windsurfrules`→windsurf, `AGENTS.md`→codex), **exclude** (curated vendored/generated dirs present at root — `third_party`, `external(s)`, `generated`, `testdata`, `tmp`, `.cache` … — appended with defaults preserved), **autoMaxTokens** (fires only when a pinned budget is below a labeled ~25-tokens/file heuristic estimate). `applyTuneProposal` merges into `gen-context.config.json` preserving every user key; re-proposal after apply is empty (idempotent). CLI: `sigmap tune` is read-only by default (`--dry-run` alias), `--apply` writes and points to `sigmap validate`, `--json` for agents. Zero new dependencies.
+
+### Changed
+- 10 new integration tests (131 test files); bundle rebuilt (148 modules).
+
+---
+
 ## [8.24.0] — 2026-07-28
 
 Minor release — **"Trust Quick Wins I" (v8.24, G3a)**: the secret-redaction engine that already protects signatures, `get_lines`, and evidence packs becomes a standalone command for arbitrary text.

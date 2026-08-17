@@ -35,6 +35,8 @@ All configuration lives in `gen-context.config.json` at the project root. Genera
 sigmap --init
 ```
 
+Or let detection write it for you: `sigmap tune` (v8.25.0) prints a recommended config diff — srcDirs pin, monorepo mode, adapters, excludes — with one reason per change, and `sigmap tune --apply` merges it in without touching your existing keys. See the [CLI reference](/guide/cli#tune).
+
 ## Copy-paste presets
 
 ### Solo repo

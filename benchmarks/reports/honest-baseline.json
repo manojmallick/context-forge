@@ -1,5 +1,5 @@
 {
-  "generated": "2026-07-28T21:54:28.471Z",
+  "generated": "2026-08-17T20:02:21.708Z",
   "methodology": {
     "corpus": "benchmarks/tasks/*.jsonl",
     "scorer": "src/eval/scorer.js hitAtK/reciprocalRank, k=5",
@@ -11,32 +11,32 @@
     "tasks": 125,
     "repos": 19,
     "sigmap": {
-      "hitAt5": 0.712,
-      "mrr": 0.641
+      "hitAt5": 0.824,
+      "mrr": 0.746
     },
     "grepBaseline": {
-      "hitAt5": 0.448,
+      "hitAt5": 0.44,
       "mrr": 0.229
     },
-    "lift": 1.59,
-    "deltaPts": 26.4,
+    "lift": 1.87,
+    "deltaPts": 38.4,
     "splits": {
       "easy": {
         "tasks": 110,
         "sigmap": {
-          "hitAt5": 0.764,
-          "mrr": 0.686
+          "hitAt5": 0.855,
+          "mrr": 0.769
         },
         "grepBaseline": {
-          "hitAt5": 0.436,
-          "mrr": 0.226
+          "hitAt5": 0.427,
+          "mrr": 0.227
         }
       },
       "hard": {
         "tasks": 15,
         "sigmap": {
-          "hitAt5": 0.333,
-          "mrr": 0.311
+          "hitAt5": 0.6,
+          "mrr": 0.571
         },
         "grepBaseline": {
           "hitAt5": 0.533,
@@ -48,8 +48,8 @@
       "small": {
         "tasks": 13,
         "sigmap": {
-          "hitAt5": 0.846,
-          "mrr": 0.75
+          "hitAt5": 1,
+          "mrr": 0.904
         },
         "grepBaseline": {
           "hitAt5": 0.692,
@@ -59,11 +59,11 @@
       "medium": {
         "tasks": 52,
         "sigmap": {
-          "hitAt5": 0.442,
-          "mrr": 0.385
+          "hitAt5": 0.673,
+          "mrr": 0.597
         },
         "grepBaseline": {
-          "hitAt5": 0.462,
+          "hitAt5": 0.442,
           "mrr": 0.245
         }
       },
@@ -106,7 +106,7 @@
       "repo": "express",
       "tasks": 8,
       "bucket": "medium",
-      "sigmapHitAt5": 0.5,
+      "sigmapHitAt5": 1,
       "grepHitAt5": 0.875
     },
     {
@@ -127,8 +127,8 @@
       "repo": "flask",
       "tasks": 8,
       "bucket": "medium",
-      "sigmapHitAt5": 0,
-      "grepHitAt5": 0.875
+      "sigmapHitAt5": 0.875,
+      "grepHitAt5": 0.75
     },
     {
       "repo": "gin",
@@ -183,14 +183,14 @@
       "repo": "serilog",
       "tasks": 5,
       "bucket": "medium",
-      "sigmapHitAt5": 0,
+      "sigmapHitAt5": 0.2,
       "grepHitAt5": 0
     },
     {
       "repo": "spring-petclinic",
       "tasks": 5,
       "bucket": "small",
-      "sigmapHitAt5": 0.6,
+      "sigmapHitAt5": 1,
       "grepHitAt5": 0.4
     },
     {

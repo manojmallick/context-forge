@@ -23,9 +23,9 @@
   <!-- Without row -->
   <text x="105" y="103" text-anchor="end" font-size="11" fill="#9ca3af">Without</text>
   <rect x="112" y="90" width="462" height="20" fill="#fee2e2" rx="4"/>
-  <!-- 44.8% of 462 = 207 (single-shot grep baseline) -->
-  <rect x="112" y="90" width="207" height="20" fill="#ef4444" rx="4"/>
-  <text x="315" y="104" font-size="11" font-weight="600" fill="#ef4444">44.8%</text>
+  <!-- 44.0% of 462 = 203 (single-shot grep baseline) -->
+  <rect x="112" y="90" width="203" height="20" fill="#ef4444" rx="4"/>
+  <text x="315" y="104" font-size="11" font-weight="600" fill="#ef4444">44.0%</text>
 
   <!-- With row -->
   <text x="105" y="126" text-anchor="end" font-size="11" fill="#7c6af7">SigMap</text>
@@ -36,7 +36,7 @@
 
   <!-- Badge -->
   <rect x="588" y="95" width="94" height="32" fill="#7c6af7" rx="6"/>
-  <text x="635" y="108" text-anchor="middle" font-size="11" font-weight="700" fill="#fff">+1.59× lift</text>
+  <text x="635" y="108" text-anchor="middle" font-size="11" font-weight="700" fill="#fff">+1.87× lift</text>
   <text x="635" y="121" text-anchor="middle" font-size="9" fill="#ded9ff">vs grep agent</text>
 
   <!-- ═══════════════════════════════════════════ -->
