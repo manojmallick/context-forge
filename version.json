@@ -3,9 +3,9 @@
   "benchmark_date": "2026-08-18",
   "benchmark_id": "sigmap-v8.26-main",
   "languages": 33,
-  "extractors": 42,
+  "extractors": 43,
   "mcp_tools": 21,
-  "tests": 134,
+  "tests": 135,
   "metrics": {
     "hit_at_5": 0.822,
     "baseline_hit_at_5": 0.136,

@@ -6566,6 +6566,7 @@ __factories["./src/extractors/javascript"] = function(module, exports) {
   
   const { lineAt, withAnchor } = __require('./src/extractors/line-anchor');
   const { capWithNotice, capMembersWithNotice } = __require('./src/util/truncate');
+  const { stripComments, maskCode, readBalanced } = __require('./src/extractors/scan');
 
   /**
    * Extract signatures from JavaScript source code.
@@ -6585,16 +6586,29 @@ __factories["./src/extractors/javascript"] = function(module, exports) {
     const returnHints = buildReturnHints(src);
     const docHints = buildDocHints(src);
 
-    // Block comments are blanked newline-by-newline (non-newline chars → spaces)
-    // so character offsets AND line numbers stay exact for anchors.
-    const stripped = src
-      .replace(/\/\/.*$/gm, '')
-      .replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, ' '));
+    // stripComments is string-aware (a `//` inside a string literal survives);
+    // maskCode additionally blanks string/template contents so every delimiter
+    // found on it is structural. Both are length- and newline-preserving, so
+    // offsets and line anchors align across all three views (#526).
+    const stripped = stripComments(src);
+    const masked = maskCode(src);
 
-    const blockEndIdx = (bodyStart) => bodyStart + extractBlock(stripped, bodyStart).length;
-    // End line for a function whose match ends at `matchEnd` (before its body brace).
+    // Full params for a declaration whose `(` sits at openIdx: depth-matched
+    // close over masked text; TEXT sliced from stripped so string defaults keep
+    // their real content. Falls back to first-`)` when unbalanced (cap hit).
+    const paramsFrom = (openIdx) => {
+      const closeIdx = readBalanced(masked, openIdx);
+      if (closeIdx === -1) {
+        const naive = stripped.indexOf(')', openIdx);
+        return { params: stripped.slice(openIdx + 1, naive === -1 ? openIdx + 1 : naive), closeIdx: naive };
+      }
+      return { params: stripped.slice(openIdx + 1, closeIdx), closeIdx };
+    };
+
+    const blockEndIdx = (bodyStart) => bodyStart + extractBlock(masked, bodyStart).length;
+    // End line for a function whose params close just before `matchEnd`.
     const fnEndLine = (matchEnd, startLn) => {
-      const brace = stripped.indexOf('{', matchEnd);
+      const brace = masked.indexOf('{', matchEnd);
       return brace !== -1 ? lineAt(stripped, blockEndIdx(brace + 1)) : startLn;
     };
 
@@ -6603,33 +6617,38 @@ __factories["./src/extractors/javascript"] = function(module, exports) {
     for (const m of stripped.matchAll(classRegex)) {
       const prefix = m[1] ? m[1].trim() + ' ' : '';
       const bodyStart = m.index + m[0].length;
+      const blockEnd = blockEndIdx(bodyStart);
       sigs.push(`${prefix}class ${m[2]}`);
-      anchors.push([lineAt(stripped, m.index), lineAt(stripped, blockEndIdx(bodyStart))]);
-      const block = extractBlock(stripped, bodyStart);
-      for (const meth of extractClassMembers(block, returnHints)) {
+      anchors.push([lineAt(stripped, m.index), lineAt(stripped, blockEnd)]);
+      const block = stripped.slice(bodyStart, blockEnd);
+      const maskedBlock = masked.slice(bodyStart, blockEnd);
+      for (const meth of extractClassMembers(block, maskedBlock, returnHints)) {
         sigs.push(`  ${meth.text}`);
         anchors.push([lineAt(stripped, bodyStart + meth.start), lineAt(stripped, bodyStart + meth.end)]);
       }
     }
 
     // Exported named functions
-    for (const m of stripped.matchAll(/^export\s+(?:async\s+)?function\s+(\w+)\s*\(([^)]*)\)/gm)) {
+    for (const m of stripped.matchAll(/^export\s+(?:async\s+)?function\s+(\w+)\s*\(/gm)) {
       const asyncKw = /export\s+async/.test(m[0]) ? 'async ' : '';
       const retStr = formatReturnHint(returnHints.get(m[1]));
       const startLn = lineAt(stripped, m.index);
-      sigs.push(`export ${asyncKw}function ${m[1]}(${normalizeParams(m[2])})${retStr}`);
+      const { params, closeIdx } = paramsFrom(m.index + m[0].length - 1);
+      sigs.push(`export ${asyncKw}function ${m[1]}(${normalizeParams(params)})${retStr}`);
       docHintFor[sigs.length - 1] = docHints.get(m[1]);
-      anchors.push([startLn, fnEndLine(m.index + m[0].length, startLn)]);
+      anchors.push([startLn, fnEndLine(closeIdx + 1, startLn)]);
     }
 
     // Exported arrow functions
-    for (const m of stripped.matchAll(/^export\s+const\s+(\w+)\s*=\s*(?:async\s+)?\(([^)]*)\)\s*=>/gm)) {
+    for (const m of stripped.matchAll(/^export\s+const\s+(\w+)\s*=\s*(?:async\s+)?\(/gm)) {
+      const { params, closeIdx } = paramsFrom(m.index + m[0].length - 1);
+      if (closeIdx === -1 || !/^\s*=>/.test(masked.slice(closeIdx + 1, closeIdx + 40))) continue;
       const asyncKw = m[0].includes('async') ? 'async ' : '';
       const retStr = formatReturnHint(returnHints.get(m[1]));
       const startLn = lineAt(stripped, m.index);
-      sigs.push(`export const ${m[1]} = ${asyncKw}(${normalizeParams(m[2])}) =>${retStr}`);
+      sigs.push(`export const ${m[1]} = ${asyncKw}(${normalizeParams(params)}) =>${retStr}`);
       docHintFor[sigs.length - 1] = docHints.get(m[1]);
-      anchors.push([startLn, fnEndLine(m.index + m[0].length, startLn)]);
+      anchors.push([startLn, fnEndLine(closeIdx + 1, startLn)]);
     }
 
     // module.exports = { ... }
@@ -6644,13 +6663,14 @@ __factories["./src/extractors/javascript"] = function(module, exports) {
     }
 
     // Top-level named functions (non-exported)
-    for (const m of stripped.matchAll(/^(?:async\s+)?function\s+(\w+)\s*\(([^)]*)\)/gm)) {
+    for (const m of stripped.matchAll(/^(?:async\s+)?function\s+(\w+)\s*\(/gm)) {
       const asyncKw = m[0].startsWith('async') ? 'async ' : '';
       const retStr = formatReturnHint(returnHints.get(m[1]));
       const startLn = lineAt(stripped, m.index);
-      sigs.push(`${asyncKw}function ${m[1]}(${normalizeParams(m[2])})${retStr}`);
+      const { params, closeIdx } = paramsFrom(m.index + m[0].length - 1);
+      sigs.push(`${asyncKw}function ${m[1]}(${normalizeParams(params)})${retStr}`);
       docHintFor[sigs.length - 1] = docHints.get(m[1]);
-      anchors.push([startLn, fnEndLine(m.index + m[0].length, startLn)]);
+      anchors.push([startLn, fnEndLine(closeIdx + 1, startLn)]);
     }
 
     const withAnchors = sigs.map((s, i) => {
@@ -6672,21 +6692,31 @@ __factories["./src/extractors/javascript"] = function(module, exports) {
     return src.slice(startIndex, i - 1);
   }
 
+  const _CTRL_KEYWORDS = new Set(['if', 'for', 'while', 'switch', 'do', 'try', 'catch', 'finally', 'else', 'return']);
+
   // Returns members as { text, start, end } where start/end are char offsets
   // WITHIN `block` (end = the method's closing brace), so the caller can resolve
-  // per-method line anchors that span the method body.
-  function extractClassMembers(block, returnHints) {
+  // per-method line anchors that span the method body. `maskedBlock` is the
+  // same-offset maskCode slice used for balanced-delimiter scanning.
+  function extractClassMembers(block, maskedBlock, returnHints) {
     const members = [];
-    for (const m of block.matchAll(/^\s+(?:static\s+|async\s+|get\s+|set\s+)*(\w+)\s*\(([^)]*)\)\s*\{/gm)) {
+    for (const m of maskedBlock.matchAll(/^\s+(?:static\s+|async\s+|get\s+|set\s+)*(\w+)\s*\(/gm)) {
       if (/^_/.test(m[1])) continue;
-      const bodyStart = m.index + m[0].length; // just past the opening brace
-      const end = bodyStart + extractBlock(block, bodyStart).length;
+      if (_CTRL_KEYWORDS.has(m[1])) continue;
+      const openIdx = m.index + m[0].length - 1;
+      const closeIdx = readBalanced(maskedBlock, openIdx);
+      if (closeIdx === -1) continue;
+      const braceMatch = maskedBlock.slice(closeIdx + 1, closeIdx + 40).match(/^\s*\{/);
+      if (!braceMatch) continue;
+      const params = block.slice(openIdx + 1, closeIdx);
+      const bodyStart = closeIdx + 1 + braceMatch[0].length; // just past the opening brace
+      const end = bodyStart + extractBlock(maskedBlock, bodyStart).length;
       const start = m.index + (m[0].length - m[0].replace(/^\s+/, '').length);
-      if (m[1] === 'constructor') { members.push({ text: `constructor(${normalizeParams(m[2])})`, start, end }); continue; }
+      if (m[1] === 'constructor') { members.push({ text: `constructor(${normalizeParams(params)})`, start, end }); continue; }
       const isAsync = m[0].includes('async ') ? 'async ' : '';
       const isStatic = m[0].includes('static ') ? 'static ' : '';
       const retStr = formatReturnHint(returnHints.get(m[1]));
-      members.push({ text: `${isStatic}${isAsync}${m[1]}(${normalizeParams(m[2])})${retStr}`, start, end });
+      members.push({ text: `${isStatic}${isAsync}${m[1]}(${normalizeParams(params)})${retStr}`, start, end });
     }
     return capMembersWithNotice(members, 8, 'methods');
   }
@@ -8274,6 +8304,101 @@ __factories["./src/extractors/scala"] = function(module, exports) {
   
 };
 
+// ── ./src/extractors/scan ──
+__factories["./src/extractors/scan"] = function(module, exports) {
+  
+  /**
+   * Shared tokenizer-grade scanning core (G4 increment 1, #526).
+   *
+   * Hand-rolled string/comment state + delimiter depth — generalizes the
+   * masking in src/graph/call-graph.js (maskJs) and the balanced reader in the
+   * R extractor. NOT a parser, NOT tree-sitter: three small, deterministic,
+   * zero-dependency passes that let extractors find real declaration
+   * boundaries instead of truncating at the first `)`.
+   *
+   * All transforms are length- and newline-preserving, so character offsets
+   * and line anchors computed on the output align 1:1 with the input.
+   */
+
+  /**
+   * Blank comments only — string-aware, so `//` or `/*` INSIDE a string
+   * literal survives (the naive regex strip corrupted e.g. `url = "https://x"`).
+   * Comment bytes become spaces; newlines and everything else are preserved.
+   * @param {string} src
+   * @returns {string} same length, comments blanked
+   */
+  function stripComments(src) {
+    const out = src.split('');
+    const blank = (a, b) => { for (let k = a; k < b; k++) if (out[k] !== '\n') out[k] = ' '; };
+    let i = 0; const n = src.length;
+    while (i < n) {
+      const c = src[i], d = src[i + 1];
+      if (c === '/' && d === '/') { let j = i + 2; while (j < n && src[j] !== '\n') j++; blank(i, j); i = j; continue; }
+      if (c === '/' && d === '*') { let j = i + 2; while (j < n && !(src[j] === '*' && src[j + 1] === '/')) j++; j = Math.min(n, j + 2); blank(i, j); i = j; continue; }
+      if (c === '"' || c === "'" || c === '`') {
+        let j = i + 1;
+        while (j < n) { if (src[j] === '\\') { j += 2; continue; } if (src[j] === c) break; if (c !== '`' && src[j] === '\n') break; j++; }
+        i = Math.min(n, j + 1); continue;
+      }
+      i++;
+    }
+    return out.join('');
+  }
+
+  /**
+   * Blank comments AND string/template contents (quotes included) — the
+   * boundary-scanning surface: delimiters found here are always structural.
+   * @param {string} src
+   * @returns {string} same length, comments + strings blanked
+   */
+  function maskCode(src) {
+    const out = src.split('');
+    const blank = (a, b) => { for (let k = a; k < b; k++) if (out[k] !== '\n') out[k] = ' '; };
+    let i = 0; const n = src.length;
+    while (i < n) {
+      const c = src[i], d = src[i + 1];
+      if (c === '/' && d === '/') { let j = i + 2; while (j < n && src[j] !== '\n') j++; blank(i, j); i = j; continue; }
+      if (c === '/' && d === '*') { let j = i + 2; while (j < n && !(src[j] === '*' && src[j + 1] === '/')) j++; j = Math.min(n, j + 2); blank(i, j); i = j; continue; }
+      if (c === '"' || c === "'" || c === '`') {
+        let j = i + 1;
+        while (j < n) { if (src[j] === '\\') { j += 2; continue; } if (src[j] === c) break; if (c !== '`' && src[j] === '\n') break; j++; }
+        j = Math.min(n, j + 1); blank(i, j); i = j; continue;
+      }
+      i++;
+    }
+    return out.join('');
+  }
+
+  /**
+   * Index of the delimiter that closes the one open at `openIdx`, matched by
+   * depth over MASKED text (strings/comments already blanked, so every
+   * delimiter seen is structural). -1 when unbalanced within the cap.
+   * @param {string} masked  output of maskCode
+   * @param {number} openIdx index of the opening delimiter
+   * @param {string} [open='(']
+   * @param {string} [close=')']
+   * @param {number} [cap=4000] scan ceiling in chars
+   * @returns {number}
+   */
+  function readBalanced(masked, openIdx, open = '(', close = ')', cap = 4000) {
+    if (masked[openIdx] !== open) return -1;
+    let depth = 1;
+    const end = Math.min(masked.length, openIdx + cap);
+    for (let i = openIdx + 1; i < end; i++) {
+      const ch = masked[i];
+      if (ch === open) depth++;
+      else if (ch === close) {
+        depth--;
+        if (depth === 0) return i;
+      }
+    }
+    return -1;
+  }
+
+  module.exports = { stripComments, maskCode, readBalanced };
+  
+};
+
 // ── ./src/extractors/shell ──
 __factories["./src/extractors/shell"] = function(module, exports) {
   
@@ -8740,6 +8865,7 @@ __factories["./src/extractors/typescript"] = function(module, exports) {
   
   const { lineAt, withAnchor } = __require('./src/extractors/line-anchor');
   const { capWithNotice, capMembersWithNotice } = __require('./src/util/truncate');
+  const { stripComments, maskCode, readBalanced } = __require('./src/extractors/scan');
 
   /**
    * Extract signatures from TypeScript source code.
@@ -8761,15 +8887,25 @@ __factories["./src/extractors/typescript"] = function(module, exports) {
     // anchors are applied once at return.
     const anchors = [];
 
-    // Strip comments to simplify matching. Block comments are blanked
-    // newline-by-newline (non-newline chars → spaces) so character offsets AND
-    // line numbers stay exact. Line comments preserve their trailing newline.
-    const stripped = src
-      .replace(/\/\/.*$/gm, '')
-      .replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, ' '));
+    // stripComments is string-aware (a `//` inside a string literal survives);
+    // maskCode additionally blanks string/template contents so every delimiter
+    // found on it is structural. Both are length- and newline-preserving, so
+    // offsets and line anchors align across all three views (#526).
+    const stripped = stripComments(src);
+    const masked = maskCode(src);
+
+    // Full params for a declaration whose `(` sits at openIdx (see javascript.js).
+    const paramsFrom = (openIdx) => {
+      const closeIdx = readBalanced(masked, openIdx);
+      if (closeIdx === -1) {
+        const naive = stripped.indexOf(')', openIdx);
+        return { params: stripped.slice(openIdx + 1, naive === -1 ? openIdx + 1 : naive), closeIdx: naive };
+      }
+      return { params: stripped.slice(openIdx + 1, closeIdx), closeIdx };
+    };
 
     // Index of the closing brace for a block whose body starts at bodyStart.
-    const blockEndIdx = (bodyStart) => bodyStart + extractBlock(stripped, bodyStart).length;
+    const blockEndIdx = (bodyStart) => bodyStart + extractBlock(masked, bodyStart).length;
 
     // Exported interfaces
     for (const m of stripped.matchAll(/^export\s+interface\s+(\w+)(?:<[^{]*>)?\s*(?:extends\s+[^{]+)?\{/gm)) {
@@ -8804,10 +8940,12 @@ __factories["./src/extractors/typescript"] = function(module, exports) {
       const prefix = m[1] ? 'export ' : '';
       const abs = m[2] ? 'abstract ' : '';
       const bodyStart = m.index + m[0].length;
+      const blockEnd = blockEndIdx(bodyStart);
       sigs.push(`${prefix}${abs}class ${m[3]}`);
-      anchors.push([lineAt(stripped, m.index), lineAt(stripped, blockEndIdx(bodyStart))]);
-      const block = extractBlock(stripped, bodyStart);
-      const methods = extractClassMembers(block);
+      anchors.push([lineAt(stripped, m.index), lineAt(stripped, blockEnd)]);
+      const block = stripped.slice(bodyStart, blockEnd);
+      const maskedBlock = masked.slice(bodyStart, blockEnd);
+      const methods = extractClassMembers(block, maskedBlock);
       for (const meth of methods) {
         sigs.push(`  ${meth.text}`);
         anchors.push([lineAt(stripped, bodyStart + meth.start), lineAt(stripped, bodyStart + meth.end)]);
@@ -8815,13 +8953,19 @@ __factories["./src/extractors/typescript"] = function(module, exports) {
     }
 
     // Exported top-level functions (not methods)
-    for (const m of stripped.matchAll(/^export\s+(?:async\s+)?function\s+(\w+)\s*(?:<[^(]*>)?\s*\(([^)]*)\)(?:\s*:\s*[^{]+)?\s*\{/gm)) {
+    for (const m of stripped.matchAll(/^export\s+(?:async\s+)?function\s+(\w+)\s*(?:<[^(]*>)?\s*\(/gm)) {
+      const { params: rawParams, closeIdx } = paramsFrom(m.index + m[0].length - 1);
+      if (closeIdx === -1) continue;
+      // Declaration shape check + return-type capture, mirroring the old
+      // `\)(?:\s*:\s*[^{]+)?\s*\{` tail against the text after the real close.
+      const tail = masked.slice(closeIdx + 1, closeIdx + 200).match(/^(\s*:\s*[^{]+?)?\s*\{/);
+      if (!tail) continue;
       const asyncKw = /export\s+async/.test(m[0]) ? 'async ' : '';
-      const params = normalizeParams(m[2]);
-      const retMatch = m[0].match(/\)\s*:\s*([^{]+)\s*\{/);
-      const retType = retMatch ? retMatch[1].trim().replace(/\s+/g, ' ').slice(0, 30) : '';
+      const params = normalizeParams(rawParams);
+      const retRaw = tail[1] ? stripped.slice(closeIdx + 1, closeIdx + 1 + tail[1].length).replace(/^\s*:\s*/, '') : '';
+      const retType = retRaw ? retRaw.trim().replace(/\s+/g, ' ').slice(0, 30) : '';
       const retStr = retType ? ` → ${retType}` : '';
-      const bodyStart = m.index + m[0].length;
+      const bodyStart = closeIdx + 1 + tail[0].length;
       sigs.push(`export ${asyncKw}function ${m[1]}(${params})${retStr}`);
       docHintFor[sigs.length - 1] = docHints.get(m[1]);
       anchors.push([lineAt(stripped, m.index), lineAt(stripped, blockEndIdx(bodyStart))]);
@@ -8844,15 +8988,21 @@ __factories["./src/extractors/typescript"] = function(module, exports) {
     }
 
     // Exported arrow functions / const functions
-    for (const m of stripped.matchAll(/^export\s+const\s+(\w+)\s*(?::\s*[^=]+)?\s*=\s*(?:async\s+)?\(([^)]*)\)\s*(?::\s*[^=>{]+)?\s*=>/gm)) {
+    for (const m of stripped.matchAll(/^export\s+const\s+(\w+)\s*(?::\s*[^=]+)?\s*=\s*(?:async\s+)?\(/gm)) {
+      const { params: rawParams, closeIdx } = paramsFrom(m.index + m[0].length - 1);
+      if (closeIdx === -1) continue;
+      // Arrow shape check, mirroring the old `\)\s*(?::\s*[^=>{]+)?\s*=>` tail.
+      const tail = masked.slice(closeIdx + 1, closeIdx + 200).match(/^\s*(?::\s*[^=>{]+)?\s*=>/);
+      if (!tail) continue;
       const asyncKw = /=\s*async\s+/.test(m[0]) ? 'async ' : '';
-      const params = normalizeParams(m[2]);
+      const params = normalizeParams(rawParams);
       sigs.push(`export const ${m[1]} = ${asyncKw}(${params}) =>`);
       docHintFor[sigs.length - 1] = docHints.get(m[1]);
-      const bodyStart = stripped.indexOf('{', m.index + m[0].length);
+      const matchEnd = closeIdx + 1 + tail[0].length;
+      const bodyStart = masked.indexOf('{', matchEnd);
       const endLn = bodyStart !== -1
         ? lineAt(stripped, blockEndIdx(bodyStart + 1))
-        : lineAt(stripped, m.index + m[0].length);
+        : lineAt(stripped, matchEnd);
       anchors.push([lineAt(stripped, m.index), endLn]);
 
       // Hooks: capture compact return object shape for use* functions.
@@ -8920,6 +9070,7 @@ __factories["./src/extractors/typescript"] = function(module, exports) {
   // Returns members as { text, start, end } where start/end are char offsets
   // WITHIN `block`, so the caller can resolve member line anchors.
   function extractInterfaceMembers(block) {
+    const maskedBlock = maskCode(block);
     const members = [];
     for (const m of block.matchAll(/^\s+(readonly\s+)?(\w+)(\??):\s*([^;]+);/gm)) {
       const readonly = m[1] ? 'readonly ' : '';
@@ -8928,9 +9079,12 @@ __factories["./src/extractors/typescript"] = function(module, exports) {
       const start = m.index + (m[0].length - m[0].replace(/^\s+/, '').length);
       members.push({ text: `${readonly}${m[2]}${optional}: ${typeStr}`, start, end: m.index + m[0].length });
     }
-    for (const m of block.matchAll(/^\s+(\w+)\s*(?:<[^(]*>)?\s*\(([^)]*)\)\s*:/gm)) {
+    for (const m of maskedBlock.matchAll(/^\s+(\w+)\s*(?:<[^(]*>)?\s*\(/gm)) {
+      const openIdx = m.index + m[0].length - 1;
+      const closeIdx = readBalanced(maskedBlock, openIdx);
+      if (closeIdx === -1 || !/^\s*:/.test(maskedBlock.slice(closeIdx + 1, closeIdx + 40))) continue;
       const start = m.index + (m[0].length - m[0].replace(/^\s+/, '').length);
-      members.push({ text: `${m[1]}(${normalizeParams(m[2])})`, start, end: m.index + m[0].length });
+      members.push({ text: `${m[1]}(${normalizeParams(block.slice(openIdx + 1, closeIdx))})`, start, end: closeIdx + 1 });
     }
     return capMembersWithNotice(members, 8, 'members');
   }
@@ -8940,30 +9094,66 @@ __factories["./src/extractors/typescript"] = function(module, exports) {
   // Returns members as { text, start, end } where start/end are char offsets
   // WITHIN `block` (end = the method's closing brace), so the caller can resolve
   // per-method line anchors that span the method body.
-  function extractClassMembers(block) {
+  function extractClassMembers(block, maskedBlock) {
+    const masked = maskedBlock || maskCode(block);
     const members = [];
     // Public methods (skip private/protected/_ prefixed and control-flow keywords)
-    const methodRe = /^\s+(?:public\s+|static\s+|async\s+|override\s+)*(\w+)\s*(?:<[^(]*>)?\s*\(([^)]*)\)(?:\s*:\s*[^{;]+)?\s*\{/gm;
-    for (const m of block.matchAll(methodRe)) {
+    const methodRe = /^\s+(?:public\s+|static\s+|async\s+|override\s+)*(\w+)\s*(?:<[^(]*>)?\s*\(/gm;
+    for (const m of masked.matchAll(methodRe)) {
       if (_CTRL_KEYWORDS.has(m[1])) continue;
       if (/^(private|protected|_)/.test(m[1])) continue;
-      const bodyStart = m.index + m[0].length; // just past the opening brace
-      const end = bodyStart + extractBlock(block, bodyStart).length;
+      const openIdx = m.index + m[0].length - 1;
+      const closeIdx = readBalanced(masked, openIdx);
+      if (closeIdx === -1) continue;
+      // Declaration tail check + return-type capture, mirroring the old
+      // `\)(?:\s*:\s*[^{;]+)?\s*\{` shape against the text after the real close.
+      const tail = masked.slice(closeIdx + 1, closeIdx + 200).match(/^(\s*:\s*[^{;]+?)?\s*\{/);
+      if (!tail) continue;
+      const params = block.slice(openIdx + 1, closeIdx);
+      const bodyStart = closeIdx + 1 + tail[0].length; // just past the opening brace
+      const end = bodyStart + extractBlock(masked, bodyStart).length;
       const start = m.index + (m[0].length - m[0].replace(/^\s+/, '').length);
-      if (m[1] === 'constructor') { members.push({ text: `constructor(${normalizeParams(m[2])})`, start, end }); continue; }
+      if (m[1] === 'constructor') { members.push({ text: `constructor(${normalizeParams(params)})`, start, end }); continue; }
       const isAsync = m[0].includes('async ') ? 'async ' : '';
       const isStatic = m[0].includes('static ') ? 'static ' : '';
-      const retMatch = m[0].match(/\)\s*:\s*([^{;]+)\s*\{/);
-      const retType = retMatch ? retMatch[1].trim().replace(/\s+/g, ' ').slice(0, 20) : '';
+      const retRaw = tail[1] ? block.slice(closeIdx + 1, closeIdx + 1 + tail[1].length).replace(/^\s*:\s*/, '') : '';
+      const retType = retRaw ? retRaw.trim().replace(/\s+/g, ' ').slice(0, 20) : '';
       const retStr = retType ? ` → ${retType}` : '';
-      members.push({ text: `${isStatic}${isAsync}${m[1]}(${normalizeParams(m[2])})${retStr}`, start, end });
+      members.push({ text: `${isStatic}${isAsync}${m[1]}(${normalizeParams(params)})${retStr}`, start, end });
     }
     return capMembersWithNotice(members, 8, 'methods');
   }
 
   function normalizeParams(params) {
     if (!params) return '';
-    return params.trim().replace(/\s+/g, ' ').replace(/:[^,)]+/g, '').trim();
+    const compact = params.trim().replace(/\s+/g, ' ');
+    // Strip `: type` annotations at top level only — nested delimiters in types
+    // (e.g. `cb: (x: number) => void`, `m: Map<string, X>`) are consumed with
+    // their annotation instead of truncating at the first `)` or `,` (#526).
+    let out = '';
+    let depth = 0;
+    let inType = false;
+    let quote = null;
+    for (let i = 0; i < compact.length; i++) {
+      const ch = compact[i];
+      if (quote) {
+        if (ch === '\\') { if (!inType) out += ch + (compact[i + 1] || ''); i++; continue; }
+        if (ch === quote) quote = null;
+        if (!inType) out += ch;
+        continue;
+      }
+      if (ch === '"' || ch === "'" || ch === '`') { quote = ch; if (!inType) out += ch; continue; }
+      if (ch === '(' || ch === '[' || ch === '{' || ch === '<') depth++;
+      else if (ch === ')' || ch === ']' || ch === '}' || (ch === '>' && compact[i - 1] !== '=')) depth--;
+      if (inType) {
+        if (depth <= 0 && ch === ',') { inType = false; out += ch; }
+        else if (depth <= 0 && ch === '=' && compact[i + 1] !== '>') { inType = false; out += ' ='; }
+        continue;
+      }
+      if (depth === 0 && ch === ':') { inType = true; continue; }
+      out += ch;
+    }
+    return out.replace(/\s*,\s*/g, ', ').replace(/\s+/g, ' ').trim();
   }
 
   // First prose sentence of the JSDoc block immediately preceding an exported
