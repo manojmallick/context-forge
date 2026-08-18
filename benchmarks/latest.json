@@ -1,21 +1,21 @@
 {
-  "benchmark_id": "sigmap-v8.26-main",
+  "benchmark_id": "sigmap-v8.27-main",
   "benchmark_date": "2026-08-18",
   "source": "benchmarks/reports/{benchmark-matrix,task-benchmark,token-reduction,honest-baseline}.json",
   "repos_token": 21,
   "repos_retrieval": 18,
   "metrics": {
-    "hit_at_5": 0.822,
+    "hit_at_5": 0.811,
     "baseline_hit_at_5": 0.136,
     "retrieval_lift": 6,
     "overall_token_reduction_pct": 96.8,
     "task_success_proxy_pct": 64.8,
-    "prompts_per_task": 1.53,
+    "prompts_per_task": 1.54,
     "baseline_prompts_per_task": 2.84,
-    "prompt_reduction_pct": 46.1,
-    "graph_boosted_hit_at_5": 0.822,
+    "prompt_reduction_pct": 45.7,
+    "graph_boosted_hit_at_5": 0.811,
     "grep_baseline_hit_at_5": 0.44,
-    "grep_lift": 1.76
+    "grep_lift": 1.73
   },
   "test_discovery": {
     "repos": 28,

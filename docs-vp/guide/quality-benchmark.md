@@ -16,13 +16,13 @@ head:
 # Quality benchmark
 
 ::: info Official v8.26.0 benchmark snapshot
-**Benchmark ID:** sigmap-v8.26-main &nbsp;·&nbsp; **Date:** 2026-08-18 (with R language)
+**Benchmark ID:** sigmap-v8.27-main &nbsp;·&nbsp; **Date:** 2026-08-18 (with R language)
 
 | Metric | Value |
 |---|---:|
 | Hit@5 | **82%** vs 44.0% single-shot grep baseline |
-| Honest lift (vs grep agent) | **1.76×** |
-| Prompt reduction | **46.1%** (2.84 → 1.53) |
+| Honest lift (vs grep agent) | **1.73×** |
+| Prompt reduction | **45.7%** (2.84 → 1.54) |
 | Task success proxy | **64.8%** |
 | Overall token reduction | **96.8%** |
 | GPT-4o overflow (without → with) | **16/21 → 0/21** |

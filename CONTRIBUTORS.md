@@ -35,6 +35,9 @@ To ensure proper attribution:
 
 We welcome contributions! See [Contributing](./docs/CONTRIBUTING.md) for guidelines.
 
+### Recent Contributors (v8.27.0)
+- **@manojmallick** — feat(extractors): shared balanced scanner (`scan.js`) — JS/TS param capture depth-matched, string-aware comment strip, TS depth/quote-aware type stripping; byte-identical-or-better gated; nested-paren gap fixed for JS/TS (#526, PR #527)
+
 ### Recent Contributors (v8.26.2)
 - **@manojmallick** — fix(benchmarks): cross-suite determinism — shared `config-overrides.json`, mirrored apply/restore in the quality suite, self-repo labeling, `validate:benchmark-determinism` gate (#522, PR #524)
 
