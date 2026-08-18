@@ -2,7 +2,7 @@
 
 SigMap's benchmark claims are honesty-audited (measured grep-agent baseline, retrieval-tier proxies labeled as proxies, leakage-gated hard corpus). This page extends the same standard to the **extraction layer**: what each extractor tier actually does, where it truncates, and what that means for verification. Every claim here is checkable against the code.
 
-Currently: **42 extractor modules covering 33 languages**. Counts are guarded against drift by `test/integration/known-limitations.test.js` (they must match `version.json`).
+Currently: **43 extractor modules covering 33 languages**. Counts are guarded against drift by `test/integration/known-limitations.test.js` (they must match `version.json`).
 
 ## Extractor tiers
 
@@ -23,7 +23,7 @@ Large god-files are therefore **under-represented by design**: the caps are what
 
 ## Known regex gaps (Tier 2)
 
-- **Nested parentheses in parameter lists truncate at the first `)`** — `function f(a, b = g(x))` captures `(a, b = g(x` incorrectly. This is the documented precondition for the planned hand-rolled tokenizer core (G4) and the arity-check verifier that depends on it (D1).
+- **Nested parentheses in parameter lists truncate at the first `)`** — `function f(a, b = g(x))` captures `(a, b = g(x` incorrectly. **Fixed for JavaScript and TypeScript** by the shared balanced scanner (`src/extractors/scan.js`, G4 increment 1): params are depth-matched over string/comment-masked text, string defaults (including `)` or `//` inside quotes) survive intact, and TS type annotations strip depth-aware. The remaining Tier-2 languages (Go, Rust, Java, Kotlin, Swift, PHP, Scala, Dart, C#) still truncate — they migrate in later G4 increments, which remain the precondition for the arity-check verifier (D1).
 - Multi-line declaration headers that break between the name and the parameter list can be missed entirely.
 - Generic/type-parameter soup (deeply nested `<>`) is normalized textually, not parsed.
 

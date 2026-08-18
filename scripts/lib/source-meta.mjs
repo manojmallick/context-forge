@@ -20,7 +20,7 @@ const require = createRequire(import.meta.url);
  * list / count, but still counted as extractor modules.
  */
 export const EXTRACTOR_HELPERS = new Set([
-  'line-anchor', 'deps', 'coverage', 'patterns', 'python_ast',
+  'line-anchor', 'deps', 'coverage', 'patterns', 'python_ast', 'scan',
   'python_dataclass', 'todos', 'prdiff', 'dispatch', 'generic',
 ]);
 
