@@ -16,12 +16,12 @@ head:
 # Quality benchmark
 
 ::: info Official v8.26.0 benchmark snapshot
-**Benchmark ID:** sigmap-v8.26-main &nbsp;·&nbsp; **Date:** 2026-08-17 (with R language)
+**Benchmark ID:** sigmap-v8.26-main &nbsp;·&nbsp; **Date:** 2026-08-18 (with R language)
 
 | Metric | Value |
 |---|---:|
 | Hit@5 | **82%** vs 44.0% single-shot grep baseline |
-| Honest lift (vs grep agent) | **1.87×** |
+| Honest lift (vs grep agent) | **1.76×** |
 | Prompt reduction | **46.1%** (2.84 → 1.53) |
 | Task success proxy | **64.8%** |
 | Overall token reduction | **96.8%** |
@@ -34,7 +34,7 @@ Token reduction is the mechanism. This benchmark shows the operational consequen
 - how much code would be hidden without SigMap?
 - what does that mean for API cost?
 
-Latest saved run: **2026-08-17 (v8.26.0)**
+Latest saved run: **2026-08-18 (v8.26.0)**
 
 ## Headline numbers
 

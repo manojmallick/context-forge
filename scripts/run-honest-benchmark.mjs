@@ -210,6 +210,11 @@ for (const f of taskFiles) {
     repo: name,
     tasks: tasks.length,
     bucket,
+    // The 'retrieval' task set scores against the LIVE SigMap repo (ROOT), so
+    // its context — and this row — legitimately drifts with every release.
+    // Labeled so cross-release comparisons never mistake it for harness
+    // instability (#522).
+    ...(repoPath === ROOT ? { selfRepo: true } : {}),
     sigmapHitAt5: round(row.sigHit / tasks.length),
     grepHitAt5: round(row.grepHit / tasks.length),
   });
@@ -256,7 +261,7 @@ if (JSON_OUT) {
   console.log('\n  repo                 tasks  SigMap  grep-agent');
   console.log('  -------------------- -----  ------  ----------');
   for (const r of perRepo) {
-    console.log(`  ${r.repo.padEnd(20)} ${String(r.tasks).padStart(5)}  ${pct(r.sigmapHitAt5)}  ${pct(r.grepHitAt5).padStart(9)}`);
+    console.log(`  ${(r.repo + (r.selfRepo ? '*' : '')).padEnd(20)} ${String(r.tasks).padStart(5)}  ${pct(r.sigmapHitAt5)}  ${pct(r.grepHitAt5).padStart(9)}`);
   }
   const s = report.summary;
   console.log(`\n  SigMap        hit@5 ${(s.sigmap.hitAt5 * 100).toFixed(1)}%   MRR ${s.sigmap.mrr.toFixed(3)}`);
@@ -269,6 +274,9 @@ if (JSON_OUT) {
   line('repos small', s.buckets.small);
   line('repos medium', s.buckets.medium);
   line('repos large', s.buckets.large);
+  if (perRepo.some((r) => r.selfRepo)) {
+    console.log('  * self-repo task set — scored against the live SigMap repo; drifts with development by design');
+  }
   for (const sk of skipped) console.log(`  [skipped] ${sk.repo}: ${sk.reason}`);
 }
 

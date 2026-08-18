@@ -880,7 +880,7 @@ SIGMAP_SESSION=chat-42 sigmap budget # explicit session key
 
 ```
 [sigmap] session spend (estimates — chars/4; SigMap-emitted tokens only)
-  session   2026-08-17
+  session   2026-08-18
   ops       14
   spent     ~3,900 tokens  (baseline ~41,200, saved ~37,300)
   budget    50,000 → remaining ~46,100 (7.8% used)
@@ -1335,7 +1335,7 @@ sigmap compare --json
 ────────────────────────────────────────────
  SigMap vs Baseline
 ────────────────────────────────────────────
- hit@5         82.2% vs 44.0% grep   (1.87× lift)
+ hit@5         82.2% vs 44.0% grep   (1.76× lift)
  Avg prompts   1.53 vs 2.84
  Token story   96.8% overall reduction
 ────────────────────────────────────────────
@@ -1375,7 +1375,7 @@ sigmap bench --submit --json
 ────────────────────────────────────────────────────────
  SigMap version : 8.21.0
  Benchmark ID   : sigmap-v8.26-main
- Submitted      : 2026-08-17
+ Submitted      : 2026-08-18
 ────────────────────────────────────────────────────────
  Canonical metrics (official release):
  hit@5          : 82.2%

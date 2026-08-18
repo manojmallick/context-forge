@@ -35,6 +35,9 @@ To ensure proper attribution:
 
 We welcome contributions! See [Contributing](./docs/CONTRIBUTING.md) for guidelines.
 
+### Recent Contributors (v8.26.2)
+- **@manojmallick** — fix(benchmarks): cross-suite determinism — shared `config-overrides.json`, mirrored apply/restore in the quality suite, self-repo labeling, `validate:benchmark-determinism` gate (#522, PR #524)
+
 ### Recent Contributors (v8.26.1)
 - **@manojmallick** — docs(trust): `KNOWN_LIMITATIONS.md` — three-tier extractor honesty table, truncation caps, verify implication; README tier label; drift-locked guard test (#520, PR #521)
 

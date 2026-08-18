@@ -1,5 +1,5 @@
 {
-  "generated": "2026-08-17T20:43:35.028Z",
+  "generated": "2026-08-18T03:54:34.374Z",
   "methodology": {
     "promptWeights": {
       "correct": 1,
@@ -26,9 +26,9 @@
     "hitAt5Without": 13.6,
     "hitAt5With": 82.2,
     "avgImprovement": 60.9,
-    "totalGroundedSymbols": 10216,
-    "totalDarkSymbols": 57187,
-    "hallucinationRiskPct": 84.8
+    "totalGroundedSymbols": 9477,
+    "totalDarkSymbols": 57926,
+    "hallucinationRiskPct": 85.9
   },
   "repos": [
     {
@@ -41,9 +41,9 @@
       "promptsWith": 1.38,
       "promptsWithout": 2,
       "reductionPct": 31.3,
-      "groundedSymbols": 54,
-      "darkSymbols": 299,
-      "hallucinationRiskPct": 84.7
+      "groundedSymbols": 11,
+      "darkSymbols": 342,
+      "hallucinationRiskPct": 96.9
     },
     {
       "repo": "flask",
@@ -55,9 +55,9 @@
       "promptsWith": 1.25,
       "promptsWithout": 2.68,
       "reductionPct": 53.4,
-      "groundedSymbols": 361,
-      "darkSymbols": 336,
-      "hallucinationRiskPct": 48.2
+      "groundedSymbols": 209,
+      "darkSymbols": 488,
+      "hallucinationRiskPct": 70
     },
     {
       "repo": "gin",
@@ -83,9 +83,9 @@
       "promptsWith": 1,
       "promptsWithout": 2.54,
       "reductionPct": 60.6,
-      "groundedSymbols": 96,
-      "darkSymbols": 374,
-      "hallucinationRiskPct": 79.6
+      "groundedSymbols": 13,
+      "darkSymbols": 457,
+      "hallucinationRiskPct": 97.2
     },
     {
       "repo": "rails",
@@ -111,9 +111,9 @@
       "promptsWith": 2.38,
       "promptsWithout": 2.76,
       "reductionPct": 13.9,
-      "groundedSymbols": 72,
-      "darkSymbols": 290,
-      "hallucinationRiskPct": 80.1
+      "groundedSymbols": 58,
+      "darkSymbols": 304,
+      "hallucinationRiskPct": 84
     },
     {
       "repo": "rust-analyzer",
@@ -153,9 +153,9 @@
       "promptsWith": 2.8,
       "promptsWithout": 2.94,
       "reductionPct": 4.7,
-      "groundedSymbols": 403,
-      "darkSymbols": 575,
-      "hallucinationRiskPct": 58.8
+      "groundedSymbols": 129,
+      "darkSymbols": 849,
+      "hallucinationRiskPct": 86.8
     },
     {
       "repo": "riverpod",

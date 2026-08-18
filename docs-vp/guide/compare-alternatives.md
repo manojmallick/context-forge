@@ -79,7 +79,7 @@ Some teams maintain a hand-written `AGENTS.md` or instructions file. SigMap gene
 |---|---|---|
 | Keeps up with code changes | **Yes** — regenerates on every commit | Manual update required |
 | Structured by module | **Yes** — per-module signature blocks | Usually flat text |
-| Benchmark-tested accuracy | **82.2% hit@5** (1.87× vs grep baseline) | Not measured |
+| Benchmark-tested accuracy | **82.2% hit@5** (1.76× vs grep baseline) | Not measured |
 | Time to set up | **30 seconds** | Hours |
 
 ## What SigMap does not replace

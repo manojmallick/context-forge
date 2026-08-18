@@ -1,5 +1,5 @@
 {
-  "generated": "2026-08-17T20:43:20.596Z",
+  "generated": "2026-08-18T03:54:19.635Z",
   "methodology": {
     "corpus": "benchmarks/tasks/*.jsonl",
     "scorer": "src/eval/scorer.js hitAtK/reciprocalRank, k=5",
@@ -11,21 +11,21 @@
     "tasks": 125,
     "repos": 19,
     "sigmap": {
-      "hitAt5": 0.824,
-      "mrr": 0.746
+      "hitAt5": 0.776,
+      "mrr": 0.694
     },
     "grepBaseline": {
       "hitAt5": 0.44,
       "mrr": 0.229
     },
-    "lift": 1.87,
-    "deltaPts": 38.4,
+    "lift": 1.76,
+    "deltaPts": 33.6,
     "splits": {
       "easy": {
         "tasks": 110,
         "sigmap": {
-          "hitAt5": 0.855,
-          "mrr": 0.769
+          "hitAt5": 0.8,
+          "mrr": 0.71
         },
         "grepBaseline": {
           "hitAt5": 0.427,
@@ -70,8 +70,8 @@
       "large": {
         "tasks": 60,
         "sigmap": {
-          "hitAt5": 0.917,
-          "mrr": 0.84
+          "hitAt5": 0.817,
+          "mrr": 0.732
         },
         "grepBaseline": {
           "hitAt5": 0.383,
@@ -162,7 +162,8 @@
       "repo": "retrieval",
       "tasks": 20,
       "bucket": "large",
-      "sigmapHitAt5": 0.85,
+      "selfRepo": true,
+      "sigmapHitAt5": 0.55,
       "grepHitAt5": 0.1
     },
     {
