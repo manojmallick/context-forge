@@ -51,7 +51,7 @@ features:
     linkText: Task benchmark →
   - icon: 🎯
     title: Right file in context
-    details: 82.2% hit@5 across 21 repos and 105 tasks. A single-shot grep agent finds the right file 44.0% of the time — SigMap is a measured 1.87× better.
+    details: 82.2% hit@5 across 21 repos and 105 tasks. A single-shot grep agent finds the right file 44.0% of the time — SigMap is a measured 1.76× better.
     link: /guide/retrieval-benchmark
     linkText: Retrieval benchmark →
   - icon: ⚖️
@@ -78,14 +78,14 @@ features:
 
 <div style="max-width:840px;margin:0 auto;padding:18px 24px 0;text-align:center">
 <div style="display:inline-flex;flex-wrap:wrap;gap:.5rem;justify-content:center;background:var(--vp-c-brand-soft,#ede9fe);border:1px solid rgba(124,106,247,.25);border-radius:999px;padding:.55rem .9rem;font-size:.9rem;color:var(--vp-c-text-1)">
-  <span><strong>Release:</strong> v8.26.1</span>
+  <span><strong>Release:</strong> v8.26.2</span>
   <span>·</span>
   <span><strong>New — extraction honesty:</strong> <a href="https://github.com/manojmallick/sigmap/blob/main/KNOWN_LIMITATIONS.md">KNOWN_LIMITATIONS.md</a> states plainly what each extractor tier can and cannot do — AST vs anchored-regex vs heuristic, the truncation caps, the known gaps, and what they mean for <code>verify</code> — drift-locked by a guard test. Plus v8.26's <code>sigmap skills install</code>: the optimal usage loop as native agent skills in five clients. Zero dependencies, offline, deterministic.</span>
 </div>
 <div style="margin-top:.4rem;display:inline-flex;flex-wrap:wrap;gap:.5rem;justify-content:center;background:var(--vp-c-default-soft,#f3f4f6);border:1px solid rgba(0,0,0,.08);border-radius:999px;padding:.55rem .9rem;font-size:.9rem;color:var(--vp-c-text-2)">
   <span><strong>Benchmark:</strong> sigmap-v8.26-main</span>
   <span>·</span>
-  <span>82.2% hit@5 · 96.8% token reduction · 2026-08-17</span>
+  <span>82.2% hit@5 · 96.8% token reduction · 2026-08-18</span>
 </div>
 </div>
 
@@ -172,11 +172,11 @@ See the full [end-to-end walkthrough](/guide/walkthrough) to watch this in actio
 |---|:---:|:---:|
 | Task success proxy | — (proxy, modeled from retrieval tiers) | **64.8%** |
 | Prompts per task | 2.84 | **1.53** |
-| Retrieval hit@5 | 44.0% (single-shot grep) | **82.2%** (1.87× honest lift) |
+| Retrieval hit@5 | 44.0% (single-shot grep) | **82.2%** (1.76× honest lift) |
 | Overall token reduction | — | **96.8%** |
 | GPT-4o overflow repos | 16/21 | **0/21** |
 
-Latest saved benchmark run: **2026-08-17 (v8.26.0)**.
+Latest saved benchmark run: **2026-08-18 (v8.26.0)**.
 
 </div>
 

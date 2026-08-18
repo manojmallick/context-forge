@@ -64,7 +64,7 @@ Example tasks:
 
 **Baseline:** Single-shot grep agent = 44.0% hit@5 — whole-repo term scan ranked by coverage then occurrences (`npm run benchmark:honest`). The old random-selection figure (~13.6%) remains in the reports as data but is no longer the quoted comparison.
 
-**SigMap score:** 82.2% — a measured 1.87× honest lift over the grep baseline
+**SigMap score:** 82.2% — a measured 1.76× honest lift over the grep baseline
 
 ### 2. Task success proxy (correct rank)
 

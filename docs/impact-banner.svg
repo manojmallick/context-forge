@@ -37,7 +37,7 @@
   <!-- Card 1: 6.8x -->
   <rect x="22" y="56" width="228" height="116" rx="10" fill="#0f0a24" stroke="#3a2b88" stroke-width="1.5"/>
   <rect x="22" y="56" width="228" height="116" rx="10" fill="url(#cardglow)"/>
-  <text x="136" y="122" text-anchor="middle" font-size="64" font-weight="900" fill="#7c6af7">1.87x</text>
+  <text x="136" y="122" text-anchor="middle" font-size="64" font-weight="900" fill="#7c6af7">1.76x</text>
   <text x="136" y="142" text-anchor="middle" font-size="13" font-weight="700" fill="#b8adff">measured lift</text>
   <text x="136" y="161" text-anchor="middle" font-size="11" fill="#5b4fcc">hit@5: 44.0% grep to 82.2%</text>
 
@@ -82,7 +82,7 @@
   <text x="402" y="320" font-size="10" fill="#1a4a2a">RETRIEVAL HIT@5 (SIGMAP)</text>
   <rect x="402" y="326" width="320" height="17" fill="#071a0e" rx="4"/>
   <rect x="402" y="326" width="263" height="17" fill="#22c55e" rx="4"/>
-  <text x="624" y="338" font-size="12" font-weight="800" fill="#22c55e">82.2% -- 1.87x better</text>
+  <text x="624" y="338" font-size="12" font-weight="800" fill="#22c55e">82.2% -- 1.76x better</text>
 
   <!-- FOOTER -->
   <line x1="22" y1="363" x2="738" y2="363" stroke="#1e1440" stroke-width="1"/>

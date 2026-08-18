@@ -10,6 +10,18 @@ Format: [Semantic Versioning](https://semver.org/)
 
 ---
 
+## [8.26.2] — 2026-08-18
+
+Patch release — **"Honest Harness" (#522)**: the benchmark suite's cross-suite instability is diagnosed, fixed, and gated — and the headline retrieval number honestly resettles on the now-stable harness.
+
+### Fixed
+- **Benchmark cross-suite determinism (#522, PR #524):** two measured root causes. (1) The quality suite carried a stale 13-entry local copy of the retrieval harness's 21-entry `CONFIG_OVERRIDES` table and regenerated every repo unconditionally — the missing entries (express, flask, spring-petclinic, serilog) got default-srcDirs contexts, silently overwriting the canonical ones (measured: honest hit@5 77.6% → 66.4% after a quality run; flask 0.875 → 0). (2) The 20-task `retrieval` set scores against the **live SigMap repo**, whose context legitimately changes every release (measured: 0.85 → 0.55 over three releases) — real development drift, previously indistinguishable from harness noise. Fixes: a single canonical `benchmarks/config-overrides.json` loaded by both suites; the quality suite now mirrors the retrieval harness's apply/restore semantics exactly (always apply · regenerate · restore in `finally`); the honest report labels the self-repo row (`selfRepo: true`, `*` + note in output). New gate `npm run validate:benchmark-determinism` runs honest → quality → honest and fails on any divergence — verified green post-fix (identical at 77.6% / 125 tasks). 5 CI-safe source-level guard tests.
+
+### Changed
+- **Headline honesty, again:** with the harness stable, the honest baseline resettles — the previously published 82.4% hit@5 included ~5pt of unlabeled self-repo drift. The refreshed numbers in this release are the first produced under the determinism gate. 134 test files.
+
+---
+
 ## [8.26.1] — 2026-08-18
 
 Patch release — **"Trust Quick Wins II" (G1)**: the extraction layer gets the same honesty treatment the benchmarks got in v8.19.

@@ -1,6 +1,6 @@
 {
-  "version": "8.26.1",
-  "benchmark_date": "2026-08-17",
+  "version": "8.26.2",
+  "benchmark_date": "2026-08-18",
   "benchmark_id": "sigmap-v8.26-main",
   "languages": 33,
   "extractors": 42,
@@ -17,7 +17,7 @@
     "prompt_reduction_pct": 46.1,
     "graph_boosted_hit_at_5": 0.822,
     "grep_baseline_hit_at_5": 0.44,
-    "grep_lift": 1.87
+    "grep_lift": 1.76
   },
   "ablation": {
     "benchmark_id": "sigmap-v7.24-ablation",

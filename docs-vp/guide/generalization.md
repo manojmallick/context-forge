@@ -20,12 +20,12 @@ SigMap was not tuned for one repo. This benchmark matters because it shows the s
 :::
 
 ::: info Official v8.26.0 benchmark snapshot
-**Benchmark ID:** sigmap-v8.26-main &nbsp;·&nbsp; **Date:** 2026-08-17 (with R language)
+**Benchmark ID:** sigmap-v8.26-main &nbsp;·&nbsp; **Date:** 2026-08-18 (with R language)
 
 | Metric | Value |
 |---|---:|
 | Hit@5 | **82%** vs 44.0% single-shot grep baseline |
-| Honest lift (vs grep agent) | **1.87×** |
+| Honest lift (vs grep agent) | **1.76×** |
 | Prompt reduction | **46.1%** (2.84 → 1.53) |
 | Task success proxy | **64.8%** |
 | Overall token reduction | **96.8%** |

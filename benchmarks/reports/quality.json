@@ -1,6 +1,6 @@
 {
-  "version": "8.26.0",
-  "timestamp": "2026-08-17T20:43:34.934Z",
+  "version": "8.26.2",
+  "timestamp": "2026-08-18T03:54:34.270Z",
   "assumptions": {
     "callsPerDay": 10,
     "models": [
@@ -45,10 +45,10 @@
       "language": "JavaScript",
       "rawTokens": 70588,
       "finalTokens": 1325,
-      "groundedSymbols": 54,
+      "groundedSymbols": 11,
       "estimatedRawSymbols": 353,
-      "darkSymbols": 299,
-      "groundingPct": 15,
+      "darkSymbols": 342,
+      "groundingPct": 3,
       "overflowModels": [],
       "filesVisible": 38,
       "filesVisibleRaw": 38,
@@ -93,10 +93,10 @@
       "language": "Python",
       "rawTokens": 139452,
       "finalTokens": 5409,
-      "groundedSymbols": 361,
+      "groundedSymbols": 209,
       "estimatedRawSymbols": 697,
-      "darkSymbols": 336,
-      "groundingPct": 52,
+      "darkSymbols": 488,
+      "groundingPct": 30,
       "overflowModels": [
         "GPT-4o"
       ],
@@ -194,10 +194,10 @@
       "language": "Java",
       "rawTokens": 94094,
       "finalTokens": 3035,
-      "groundedSymbols": 96,
+      "groundedSymbols": 13,
       "estimatedRawSymbols": 470,
-      "darkSymbols": 374,
-      "groundingPct": 20,
+      "darkSymbols": 457,
+      "groundingPct": 3,
       "overflowModels": [],
       "filesVisible": 52,
       "filesVisibleRaw": 52,
@@ -294,10 +294,10 @@
       "language": "TypeScript",
       "rawTokens": 72322,
       "finalTokens": 3302,
-      "groundedSymbols": 72,
+      "groundedSymbols": 58,
       "estimatedRawSymbols": 362,
-      "darkSymbols": 290,
-      "groundingPct": 20,
+      "darkSymbols": 304,
+      "groundingPct": 16,
       "overflowModels": [],
       "filesVisible": 64,
       "filesVisibleRaw": 64,
@@ -446,10 +446,10 @@
       "language": "C#",
       "rawTokens": 195515,
       "finalTokens": 7117,
-      "groundedSymbols": 403,
+      "groundedSymbols": 129,
       "estimatedRawSymbols": 978,
-      "darkSymbols": 575,
-      "groundingPct": 41,
+      "darkSymbols": 849,
+      "groundingPct": 13,
       "overflowModels": [
         "GPT-4o"
       ],
@@ -1049,10 +1049,10 @@
       "language": "R",
       "rawTokens": 264602,
       "finalTokens": 8768,
-      "groundedSymbols": 173,
+      "groundedSymbols": 0,
       "estimatedRawSymbols": 1323,
-      "darkSymbols": 1150,
-      "groundingPct": 13,
+      "darkSymbols": 1323,
+      "groundingPct": 0,
       "overflowModels": [
         "GPT-4o",
         "Claude Sonnet"
@@ -1099,8 +1099,8 @@
   "summary": {
     "repoCount": 21,
     "overflowGPT4oCount": 16,
-    "totalGroundedSymbols": 10216,
-    "totalDarkSymbols": 57187,
+    "totalGroundedSymbols": 9477,
+    "totalDarkSymbols": 57926,
     "totalHiddenFiles": 5181,
     "gpt4oSavedPerMonth": 9941.94
   }
