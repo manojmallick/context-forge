@@ -10,6 +10,19 @@ Format: [Semantic Versioning](https://semver.org/)
 
 ---
 
+## [8.27.0] — 2026-08-18
+
+Minor release — **"Tokenizer Core I" (v8.27, G4 increment 1)**: the hand-rolled balanced scanner lands and JS/TS extraction stops truncating at the first `)` — the first slice of the v9.0 grounding track and the stated precondition for arity-checked verification (D1).
+
+### Added
+- **Shared balanced scanner (#526, PR #527):** new `src/extractors/scan.js` — three deterministic, length- and newline-preserving passes: `stripComments` (string-aware — `//` inside a string literal survives, fixing the `url = "https://x"` corruption class), `maskCode` (comments + string/template contents blanked so every delimiter found is structural), and `readBalanced` (depth-matched close index, capped). Generalizes the repo's own `maskJs`/`readBalancedParens` patterns; explicitly NOT tree-sitter — zero dependencies, deterministic by construction.
+
+### Changed
+- **JS/TS extraction is balanced (#526, PR #527):** every `\(([^)]*)\)` param capture in `javascript.js`/`typescript.js` (top-level functions, arrow consts, class members, TS interface methods) is replaced with match-to-`(` + depth-matched close — `f(a, b = g(x))`, `c = ")"`, and destructuring-brace params now capture fully, with body/anchor endpoints computed from the real close index. JS class members gain the TS control-keyword guard. TS `normalizeParams` strips types depth- and quote-aware: `(cb: (x: number) => void)` → `cb`, generics consumed with the annotation, defaults after typed params preserved (`m: Map<K,V> = new Map()` → `m = new Map()`). Shipped behind the byte-identical-or-better gate: the full existing suite passes unchanged; 12 new adversarial tests (135 test files). `KNOWN_LIMITATIONS.md` updated — nested-paren gap fixed for JS/TS, the 9 remaining Tier-2 languages stay listed for later G4 increments. Extractor-module count honestly 42 → 43 (`scan` registered as a helper so the language count stays 33).
+- **Measured trade, documented honestly (v8.20 precedent):** fuller param text adds lexical tokens that dilute BM25 on the file-discovery corpus — retrieval hit@5 **82.2% → 81.1%** (one task partial → wrong), honest lift 1.76× → 1.73×, token reduction unchanged at 96.8%. **Gate-verified real** (`validate:benchmark-determinism` identical cross-suite), not harness noise. The point of the trade: params are now *exact*, which is what D1 arity-checked verification consumes — correctness over corpus points, per the grounding-first north star.
+
+---
+
 ## [8.26.2] — 2026-08-18
 
 Patch release — **"Honest Harness" (#522)**: the benchmark suite's cross-suite instability is diagnosed, fixed, and gated — and the headline retrieval number honestly resettles on the now-stable harness.

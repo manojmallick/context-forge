@@ -59,10 +59,10 @@ That map is exactly what agentic grep is worst at: reproducible, auditable conte
 
 **Proof it pays off** (full benchmark below):
 <!--SM:whyMetrics-->
-- **82.2% hit@5** — right file in top 5 results (vs 44.0% single-shot grep baseline — 1.76× lift)
+- **81.1% hit@5** — right file in top 5 results (vs 44.0% single-shot grep baseline — 1.73× lift)
 - **96.8% token reduction** — average across 21 real repos
 - **64.8% task-success proxy** — modeled from retrieval tiers, not measured LLM sessions
-- **1.53 prompts per task** — down from 2.84 (46.1% fewer retries, modeled)
+- **1.54 prompts per task** — down from 2.84 (45.7% fewer retries, modeled)
 <!--/SM:whyMetrics-->
 - **<!--SM:languages-->33<!--/SM:languages--> languages supported** — TypeScript, Python, Go, Rust, Java, R, and more
 - **No vendor lock-in** — works with any AI assistant or local LLM
@@ -98,7 +98,7 @@ sigmap verify answer.md --report        # standalone red/amber/green HTML report
 | Without SigMap | With SigMap |
 |---|---|
 | ❌ Non-reproducible agent guesses | ✅ Deterministic map — same input, same output, every time |
-| ❌ "Trust me" AI answers | ✅ Grounded — right file in context <!--SM:hitWhole-->82%<!--/SM:hitWhole--> of the time, every symbol on a real line anchor |
+| ❌ "Trust me" AI answers | ✅ Grounded — right file in context <!--SM:hitWhole-->81%<!--/SM:hitWhole--> of the time, every symbol on a real line anchor |
 | ❌ Embeddings / vector DB required | ✅ Zero deps, no infra, fully offline |
 
 ---
@@ -122,12 +122,12 @@ Ask → Rank → Context → Validate → Judge → Learn
 
 <!--SM:benchmarkBlock-->
 ```
-Benchmark : sigmap-v8.26-main (21 repositories, including R language)
+Benchmark : sigmap-v8.27-main (21 repositories, including R language)
 Date      : 2026-08-18
 
-Hit@5          : 82.2%   (grep-agent baseline 44.0%  — 1.76× lift)
+Hit@5          : 81.1%   (grep-agent baseline 44.0%  — 1.73× lift)
 Token reduction: 96.8%   (across 21 repos)
-Prompt reduction : 46.1% (2.84 → 1.53 prompts per task, modeled)
+Prompt reduction : 45.7% (2.84 → 1.54 prompts per task, modeled)
 Task success   : 64.8%   (proxy — modeled from retrieval tiers)
 Repos tested   : 21 (JavaScript, Python, Go, Rust, Java, R, C++, C#, Dart, Swift, Ruby, PHP, Scala, Kotlin, and more)
 ```

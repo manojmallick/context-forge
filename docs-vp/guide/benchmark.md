@@ -1,6 +1,6 @@
 ---
 title: Benchmark overview
-description: Official v8.26.0 benchmark snapshot. 96.8% average token reduction across 21 repos, 82.2% retrieval hit@5, 46.1% fewer prompts, and R language support verified.
+description: Official v8.26.0 benchmark snapshot. 96.8% average token reduction across 21 repos, 81.1% retrieval hit@5, 45.7% fewer prompts, and R language support verified.
 head:
   - - meta
     - property: og:title
@@ -16,14 +16,14 @@ head:
 # Benchmark overview
 
 ::: info Official v8.26.0 benchmark snapshot (21 repos, including R language)
-**Benchmark ID:** sigmap-v8.26-main &nbsp;·&nbsp; **Date:** 2026-08-18
+**Benchmark ID:** sigmap-v8.27-main &nbsp;·&nbsp; **Date:** 2026-08-18
 
 | Metric | Value |
 |---|---:|
 | Hit@5 (18 core repos) | **82%** vs 44.0% single-shot grep baseline |
 | Token reduction (21 repos) | **96.8%** |
-| Honest lift (vs grep agent) | **1.76×** |
-| Prompt reduction | **46.1%** (2.84 → 1.53) |
+| Honest lift (vs grep agent) | **1.73×** |
+| Prompt reduction | **45.7%** (2.84 → 1.54) |
 | Task success proxy | **64.8%** |
 | Test discovery (impl→test) | **F1 98.0%** · hit@1 97.4% (28 repos) |
 | GPT-4o overflow (without → with) | **16/21 → 0/21** |
@@ -50,9 +50,9 @@ Latest saved benchmark run: **2026-08-18 (v8.26.0)**
 | Average token reduction (all 21) | **96.8%** |
 | Retrieval hit@5 (18 core) | **86%** |
 | Graph-boosted hit@5 | **86%** |
-| Grep-agent baseline hit@5 (125 tasks, 19 repos) | 44.0% — **1.76× honest lift** |
+| Grep-agent baseline hit@5 (125 tasks, 19 repos) | 44.0% — **1.73× honest lift** |
 | Random baseline hit@5 (data only, no longer quoted) | 13.6% |
-| Prompt reduction | **48%** (2.84 → 1.53 prompts) |
+| Prompt reduction | **48%** (2.84 → 1.54 prompts) |
 | GPT-4o overflow repos without SigMap | **16 / 21** |
 | GPT-4o monthly input savings at 10 calls/day | **$9,899.90** |
 
@@ -75,7 +75,7 @@ Latest saved benchmark run: **2026-08-18 (v8.26.0)**
 - SigMap hit@5: **86%**
 - Graph-boosted hit@5: **86%** (+0.0pp with dependency graph)
 - Grep-agent baseline: **44.0%** (single-shot, `npm run benchmark:honest`)
-- Honest lift: **1.76x** (+26.4pt; random baseline 13.6% kept as data only)
+- Honest lift: **1.73x** (+26.4pt; random baseline 13.6% kept as data only)
 
 This is the best benchmark when the question is: *"Does SigMap actually put the right file in context?"*
 
@@ -84,7 +84,7 @@ This is the best benchmark when the question is: *"Does SigMap actually put the 
 - Correct: **68 / 105** (64.8%)
 - Partial: **17 / 90** (18.9%)
 - Wrong: **13 / 90** (14.4%)
-- Average prompts: **2.84 → 1.53**
+- Average prompts: **2.84 → 1.54**
 
 This is the best benchmark when the question is: *"Does the developer need fewer retries to finish the job?"*
 

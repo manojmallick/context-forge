@@ -1,5 +1,5 @@
 {
-  "generated": "2026-08-18T03:53:46.865Z",
+  "generated": "2026-08-18T04:54:42.671Z",
   "repos": [
     {
       "repo": "express",
@@ -453,7 +453,7 @@
       "sigCount": 29,
       "tasks": 8,
       "hitAt5": 0.5,
-      "mrr": 0.291,
+      "mrr": 0.293,
       "randomBaseline": 0.2,
       "improvement": 2.5,
       "tiers": {
@@ -481,7 +481,7 @@
             "lib/core/Axios.js"
           ],
           "top1": "lib/core/AxiosError.js",
-          "firstHitRank": 8,
+          "firstHitRank": 7,
           "tier": "wrong"
         },
         {
@@ -544,7 +544,7 @@
           "expected": [
             "lib/core/settle.js"
           ],
-          "top1": "lib/core/AxiosError.js",
+          "top1": "lib/core/InterceptorManager.js",
           "firstHitRank": null,
           "tier": "wrong"
         }
@@ -1120,7 +1120,7 @@
     {
       "repo": "vue-core",
       "fileCount": 232,
-      "sigCount": 129,
+      "sigCount": 135,
       "tasks": 5,
       "hitAt5": 1,
       "mrr": 0.9,
@@ -1196,14 +1196,14 @@
       "fileCount": 370,
       "sigCount": 141,
       "tasks": 5,
-      "hitAt5": 0.8,
-      "mrr": 0.662,
+      "hitAt5": 0.6,
+      "mrr": 0.656,
       "randomBaseline": 0.014,
-      "improvement": 59.2,
+      "improvement": 44.4,
       "tiers": {
         "correct": 3,
-        "partial": 1,
-        "wrong": 1
+        "partial": 0,
+        "wrong": 2
       },
       "taskDetails": [
         {
@@ -1258,8 +1258,8 @@
             "packages/svelte/src/internal/client/reactivity/batch.js"
           ],
           "top1": "packages/svelte/src/store/utils.js",
-          "firstHitRank": 5,
-          "tier": "partial"
+          "firstHitRank": 6,
+          "tier": "wrong"
         }
       ]
     },
@@ -1344,7 +1344,7 @@
           "expected": [
             "lib/four-oh-four.js"
           ],
-          "top1": "lib/content-type.js",
+          "top1": "lib/config-validator.js",
           "firstHitRank": null,
           "tier": "wrong"
         },

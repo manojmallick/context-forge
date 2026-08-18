@@ -1,13 +1,13 @@
 ---
 title: Task benchmark
-description: Latest saved task benchmark for SigMap v8.26.0. 64.8% correct, 46.1% fewer prompts, 82.2% hit@5 across 105 tasks, with R language support.
+description: Latest saved task benchmark for SigMap v8.26.0. 64.8% correct, 45.7% fewer prompts, 81.1% hit@5 across 105 tasks, with R language support.
 head:
   - - meta
     - property: og:title
       content: "SigMap task benchmark — fewer retries, better context (with R language)"
   - - meta
     - property: og:description
-      content: "Latest saved run: 64.8% correct, 1.53 prompts per task, 46.1% prompt reduction, 105 tasks, 18+ repos with R support."
+      content: "Latest saved run: 64.8% correct, 1.53 prompts per task, 45.7% prompt reduction, 105 tasks, 18+ repos with R support."
   - - meta
     - property: og:url
       content: "https://sigmap.io/guide/task-benchmark"
@@ -16,14 +16,14 @@ head:
 # Task benchmark
 
 ::: info Official v8.26.0 benchmark snapshot
-**Benchmark ID:** sigmap-v8.26-main &nbsp;·&nbsp; **Date:** 2026-08-18 (with R language)
+**Benchmark ID:** sigmap-v8.27-main &nbsp;·&nbsp; **Date:** 2026-08-18 (with R language)
 
 | Metric | Value |
 |---|---:|
 | Hit@5 | **82%** vs 44.0% single-shot grep baseline |
 | Graph-boosted hit@5 | **88%** |
-| Honest lift (vs grep agent) | **1.76×** |
-| Prompt reduction | **46.1%** (2.84 → 1.53) |
+| Honest lift (vs grep agent) | **1.73×** |
+| Prompt reduction | **45.7%** (2.84 → 1.54) |
 | Task success proxy | **64.8%** |
 | Token reduction (21 repos) | **96.8%** |
 | GPT-4o overflow (without → with) | **16/21 → 0/21** |
@@ -40,7 +40,7 @@ This page answers the question people care about most:
 | Metric | Without SigMap | With SigMap |
 |---|:---:|:---:|
 | Task success proxy | 10% | **64.8%** |
-| Prompts per task | 2.84 | **1.53** |
+| Prompts per task | 2.84 | **1.54** |
 | Prompt reduction | — | **48%** |
 | Retrieval hit@5 | 13.6% | **88%** |
 | Token reduction | — | **96.8%** |
@@ -72,9 +72,9 @@ The task benchmark models that outcome from the ranked file quality tiers:
 | Metric | Value |
 |---|---:|
 | Average prompts without SigMap | 2.84 |
-| Average prompts with SigMap | **1.53** |
+| Average prompts with SigMap | **1.54** |
 | Reduction | **48%** |
-| Honest hit@5 lift | **1.76x** vs single-shot grep baseline (per-repo random lifts remain in the report as data) |
+| Honest hit@5 lift | **1.73x** vs single-shot grep baseline (per-repo random lifts remain in the report as data) |
 
 ## What changed in the v5 story
 
