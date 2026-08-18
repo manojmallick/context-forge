@@ -34,6 +34,7 @@
     "benchmark:centrality-blend": "node scripts/run-centrality-blend-benchmark.mjs --save",
     "benchmark:surface-enrichment": "node scripts/run-surface-enrichment-benchmark.mjs --save",
     "validate:squeeze": "node scripts/run-squeeze-benchmark.mjs --gate",
+    "validate:benchmark-determinism": "node scripts/check-benchmark-determinism.mjs --cross-suite",
     "health": "node gen-context.js --health",
     "map": "node gen-project-map.js",
     "mcp": "node gen-context.js --mcp",

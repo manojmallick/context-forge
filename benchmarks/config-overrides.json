@@ -1,0 +1,117 @@
+{
+  "express": {
+    "srcDirs": [
+      "lib"
+    ]
+  },
+  "flask": {
+    "srcDirs": [
+      "src/flask"
+    ]
+  },
+  "spring-petclinic": {
+    "srcDirs": [
+      "src"
+    ]
+  },
+  "axios": {
+    "srcDirs": [
+      "lib"
+    ]
+  },
+  "serilog": {
+    "srcDirs": [
+      "src/Serilog"
+    ]
+  },
+  "gin": {
+    "srcDirs": [
+      "."
+    ]
+  },
+  "rails": {
+    "srcDirs": [
+      "activesupport/lib",
+      "actionpack/lib",
+      "railties/lib",
+      "activerecord/lib",
+      "actionview/lib",
+      "actionmailer/lib",
+      "activejob/lib"
+    ]
+  },
+  "rust-analyzer": {
+    "srcDirs": [
+      "crates"
+    ]
+  },
+  "abseil-cpp": {
+    "srcDirs": [
+      "absl"
+    ]
+  },
+  "riverpod": {
+    "srcDirs": [
+      "packages"
+    ]
+  },
+  "okhttp": {
+    "srcDirs": [
+      "okhttp/src/main/kotlin",
+      "okhttp-tls/src/main/kotlin",
+      "okhttp-logging-interceptor/src/main/kotlin"
+    ]
+  },
+  "laravel": {
+    "srcDirs": [
+      "src"
+    ]
+  },
+  "akka": {
+    "srcDirs": [
+      "akka-actor/src/main/scala",
+      "akka-stream/src/main/scala",
+      "akka-cluster/src/main/scala"
+    ]
+  },
+  "vapor": {
+    "srcDirs": [
+      "Sources"
+    ]
+  },
+  "vue-core": {
+    "srcDirs": [
+      "packages"
+    ]
+  },
+  "svelte": {
+    "srcDirs": [
+      "packages/svelte/src"
+    ]
+  },
+  "fastify": {
+    "srcDirs": [
+      "lib"
+    ]
+  },
+  "fastapi": {
+    "srcDirs": [
+      "fastapi"
+    ]
+  },
+  "ggplot2": {
+    "srcDirs": [
+      "R"
+    ]
+  },
+  "dplyr": {
+    "srcDirs": [
+      "R"
+    ]
+  },
+  "shiny": {
+    "srcDirs": [
+      "R"
+    ]
+  }
+}

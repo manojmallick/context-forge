@@ -64,53 +64,12 @@ const REPOS = [
   { repo: 'shiny',            fileCount: 101  },
 ];
 
-const CONFIG_OVERRIDES = {
-  // Explicit srcDirs prevent test/, docs/, .idea/ etc. from polluting the index
-  express: { srcDirs: ['lib'] },
-  flask: { srcDirs: ['src/flask'] },
-  'spring-petclinic': { srcDirs: ['src'] },
-  axios: { srcDirs: ['lib'] },
-  serilog: { srcDirs: ['src/Serilog'] },
-  gin: { srcDirs: ['.'] },
-  rails: {
-    srcDirs: [
-      'activesupport/lib',
-      'actionpack/lib',
-      'railties/lib',
-      'activerecord/lib',
-      'actionview/lib',
-      'actionmailer/lib',
-      'activejob/lib',
-    ],
-  },
-  'rust-analyzer': { srcDirs: ['crates'] },
-  'abseil-cpp': { srcDirs: ['absl'] },
-  riverpod: { srcDirs: ['packages'] },
-  okhttp: {
-    srcDirs: [
-      'okhttp/src/main/kotlin',
-      'okhttp-tls/src/main/kotlin',
-      'okhttp-logging-interceptor/src/main/kotlin',
-    ],
-  },
-  laravel: { srcDirs: ['src'] },
-  akka: {
-    srcDirs: [
-      'akka-actor/src/main/scala',
-      'akka-stream/src/main/scala',
-      'akka-cluster/src/main/scala',
-    ],
-  },
-  vapor: { srcDirs: ['Sources'] },
-  'vue-core': { srcDirs: ['packages'] },
-  svelte: { srcDirs: ['packages/svelte/src'] },
-  fastify: { srcDirs: ['lib'] },
-  fastapi: { srcDirs: ['fastapi'] },
-  // R language (v6.10.10+)
-  ggplot2: { srcDirs: ['R'] },
-  dplyr: { srcDirs: ['R'] },
-  shiny: { srcDirs: ['R'] },
-};
+// Explicit srcDirs prevent test/, docs/, .idea/ etc. from polluting the index.
+// Single source of truth shared by every suite that regenerates repo contexts —
+// divergent copies caused the #522 cross-suite skew (a repo regenerated with a
+// different config scores differently in every later suite).
+const CONFIG_OVERRIDES = JSON.parse(
+  fs.readFileSync(path.join(ROOT, 'benchmarks', 'config-overrides.json'), 'utf8'));
 
 // ---------------------------------------------------------------------------
 // Ranking — identifier-aware BM25, shared with src/eval/runner.js (#395)
