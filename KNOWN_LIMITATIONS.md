@@ -31,6 +31,8 @@ Large god-files are therefore **under-represented by design**: the caps are what
 
 The Hallucination Guard builds its symbol index **from extracted signatures**. A real symbol that fell to the caps or slipped past a Tier-2/3 regex is absent from the index, so verifying code that references it produces a **`fake-symbol` flag at medium confidence** — a conservative false positive, not a silent pass. Mitigations already in place: language/runtime builtin allowlists, closest-match suggestions on every flag, and confidence capped at `medium` for exactly this class of miss. Treat medium-confidence symbol flags on very large files as "check the file" rather than "the AI hallucinated".
 
+Since the balanced scanner (v8.27) made JS/TS params exact, `verify` also runs **arity checks** (`arity-mismatch`, medium confidence) — but only where they can be trusted: uniquely-resolved top-level functions from exact-param languages (JS/TS + Python), non-variadic signatures, undotted calls. Method calls, ambiguous names, `...rest`/`*args` signatures, and every other Tier-2/3 language are deliberately not checked yet.
+
 ## Not limitations (frequently asked)
 
 - **Byte-stability** — regenerating on an unchanged repo produces byte-identical output; drift is a bug, not an expectation.
