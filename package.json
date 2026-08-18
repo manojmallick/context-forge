@@ -1,6 +1,6 @@
 {
   "name": "sigmap",
-  "version": "8.27.0",
+  "version": "8.28.0",
   "description": "The deterministic, verifiable grounding layer for AI code work — a zero-dependency signature-and-evidence map that grounds Claude, Cursor, Copilot, Aider, Windsurf, local LLMs & MCP agents against your real code (repo + installed libraries) so they stop hallucinating files, imports & APIs. Runs offline via npx; byte-stable output; ~97% token reduction as proof.",
   "main": "packages/core/index.js",
   "exports": {

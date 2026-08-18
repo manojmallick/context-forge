@@ -16,7 +16,7 @@ head:
 # Benchmark overview
 
 ::: info Official v8.26.0 benchmark snapshot (21 repos, including R language)
-**Benchmark ID:** sigmap-v8.27-main &nbsp;·&nbsp; **Date:** 2026-08-18
+**Benchmark ID:** sigmap-v8.28-main &nbsp;·&nbsp; **Date:** 2026-08-18
 
 | Metric | Value |
 |---|---:|

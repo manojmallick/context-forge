@@ -22,10 +22,22 @@ straight into CI.
 | `fake-import` | A relative import doesn't resolve, or a bare package isn't in `package.json` | High |
 | `fake-symbol` | A called function/class isn't in the repo index **or the installed libraries** | Medium |
 | `fake-npm-script` | `npm run X` where `X` isn't a `package.json` script | High |
+| `arity-mismatch` | A **known** repo function is called with an argument count outside its signature's `[min, max]` (v8.28.0, D1) | Medium |
 
 Node/Python builtins, scoped packages, and language globals are allow-listed to
 keep precision high. Python bare imports are intentionally **not** flagged
 (stdlib is unbounded offline).
+
+### Arity checks (v8.28.0)
+
+Because the balanced scanner (v8.27) made JS/TS parameter lists exact — and
+Python's come from the AST — the guard can compare a call's argument count
+against the repo signature's arity range (`=` defaults and `?`-optionals lower
+the minimum; `...rest`/`*args` make it variadic). Conservative by
+construction: only uniquely-resolved **top-level** functions from JS/TS/Python
+are checked; variadic signatures flag only too-few; dotted method calls,
+ambiguous names, and every other language are skipped. The suggestion on each
+flag is the actual repo signature and its file.
 
 ### Installed-library grounding (v8.1.0, v9.0 G5/D5 — the moat)
 

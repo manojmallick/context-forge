@@ -35,6 +35,9 @@ To ensure proper attribution:
 
 We welcome contributions! See [Contributing](./docs/CONTRIBUTING.md) for guidelines.
 
+### Recent Contributors (v8.28.0)
+- **@manojmallick** — feat(verify): arity-checked verification (D1) — `arity-mismatch` detector over exact JS/TS/Python params; conservative gates (ambiguity, variadics, dotted calls); verify_suggestion + verify-ai-output inherit (#529, PR #530)
+
 ### Recent Contributors (v8.27.0)
 - **@manojmallick** — feat(extractors): shared balanced scanner (`scan.js`) — JS/TS param capture depth-matched, string-aware comment strip, TS depth/quote-aware type stripping; byte-identical-or-better gated; nested-paren gap fixed for JS/TS (#526, PR #527)
 

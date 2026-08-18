@@ -22,6 +22,7 @@ const path = require('path');
 const parsers = require('./parsers');
 const { closestMatch, buildSymbolCandidates, formatSuggestion } = require('./closest-match');
 const { buildLibraryIndex } = require('./lib-index');
+const { buildArityIndex, extractCallArgCounts, checkArity } = require('./arity');
 
 // A path that looks like a test file (JS/TS spec/test, Python test_/_test, or
 // a tests/__tests__ directory). Used to flag fake-test-file separately.
@@ -77,9 +78,11 @@ function buildSymbolSet(cwd) {
   const set = new Set();
   let fileKeys = [];
   let symbolCandidates = [];
+  let sigIndex = null;
   try {
     const { buildSigIndex } = require('../retrieval/ranker');
     const idx = buildSigIndex(cwd);
+    sigIndex = idx;
     fileKeys = [...idx.keys()];
     for (const sigs of idx.values()) {
       for (const sig of sigs) {
@@ -90,7 +93,7 @@ function buildSymbolSet(cwd) {
     }
     symbolCandidates = buildSymbolCandidates(idx);
   } catch (_) {}
-  return { set, fileKeys, symbolCandidates };
+  return { set, fileKeys, symbolCandidates, sigIndex };
 }
 
 /** Load declared dependency names from package.json. */
@@ -179,6 +182,7 @@ function verify(answerText, cwd, opts = {}) {
   let fileBasenames = opts.fileBasenames;
   let symbolCandidates = opts.symbolCandidates || [];
   let fileCandidates = opts.fileCandidates || [];
+  let arityIndex = opts.arityIndex || null;
   if (!symbolSet) {
     const built = buildSymbolSet(cwd);
     symbolSet = built.set;
@@ -187,6 +191,9 @@ function verify(answerText, cwd, opts = {}) {
     ));
     symbolCandidates = built.symbolCandidates;
     fileCandidates = built.fileKeys;
+    if (!arityIndex && built.sigIndex) {
+      try { arityIndex = buildArityIndex(built.sigIndex); } catch (_) {}
+    }
   }
   if (!fileBasenames) fileBasenames = new Set();
 
@@ -302,6 +309,32 @@ function verify(answerText, cwd, opts = {}) {
         confidence: 'medium',
         suggestion: match ? formatSuggestion(match, true) : null,
       });
+    }
+  }
+
+  // 3b. arity-mismatch (D1, #529) — a call to a KNOWN repo function whose
+  // argument count falls outside the signature's [min, max]. Conservative by
+  // construction: only uniquely-resolved, top-level functions from
+  // exact-param languages (JS/TS via the balanced scanner, Python via AST);
+  // variadic signatures only flag too-few; dotted calls never flag.
+  if (arityIndex && arityIndex.size > 0) {
+    for (const block of parsers.extractCodeBlocks(answerText)) {
+      if (block.lang && !/^(js|jsx|ts|tsx|javascript|typescript|python|py)$/i.test(block.lang)) continue;
+      for (const call of extractCallArgCounts(block.content)) {
+        if (!symbolSet.has(call.name)) continue; // unknown symbols stay fake-symbol territory
+        const entry = checkArity(call.name, call.args, arityIndex);
+        if (!entry) continue;
+        const range = entry.variadic ? `at least ${entry.min}`
+          : (entry.min === entry.max ? String(entry.max) : `${entry.min}–${entry.max}`);
+        add({
+          type: 'arity-mismatch',
+          value: `${call.name}(${call.args} args)`,
+          line: block.line + call.line - 1,
+          message: `${call.name}() called with ${call.args} argument(s) — repo signature takes ${range}`,
+          confidence: 'medium',
+          suggestion: `${entry.sig}  (${entry.file})`,
+        });
+      }
     }
   }
 

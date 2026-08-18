@@ -10,6 +10,18 @@ Format: [Semantic Versioning](https://semver.org/)
 
 ---
 
+## [8.28.0] — 2026-08-18
+
+Minor release — **"Arity Guard" (v8.28, D1)**: verification now checks not just *does this function exist* but *is it being called with a plausible number of arguments* — the payoff of the v8.27 balanced scanner.
+
+### Added
+- **Arity-checked verification (#529, PR #530):** new `src/verify/arity.js` — `parseParams` turns a signature's exact parameter list into an arity range (`=` defaults and TS `?`-optionals lower `min`; `...rest`/`*args`/`**kwargs` mark the signature variadic; destructuring patterns count as one parameter; depth- and quote-aware throughout), `buildArityIndex` builds a per-name range from top-level callables in exact-param languages only (JS/TS via the balanced scanner, Python via AST; names whose signatures disagree across files are marked ambiguous and never checked; indented members excluded), `extractCallArgCounts` reads calls from answer code over masked text (nested calls and comma-containing strings count correctly; argument emptiness judged on the original text; dotted calls, definitions, `new`-expressions, and control keywords skipped), `checkArity` (variadic signatures flag only too-few). Wired into the Hallucination Guard as detector 3b — **`arity-mismatch` at medium confidence**, with the repo signature + file as the suggestion; `verify_suggestion` (MCP) and `sigmap verify-ai-output` inherit automatically; `opts.arityIndex` keeps hermetic callers unchanged. Conservative by construction: uniquely-resolved · top-level · non-variadic · undotted · known-symbol calls in JS/TS/Python code blocks only — unknowns stay `fake-symbol`. `KNOWN_LIMITATIONS.md` documents the checks and their gates.
+
+### Changed
+- 6 new integration tests incl. end-to-end through a real context file (136 test files); bundle rebuilt (151 modules); zero new dependencies.
+
+---
+
 ## [8.27.0] — 2026-08-18
 
 Minor release — **"Tokenizer Core I" (v8.27, G4 increment 1)**: the hand-rolled balanced scanner lands and JS/TS extraction stops truncating at the first `)` — the first slice of the v9.0 grounding track and the stated precondition for arity-checked verification (D1).
