@@ -62,16 +62,27 @@ const tokenData = JSON.parse(fs.readFileSync(tokenFile, 'utf8'));
 function countGroundedSymbols(repoDir, configOverride) {
   const contextFile = path.join(repoDir, '.github', 'copilot-instructions.md');
   const configPath  = path.join(repoDir, 'gen-context.config.json');
-  const hadConfig   = fs.existsSync(configPath);
 
   if (!fs.existsSync(repoDir)) return 0;
 
-  if (!hadConfig && configOverride) {
+  // Mirror run-retrieval-benchmark.mjs exactly (#522): ALWAYS apply the shared
+  // override (even over a pre-existing config), regenerate, then restore the
+  // prior state. Regenerating with a different config than the retrieval
+  // harness silently rewrites the canonical context and skews every suite
+  // that reads it afterwards.
+  const existingConfig = fs.existsSync(configPath) ? fs.readFileSync(configPath, 'utf8') : null;
+  if (configOverride) {
     fs.writeFileSync(configPath, JSON.stringify(configOverride, null, 2));
   }
-  spawnSync('node', [GEN_CTX], { cwd: repoDir, encoding: 'utf8' });
-  if (!hadConfig && configOverride) {
-    try { fs.unlinkSync(configPath); } catch (_) {}
+  try {
+    spawnSync('node', [GEN_CTX], { cwd: repoDir, encoding: 'utf8' });
+  } finally {
+    if (configOverride) {
+      try {
+        if (existingConfig !== null) fs.writeFileSync(configPath, existingConfig);
+        else fs.unlinkSync(configPath);
+      } catch (_) {}
+    }
   }
 
   if (!fs.existsSync(contextFile)) return 0;
@@ -92,22 +103,13 @@ function countGroundedSymbols(repoDir, configOverride) {
   }).length;
 }
 
-// ─── Config overrides (same as run-benchmark.mjs) ────────────────────────────
-const CONFIG_OVERRIDES = {
-  'gin':              { srcDirs: ['.'] },
-  'rails':            { srcDirs: ['activesupport/lib','actionpack/lib','railties/lib','activerecord/lib','actionview/lib','actionmailer/lib','activejob/lib'] },
-  'rust-analyzer':    { srcDirs: ['crates'] },
-  'abseil-cpp':       { srcDirs: ['absl'] },
-  'riverpod':         { srcDirs: ['packages'] },
-  'okhttp':           { srcDirs: ['okhttp/src/main/kotlin','okhttp-tls/src/main/kotlin','okhttp-logging-interceptor/src/main/kotlin'] },
-  'laravel':          { srcDirs: ['src'] },
-  'akka':             { srcDirs: ['akka-actor/src/main/scala','akka-stream/src/main/scala','akka-cluster/src/main/scala'] },
-  'vapor':            { srcDirs: ['Sources'] },
-  'vue-core':         { srcDirs: ['packages'] },
-  'svelte':           { srcDirs: ['packages/svelte/src'] },
-  'fastify':          { srcDirs: ['lib'] },
-  'fastapi':          { srcDirs: ['fastapi'] },
-};
+// ─── Config overrides — shared single source of truth (#522) ─────────────────
+// The old local copy here was a 13-entry subset of the retrieval harness's
+// table; the missing entries (express, flask, spring-petclinic, serilog, …)
+// meant this suite regenerated those repos with default srcDirs, overwriting
+// the canonical contexts and decaying every later honest/retrieval score.
+const CONFIG_OVERRIDES = JSON.parse(
+  fs.readFileSync(path.join(ROOT, 'benchmarks', 'config-overrides.json'), 'utf8'));
 
 // ─── Per-repo analysis ────────────────────────────────────────────────────────
 function pad(s, w, right = false) {
