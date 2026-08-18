@@ -78,12 +78,12 @@ features:
 
 <div style="max-width:840px;margin:0 auto;padding:18px 24px 0;text-align:center">
 <div style="display:inline-flex;flex-wrap:wrap;gap:.5rem;justify-content:center;background:var(--vp-c-brand-soft,#ede9fe);border:1px solid rgba(124,106,247,.25);border-radius:999px;padding:.55rem .9rem;font-size:.9rem;color:var(--vp-c-text-1)">
-  <span><strong>Release:</strong> v8.27.0</span>
+  <span><strong>Release:</strong> v8.28.0</span>
   <span>·</span>
-  <span><strong>New — extraction honesty:</strong> <a href="https://github.com/manojmallick/sigmap/blob/main/KNOWN_LIMITATIONS.md">KNOWN_LIMITATIONS.md</a> states plainly what each extractor tier can and cannot do — AST vs anchored-regex vs heuristic, the truncation caps, the known gaps, and what they mean for <code>verify</code> — drift-locked by a guard test. Plus v8.26's <code>sigmap skills install</code>: the optimal usage loop as native agent skills in five clients. Zero dependencies, offline, deterministic.</span>
+  <span><strong>New — arity-checked verification:</strong> <code>verify</code> now checks not just <em>does this function exist</em> but <em>is it called with a plausible number of arguments</em> — against your repo's exact signatures (JS/TS via the v8.27 balanced scanner, Python via AST). Wrong argument counts flag <code>arity-mismatch</code> with the real signature as the suggestion. Conservative by construction; unknown symbols stay <code>fake-symbol</code>. The first grounding check no grep loop can replicate. Zero dependencies, offline, deterministic.</span>
 </div>
 <div style="margin-top:.4rem;display:inline-flex;flex-wrap:wrap;gap:.5rem;justify-content:center;background:var(--vp-c-default-soft,#f3f4f6);border:1px solid rgba(0,0,0,.08);border-radius:999px;padding:.55rem .9rem;font-size:.9rem;color:var(--vp-c-text-2)">
-  <span><strong>Benchmark:</strong> sigmap-v8.27-main</span>
+  <span><strong>Benchmark:</strong> sigmap-v8.28-main</span>
   <span>·</span>
   <span>81.1% hit@5 · 96.8% token reduction · 2026-08-18</span>
 </div>
