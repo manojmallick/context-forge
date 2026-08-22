@@ -35,6 +35,10 @@ To ensure proper attribution:
 
 We welcome contributions! See [Contributing](./docs/CONTRIBUTING.md) for guidelines.
 
+### Recent Contributors (v8.28.1)
+- **@ruurdboeke** — reported and precisely diagnosed the Python absolute-import resolution gap (silent zero-importer results in `get_impact` on `src/` layouts) with a minimal repro and root-cause walkthrough (#532)
+- **@manojmallick** — fix(graph): ancestor-walk resolution for Python absolute imports (#532, PR #533); fix(retrieval): per-module context splits merged into the sig index — `ask`/`query_context` work under `strategy: per-module` (#534, PR #535)
+
 ### Recent Contributors (v8.28.0)
 - **@manojmallick** — feat(verify): arity-checked verification (D1) — `arity-mismatch` detector over exact JS/TS/Python params; conservative gates (ambiguity, variadics, dotted calls); verify_suggestion + verify-ai-output inherit (#529, PR #530)
 

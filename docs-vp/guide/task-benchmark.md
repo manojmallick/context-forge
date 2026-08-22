@@ -16,7 +16,7 @@ head:
 # Task benchmark
 
 ::: info Official v8.26.0 benchmark snapshot
-**Benchmark ID:** sigmap-v8.28-main &nbsp;·&nbsp; **Date:** 2026-08-18 (with R language)
+**Benchmark ID:** sigmap-v8.28-main &nbsp;·&nbsp; **Date:** 2026-08-22 (with R language)
 
 | Metric | Value |
 |---|---:|
@@ -29,7 +29,7 @@ head:
 | GPT-4o overflow (without → with) | **16/21 → 0/21** |
 :::
 
-Latest saved run: **2026-08-18 (v8.26.0)** — Now includes R language support (ggplot2, dplyr, shiny)
+Latest saved run: **2026-08-22 (v8.26.0)** — Now includes R language support (ggplot2, dplyr, shiny)
 
 This page answers the question people care about most:
 

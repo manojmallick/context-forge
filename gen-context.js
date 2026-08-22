@@ -11573,23 +11573,31 @@ __factories["./src/graph/builder"] = function(module, exports) {
         }
       }
 
-      // Absolute imports: from package.module import ... (infer from project structure)
+      // Absolute imports: from package.module import ... (infer from project
+      // structure). The module is resolved against EVERY ancestor of the
+      // importing file up to the project root, nearest first — any of them can
+      // be the source root on sys.path (src/ layouts, pytest rootdir). The old
+      // dir + one-parent probe silently dropped edges for files nested two or
+      // more directories below the source root (#532), and a false "zero
+      // importers" from get_impact is exactly the signal that says a change is
+      // safe to make.
       const reAbs = /^[ \t]*from\s+([\w.]+)\s+import/gm;
       while ((m = reAbs.exec(content)) !== null) {
         const modulePath = m[1].replace(/\./g, '/');
-        const candidates = [
-          path.join(dir, modulePath + '.py'),
-          path.join(dir, modulePath, '__init__.py'),
-          path.resolve(dir, '..', modulePath + '.py'),
-          path.resolve(dir, '..', modulePath, '__init__.py'),
-        ];
-        for (const c of candidates) {
-          const normC = normalizePath(c);
-          if (fileSet.has(normC)) {
-            found.push(normC);
-            break;
+        const normCwd = normalizePath(path.resolve(cwd));
+        let base = dir;
+        let hit = null;
+        for (let depth = 0; depth < 16 && !hit; depth++) {
+          for (const c of [path.join(base, modulePath + '.py'), path.join(base, modulePath, '__init__.py')]) {
+            const normC = normalizePath(c);
+            if (fileSet.has(normC)) { hit = normC; break; }
           }
+          if (normalizePath(base) === normCwd) break;
+          const parent = path.dirname(base);
+          if (parent === base) break;
+          base = parent;
         }
+        if (hit) found.push(hit);
       }
     }
 
@@ -15385,7 +15393,7 @@ __factories["./src/mcp/server"] = function(module, exports) {
 
   const SERVER_INFO = {
     name: 'sigmap',
-    version: '8.28.0',
+    version: '8.28.1',
     description: 'SigMap MCP server — code signatures on demand',
   };
 
@@ -16975,9 +16983,22 @@ __factories["./src/retrieval/ranker"] = function(module, exports) {
    * @returns {Map<string, string[]>}
    */
   function _enrichSigIndexFromStrategy(cwd, index) {
+    const fs = require('fs');
     const path = require('path');
-    const coldPath = path.join(cwd, '.github', 'context-cold.md');
-    _mergeSigIndex(index, _parseContextFile(coldPath));
+    // Merge every strategy split file: context-cold.md (hot-cold) AND each
+    // per-module context-<module>.md — the per-module strategy stores ALL
+    // signatures in these, leaving the primary file as a thin overview, so
+    // skipping them made ask/query_context see an empty index (#534).
+    // Sorted for deterministic merge order.
+    try {
+      const ghDir = path.join(cwd, '.github');
+      const splits = fs.readdirSync(ghDir)
+        .filter((f) => /^context-[\w.-]+\.md$/.test(f))
+        .sort();
+      for (const f of splits) {
+        _mergeSigIndex(index, _parseContextFile(path.join(ghDir, f)));
+      }
+    } catch (_) {}
     _mergeSigIndex(index, _buildSigIndexFromCache(cwd));
     return index;
   }
@@ -21214,7 +21235,7 @@ function __tryGit(args, opts = {}) {
   catch (_) { return ''; }
 }
 
-const VERSION = '8.28.0';
+const VERSION = '8.28.1';
 const MARKER = '\n\n## Auto-generated signatures\n<!-- Updated by gen-context.js -->\n';
 
 function requireSourceOrBundled(key) {

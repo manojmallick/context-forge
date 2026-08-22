@@ -7,7 +7,7 @@ head:
       content: "SigMap Roadmap — version history and upcoming features"
   - - meta
     - property: og:description
-      content: "100 versions shipped. See what changed in each release and what is coming next."
+      content: "101 versions shipped. See what changed in each release and what is coming next."
   - - meta
     - property: og:url
       content: "https://sigmap.io/guide/roadmap"
@@ -20,7 +20,7 @@ head:
 ---
 # Roadmap
 
-One hundred versions shipped. MIT open source from day one.
+One hundred one versions shipped. MIT open source from day one.
 
 **Stats:** 96.8% overall token reduction · 82.2% retrieval hit@5 (1.59× measured lift vs single-shot grep) · 98.0% test-discovery F1 · installed-library grounding (JS/TS + Python) · method-level call-graph (JS/TS, Python, Java, Go, Rust) · 21 MCP tools · 33 languages · 17-language source resolver · 0 npm deps
 
@@ -835,6 +835,16 @@ Two milestones in one release. **`verify-ai-output` Reliable MVP** (#232) grows 
 **Tags:** `KNOWN_LIMITATIONS.md` · `extraction honesty` · `tier label` · `drift guard` · `G1` · `#520` · `PR #521`
 
 **Impact:** the credibility gap a skeptical reviewer finds first is closed in writing; 6 new guard checks (133 files); zero runtime changes.
+
+---
+
+### v8.28.1 — Two silent failures fixed ✓ (2026-08-22)
+
+**Patch release — both bugs failed silently, which is the worst way to fail.** (1) **Python absolute imports** (#532, reported and precisely diagnosed by **@ruurdboeke**): `from package.module import` was resolved against only the importing file's directory and one parent, so `src/`-layout projects lost every graph edge from files nested two or more levels below the source root — and `get_impact` reported **zero importers**, exactly the false signal that says a change is safe. Fixed with an ancestor walk to the project root (nearest first, so existing resolutions keep identical semantics). (2) **Per-module strategy** (#534): the strategy's `context-<module>.md` split files were never merged into the signature index — only `context-cold.md` was — so `sigmap ask` died with "no context file found" and `query_context` returned nothing on every per-module repo. Fixed by generalizing the cold-file merge to every `.github/context-*.md` split, sorted and deterministic.
+
+**Tags:** `extractFileDeps` · `ancestor walk` · `zero importers` · `_enrichSigIndexFromStrategy` · `per-module` · `#532` · `#534` · `PRs #533 #535`
+
+**Impact:** `get_impact` is trustworthy on `src/`-layout Python repos; `ask`/`query_context` work under every strategy; 8 new regression tests (138 files).
 
 ---
 
