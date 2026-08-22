@@ -10,6 +10,19 @@ Format: [Semantic Versioning](https://semver.org/)
 
 ---
 
+## [8.28.1] — 2026-08-22
+
+Patch release — two silent-failure bug fixes: a false "zero importers" in the Python import graph, and an empty index under the per-module strategy.
+
+### Fixed
+- **Python absolute imports resolve through any ancestor root (#532, PR #533)** — reported and precisely diagnosed by **@ruurdboeke**, thank you: `extractFileDeps` probed only the importing file's directory and one parent for `from package.module import`, so `src/`-layout projects (source root on `sys.path`) silently produced no graph edge whenever the importer sat two or more directories below the root — and `get_impact` then reported **zero importers**, exactly the signal that says a change is safe to make. Fix: an ancestor walk from the importing file up to the project root (nearest first, 16-level cap), probing `<module>.py` and `<module>/__init__.py` per level; nearest-first preserves the old first-match semantics for same-dir/one-parent cases. 4 new tests incl. the verbatim issue repro and `get_impact` end-to-end.
+- **Per-module strategy: `ask`/`query_context` find signatures again (#534, PR #535):** the per-module strategy writes one `context-<module>.md` per top-level srcDir and leaves the primary file as a thin overview — but the sig-index strategy enrichment merged only `context-cold.md` (hot-cold) plus the cache, so `sigmap ask` failed with "no context file found" and the `query_context` MCP tool returned an empty index on every per-module repo. Fix: enumerate `.github/context-*.md` (sorted, deterministic) and merge each — the cold-file merge generalized to every strategy split. 4 new tests on a real generated two-module fixture incl. the exact reported failure; hot-cold and full strategies verified unchanged.
+
+### Changed
+- 8 new integration tests (138 test files); bundle rebuilt; zero new dependencies.
+
+---
+
 ## [8.28.0] — 2026-08-18
 
 Minor release — **"Arity Guard" (v8.28, D1)**: verification now checks not just *does this function exist* but *is it being called with a plausible number of arguments* — the payoff of the v8.27 balanced scanner.

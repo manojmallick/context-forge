@@ -16,7 +16,7 @@ head:
 # Retrieval benchmark
 
 ::: info Official v8.26.0 benchmark snapshot
-**Benchmark ID:** sigmap-v8.28-main &nbsp;·&nbsp; **Date:** 2026-08-18 (with R language)
+**Benchmark ID:** sigmap-v8.28-main &nbsp;·&nbsp; **Date:** 2026-08-22 (with R language)
 
 | Metric | Value |
 |---|---:|
@@ -29,7 +29,7 @@ head:
 | GPT-4o overflow (without → with) | **16/21 → 0/21** |
 :::
 
-Latest saved run: **2026-08-18 (v8.26.0)**
+Latest saved run: **2026-08-22 (v8.26.0)**
 
 **Result:** SigMap finds the right file in the top 5 far more often than chance — **81.1% hit@5** vs **13.6%** random baseline across 105 tasks on 18 real repos.
 
