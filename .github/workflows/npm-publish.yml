@@ -4,10 +4,13 @@ on:
   push:
     tags:
       - 'v[0-9]*'
+  # Manual re-publish path (e.g. after a failed tag run): dispatch from a ref
+  # whose package.json carries the version to publish. Tag-only jobs skip.
+  workflow_dispatch:
 
 permissions:
   contents: write   # create GitHub Releases
-  id-token: write   # npm provenance
+  id-token: write   # npm Trusted Publishing (OIDC) + provenance
   packages: write   # GitHub Packages
 
 jobs:
@@ -24,6 +27,9 @@ jobs:
         run: node test/run.js
 
   # ── 2. Publish to npmjs.com ───────────────────────────────────────────────
+  # Auth is npm Trusted Publishing (OIDC): the npmjs.com package settings
+  # trust this repo + workflow file, so no NPM_TOKEN secret exists to expire
+  # (the classic-token 404-on-PUT failure class, v8.28.1). Requires npm ≥ 11.5.1.
   publish-npm:
     name: Publish → npmjs.com
     needs: test
@@ -33,9 +39,14 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-          registry-url: 'https://registry.npmjs.org'
+
+      - name: Upgrade npm for Trusted Publishing
+        run: |
+          npm install -g npm@^11.5.1
+          npm --version
 
       - name: Verify package version matches tag
+        if: github.ref_type == 'tag'
         run: |
           PKG_VERSION="v$(node -p "require('./package.json').version")"
           TAG_VERSION="${GITHUB_REF_NAME}"
@@ -45,26 +56,18 @@ jobs:
           fi
           echo "✓ version check passed: $PKG_VERSION"
 
-      - name: Verify npm registry and token
-        run: |
-          echo "NPM Registry: $(npm config get registry)"
-          echo "Token set: $([ -n "$NODE_AUTH_TOKEN" ] && echo 'yes' || echo 'no')"
-          echo "Token length: ${#NODE_AUTH_TOKEN}"
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Show version to publish (manual dispatch)
+        if: github.ref_type != 'tag'
+        run: echo "Publishing package.json version $(node -p "require('./package.json').version") from ${GITHUB_REF_NAME}"
 
-      - name: Publish to npm
-        run: |
-          # NPM_TOKEN must be an 'Automation' token from npmjs.org settings
-          # (not requiring 2FA in CI/CD environments)
-          npm publish --provenance --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Publish to npm (Trusted Publishing)
+        run: npm publish --provenance --access public
 
   # ── 3. Publish to GitHub Packages (scoped) ───────────────────────────────
   publish-github:
     name: Publish → GitHub Packages
     needs: test
+    if: github.ref_type == 'tag'
     runs-on: ubuntu-latest
     continue-on-error: true
     steps:
@@ -92,6 +95,7 @@ jobs:
   release:
     name: Create GitHub Release
     needs: [publish-npm, publish-github]
+    if: github.ref_type == 'tag'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
