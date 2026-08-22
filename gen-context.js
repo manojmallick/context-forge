@@ -11573,23 +11573,31 @@ __factories["./src/graph/builder"] = function(module, exports) {
         }
       }
 
-      // Absolute imports: from package.module import ... (infer from project structure)
+      // Absolute imports: from package.module import ... (infer from project
+      // structure). The module is resolved against EVERY ancestor of the
+      // importing file up to the project root, nearest first — any of them can
+      // be the source root on sys.path (src/ layouts, pytest rootdir). The old
+      // dir + one-parent probe silently dropped edges for files nested two or
+      // more directories below the source root (#532), and a false "zero
+      // importers" from get_impact is exactly the signal that says a change is
+      // safe to make.
       const reAbs = /^[ \t]*from\s+([\w.]+)\s+import/gm;
       while ((m = reAbs.exec(content)) !== null) {
         const modulePath = m[1].replace(/\./g, '/');
-        const candidates = [
-          path.join(dir, modulePath + '.py'),
-          path.join(dir, modulePath, '__init__.py'),
-          path.resolve(dir, '..', modulePath + '.py'),
-          path.resolve(dir, '..', modulePath, '__init__.py'),
-        ];
-        for (const c of candidates) {
-          const normC = normalizePath(c);
-          if (fileSet.has(normC)) {
-            found.push(normC);
-            break;
+        const normCwd = normalizePath(path.resolve(cwd));
+        let base = dir;
+        let hit = null;
+        for (let depth = 0; depth < 16 && !hit; depth++) {
+          for (const c of [path.join(base, modulePath + '.py'), path.join(base, modulePath, '__init__.py')]) {
+            const normC = normalizePath(c);
+            if (fileSet.has(normC)) { hit = normC; break; }
           }
+          if (normalizePath(base) === normCwd) break;
+          const parent = path.dirname(base);
+          if (parent === base) break;
+          base = parent;
         }
+        if (hit) found.push(hit);
       }
     }
 
