@@ -16975,9 +16975,22 @@ __factories["./src/retrieval/ranker"] = function(module, exports) {
    * @returns {Map<string, string[]>}
    */
   function _enrichSigIndexFromStrategy(cwd, index) {
+    const fs = require('fs');
     const path = require('path');
-    const coldPath = path.join(cwd, '.github', 'context-cold.md');
-    _mergeSigIndex(index, _parseContextFile(coldPath));
+    // Merge every strategy split file: context-cold.md (hot-cold) AND each
+    // per-module context-<module>.md — the per-module strategy stores ALL
+    // signatures in these, leaving the primary file as a thin overview, so
+    // skipping them made ask/query_context see an empty index (#534).
+    // Sorted for deterministic merge order.
+    try {
+      const ghDir = path.join(cwd, '.github');
+      const splits = fs.readdirSync(ghDir)
+        .filter((f) => /^context-[\w.-]+\.md$/.test(f))
+        .sort();
+      for (const f of splits) {
+        _mergeSigIndex(index, _parseContextFile(path.join(ghDir, f)));
+      }
+    } catch (_) {}
     _mergeSigIndex(index, _buildSigIndexFromCache(cwd));
     return index;
   }
