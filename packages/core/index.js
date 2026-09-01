@@ -29,6 +29,7 @@ const EXT_MAP = {
   '.swift': 'swift',
   '.dart': 'dart',
   '.scala': 'scala',   '.sc': 'scala',
+  '.lua': 'lua',
   '.gd': 'gdscript',
   '.r': 'r',           '.R': 'r',
   '.vue': 'vue',

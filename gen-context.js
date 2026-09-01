@@ -1644,7 +1644,7 @@ __factories["./src/config/loader"] = function(module, exports) {
     '.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs',
     '.py', '.pyw', '.java', '.kt', '.kts', '.go', '.rs', '.cs',
     '.cpp', '.c', '.h', '.hpp', '.cc', '.rb', '.rake', '.php',
-    '.swift', '.dart', '.scala', '.sc', '.vue', '.svelte',
+    '.swift', '.dart', '.scala', '.sc', '.lua', '.vue', '.svelte',
     '.html', '.htm', '.css', '.scss', '.sass', '.less',
     '.yml', '.yaml', '.sh', '.bash', '.zsh', '.fish',
     '.sql', '.graphql', '.gql', '.tf', '.tfvars', '.proto',
@@ -1918,7 +1918,7 @@ __factories["./src/config/tune"] = function(module, exports) {
   const SOURCE_EXTS = new Set([
     '.js', '.mjs', '.cjs', '.jsx', '.ts', '.tsx', '.py', '.rb', '.go', '.rs',
     '.java', '.kt', '.cs', '.cpp', '.c', '.h', '.hpp', '.swift', '.dart',
-    '.scala', '.php', '.gd', '.r', '.R',
+    '.scala', '.php', '.lua', '.gd', '.r', '.R',
   ]);
 
   /** Raw user config file content, or null when absent/unparsable. */
@@ -3078,6 +3078,7 @@ __factories["./src/discovery/language-detector"] = function(module, exports) {
     '.java': 'java', '.kt': 'kotlin', '.cs': 'csharp', '.cpp': 'cpp',
     '.c': 'cpp', '.h': 'cpp', '.hpp': 'cpp', '.swift': 'swift',
     '.dart': 'dart', '.scala': 'scala', '.php': 'php',
+    '.lua': 'lua',
     '.gd': 'gdscript',
     '.r': 'r', '.R': 'r',
   };
@@ -3508,10 +3509,19 @@ __factories["./src/discovery/source-root-registry"] = function(module, exports) 
         akka:  { detectionFiles: [], detectionDeps: ['akka'], srcDirs: ['src/main/scala','src'] },
         play:  { detectionFiles: [], detectionDeps: ['play'], srcDirs: ['app','conf'] },
         spark: { detectionFiles: [], detectionDeps: ['spark'],srcDirs: ['src/main/scala'] },
-        zio:   { detectionFiles: [], detectionDeps: ['zio'],  srcDirs: ['src/main/scala'] },
+        zio:   { detectionFiles: [], detectionDeps: ['zio'], srcDirs: ['src/main/scala'] },
       },
       srcDirs:  ['src/main/scala','src'],
       penalties: ['target'],
+    },
+
+    lua: {
+      manifestFiles: ['.luarc.json', 'selene.toml', 'stylua.toml'],
+      frameworks: {
+        luarocks: { detectionFiles: ['*.rockspec'], srcDirs: ['src','lua','lib'] },
+      },
+      srcDirs:  ['src','lua','lib'],
+      penalties: ['.luarocks','luarocks_modules'],
     },
 
     r: {
@@ -3747,7 +3757,7 @@ __factories["./src/discovery/source-root-scorer"] = function(module, exports) {
   const CODE_EXTS = new Set([
     '.js','.mjs','.cjs','.ts','.tsx','.jsx',
     '.py','.rb','.go','.rs','.java','.kt',
-    '.cs','.cpp','.c','.h','.swift','.dart','.scala','.php',
+    '.cs','.cpp','.c','.h','.swift','.dart','.scala','.php','.lua',
   ]);
 
   const AUTO_SKIP = new Set([
@@ -4116,6 +4126,7 @@ __factories["./src/eval/analyzer"] = function(module, exports) {
     '.swift': 'swift',
     '.dart': 'dart',
     '.scala': 'scala',   '.sc': 'scala',
+    '.lua': 'lua',
     '.gd': 'gdscript',
     '.r': 'r',           '.R': 'r',
     '.vue': 'vue',
@@ -5838,6 +5849,28 @@ __factories["./src/extractors/deps"] = function(module, exports) {
   }
 
   /**
+   * Extract Lua require() module dependencies.
+   * Captures `require "mod"` and `require("mod")`, returning compact module
+   * names as they appear in source.
+   * @param {string} src
+   * @returns {string[]}
+   */
+  function extractLuaDeps(src) {
+    const deps = new Set();
+    const stripped = stripLuaComments(src || '');
+    for (const m of stripped.matchAll(/\brequire\s*(?:\(\s*)?["']([A-Za-z0-9_.\/-]+)["']\s*\)?/g)) {
+      if (m[1]) deps.add(m[1]);
+    }
+    return [...deps].slice(0, 5);
+  }
+
+  function stripLuaComments(src) {
+    return String(src || '')
+      .replace(/--\[\[[\s\S]*?\]\]/g, '')
+      .replace(/--.*$/gm, '');
+  }
+
+  /**
    * Build reverse dependency map from forward map.
    * @param {Map<string, string[]>} forwardMap
    * @returns {Map<string, string[]>}
@@ -5855,7 +5888,7 @@ __factories["./src/extractors/deps"] = function(module, exports) {
     return reverse;
   }
 
-  module.exports = { extractPythonDeps, extractTSDeps, extractRDeps, buildReverseDepMap };
+  module.exports = { extractPythonDeps, extractTSDeps, extractRDeps, extractLuaDeps, buildReverseDepMap };
   
 };
 
@@ -5890,6 +5923,7 @@ __factories["./src/extractors/dispatch"] = function(module, exports) {
     swift: __require('./src/extractors/swift'),
     dart: __require('./src/extractors/dart'),
     scala: __require('./src/extractors/scala'),
+    lua: __require('./src/extractors/lua'),
     gdscript: __require('./src/extractors/gdscript'),
     r: __require('./src/extractors/r'),
     vue: __require('./src/extractors/vue'),
@@ -5926,6 +5960,7 @@ __factories["./src/extractors/dispatch"] = function(module, exports) {
     '.swift': 'swift',
     '.dart': 'dart',
     '.scala': 'scala', '.sc': 'scala',
+    '.lua': 'lua',
     '.gd': 'gdscript',
     '.r': 'r', '.R': 'r',
     '.vue': 'vue_sfc',
@@ -6899,6 +6934,159 @@ __factories["./src/extractors/line-anchor"] = function(module, exports) {
   }
 
   module.exports = { lineAt, anchor, withAnchor };
+  
+};
+
+// ── ./src/extractors/lua ──
+__factories["./src/extractors/lua"] = function(module, exports) {
+  
+  /**
+   * Extract signatures from Lua source code.
+   *
+   * Recognised constructs:
+   *   - Global functions: `function name(args)`
+   *   - Module-table functions: `function M.name(args)` / `function M:name(args)`
+   *   - Local functions: `local function name(args)`
+   *   - Assigned functions: `name = function(args)` / `M.name = function(args)`
+   *   - Module imports: `local mod = require("mod")` as compact hints
+   *   - LDoc-style doc comments (`---`) as first-sentence hints
+   *
+   * The extractor is regex-only and zero-dependency, matching SigMap's Tier-3
+   * language extractor style.
+   *
+   * @param {string} src - Raw file content
+   * @returns {string[]} Array of signature strings
+   */
+  function extract(src) {
+    if (!src || typeof src !== 'string') return [];
+    const sigs = [];
+    const hints = collectDocHints(src);
+    const stripped = stripLuaComments(src);
+    const seen = new Set();
+
+    // local foo = require('bar.baz') — useful module-surface hint, capped low.
+    for (const m of stripped.matchAll(/^\s*(?:local\s+)?([A-Za-z_]\w*)\s*=\s*require\s*\(\s*['"]([A-Za-z0-9_.\/-]+)['"]\s*\)/gm)) {
+      pushUnique(sigs, seen, `require ${m[2]} as ${m[1]}`);
+      if (sigs.length >= 30) return sigs.slice(0, 30);
+    }
+
+    // local function name(args)
+    for (const m of stripped.matchAll(/^\s*local\s+function\s+([A-Za-z_]\w*)\s*\(([^)]*)\)/gm)) {
+      if (m[1].startsWith('_')) continue;
+      pushUnique(sigs, seen, `local function ${m[1]}(${normalizeParams(m[2])})${applyHint(hints, m[1])}`);
+      if (sigs.length >= 30) return sigs.slice(0, 30);
+    }
+
+    // function name(args), function M.name(args), function M:name(args)
+    for (const m of stripped.matchAll(/^\s*function\s+([A-Za-z_]\w*(?:(?:\.|:)[A-Za-z_]\w*)*)\s*\(([^)]*)\)/gm)) {
+      const name = m[1];
+      if (name.startsWith('_')) continue;
+      pushUnique(sigs, seen, `function ${name}(${normalizeParams(m[2])})${applyHint(hints, name)}`);
+      if (sigs.length >= 30) return sigs.slice(0, 30);
+    }
+
+    // name = function(args), M.name = function(args), M:name = function(args)
+    for (const m of stripped.matchAll(/^\s*(?:local\s+)?([A-Za-z_]\w*(?:(?:\.|:)[A-Za-z_]\w*)*)\s*=\s*function\s*\(([^)]*)\)/gm)) {
+      const name = m[1];
+      if (name.startsWith('_')) continue;
+      pushUnique(sigs, seen, `${name} = function(${normalizeParams(m[2])})${applyHint(hints, name)}`);
+      if (sigs.length >= 30) return sigs.slice(0, 30);
+    }
+
+    return sigs.slice(0, 30);
+  }
+
+  function pushUnique(out, seen, sig) {
+    if (!sig || seen.has(sig)) return;
+    seen.add(sig);
+    out.push(sig);
+  }
+
+  function normalizeParams(params) {
+    return String(params || '')
+      .replace(/--.*$/gm, '')
+      .split(',')
+      .map((p) => p.trim().replace(/\s+/g, ' '))
+      .filter(Boolean)
+      .join(', ');
+  }
+
+  function applyHint(hints, name) {
+    const h = hints.get(name);
+    return h ? `  # ${h}` : '';
+  }
+
+  /**
+   * Attach each contiguous `---` doc block to the next function-like declaration
+   * by its extracted symbol name.
+   */
+  function collectDocHints(src) {
+    const hints = new Map();
+    const lines = src.split('\n');
+    let block = [];
+    for (const line of lines) {
+      const doc = line.match(/^\s*---\s?(.*)$/);
+      if (doc) {
+        block.push(doc[1]);
+      } else if (block.length > 0) {
+        const decl = line.match(/^\s*local\s+function\s+([A-Za-z_]\w*)\s*\(/)
+                  || line.match(/^\s*function\s+([A-Za-z_]\w*(?:(?:\.|:)[A-Za-z_]\w*)*)\s*\(/)
+                  || line.match(/^\s*(?:local\s+)?([A-Za-z_]\w*(?:(?:\.|:)[A-Za-z_]\w*)*)\s*=\s*function\s*\(/);
+        if (decl) {
+          const hint = firstDocSentence(block);
+          if (hint) hints.set(decl[1], hint);
+        }
+        block = [];
+      }
+    }
+    return hints;
+  }
+
+  function firstDocSentence(block) {
+    for (const raw of block) {
+      const line = String(raw || '').trim();
+      if (!line || line.startsWith('@')) continue;
+      return line.replace(/\s+/g, ' ').slice(0, 60).replace(/[.,;:!?]+$/, '').trim();
+    }
+    return '';
+  }
+
+  /** Strip Lua line and long comments while preserving strings enough for regex scans. */
+  function stripLuaComments(src) {
+    const out = src.split('');
+    const blank = (a, b) => { for (let i = a; i < b; i++) if (out[i] !== '\n') out[i] = ' '; };
+    let i = 0;
+    while (i < src.length) {
+      const ch = src[i];
+      if (ch === '"' || ch === "'") {
+        const quote = ch;
+        i++;
+        while (i < src.length) {
+          if (src[i] === '\\') { i += 2; continue; }
+          if (src[i] === quote) { i++; break; }
+          if (src[i] === '\n') break;
+          i++;
+        }
+        continue;
+      }
+      if (src.startsWith('--[[', i)) {
+        const end = src.indexOf(']]', i + 4);
+        blank(i, end === -1 ? src.length : end + 2);
+        i = end === -1 ? src.length : end + 2;
+        continue;
+      }
+      if (src.startsWith('--', i)) {
+        const end = src.indexOf('\n', i + 2);
+        blank(i, end === -1 ? src.length : end);
+        i = end === -1 ? src.length : end;
+        continue;
+      }
+      i++;
+    }
+    return out.join('');
+  }
+
+  module.exports = { extract };
   
 };
 
@@ -21672,6 +21860,7 @@ const EXT_MAP = {
   '.swift': 'swift',
   '.dart': 'dart',
   '.scala': 'scala', '.sc': 'scala',
+  '.lua': 'lua',
   '.r': 'r', '.R': 'r',
   '.vue': 'vue_sfc',
   '.svelte': 'svelte',
@@ -21876,11 +22065,12 @@ function detectAndExtract(filePath, content, maxSigsPerFile) {
 function extractFileDeps(filePath, content, config) {
   if (config && config.depMap === false) return [];
   try {
-    const { extractPythonDeps, extractTSDeps, extractRDeps } = requireSourceOrBundled('./src/extractors/deps');
+    const { extractPythonDeps, extractTSDeps, extractRDeps, extractLuaDeps } = requireSourceOrBundled('./src/extractors/deps');
     const ext = path.extname(filePath).toLowerCase();
     if (ext === '.py' || ext === '.pyw') return extractPythonDeps(content);
     if (['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs'].includes(ext)) return extractTSDeps(content);
     if (ext === '.r') return extractRDeps ? extractRDeps(content) : [];
+    if (ext === '.lua') return extractLuaDeps ? extractLuaDeps(content) : [];
   } catch (_) {}
   return [];
 }

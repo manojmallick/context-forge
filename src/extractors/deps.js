@@ -90,6 +90,28 @@ function extractRDeps(src) {
 }
 
 /**
+ * Extract Lua require() module dependencies.
+ * Captures `require "mod"` and `require("mod")`, returning compact module
+ * names as they appear in source.
+ * @param {string} src
+ * @returns {string[]}
+ */
+function extractLuaDeps(src) {
+  const deps = new Set();
+  const stripped = stripLuaComments(src || '');
+  for (const m of stripped.matchAll(/\brequire\s*(?:\(\s*)?["']([A-Za-z0-9_.\/-]+)["']\s*\)?/g)) {
+    if (m[1]) deps.add(m[1]);
+  }
+  return [...deps].slice(0, 5);
+}
+
+function stripLuaComments(src) {
+  return String(src || '')
+    .replace(/--\[\[[\s\S]*?\]\]/g, '')
+    .replace(/--.*$/gm, '');
+}
+
+/**
  * Build reverse dependency map from forward map.
  * @param {Map<string, string[]>} forwardMap
  * @returns {Map<string, string[]>}
@@ -107,4 +129,4 @@ function buildReverseDepMap(forwardMap) {
   return reverse;
 }
 
-module.exports = { extractPythonDeps, extractTSDeps, extractRDeps, buildReverseDepMap };
+module.exports = { extractPythonDeps, extractTSDeps, extractRDeps, extractLuaDeps, buildReverseDepMap };
