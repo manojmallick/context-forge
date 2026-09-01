@@ -19,7 +19,7 @@
 
 const { loadWeights } = require('../learning/weights');
 const { tokenize, STOP_WORDS } = require('./tokenizer');
-const { bm25rank } = require('./bm25');
+const { bm25rank, MODULE_DOC_RE } = require('./bm25');
 
 // ---------------------------------------------------------------------------
 // Default weights
@@ -43,17 +43,28 @@ const GRAPH_BOOST_AMOUNTS = {
 // Max additive prior for import-graph centrality (opt-in retrieval.centralityBlend)
 const CENTRALITY_BLEND_WEIGHT = 0.3;
 
-// Intent-specific weight adjustments
-const INTENT_WEIGHTS = {
-  search:     DEFAULT_WEIGHTS,
-  debug:      { ...DEFAULT_WEIGHTS, exactToken: 1.2, pathMatch: 0.6 },
-  explain:    { ...DEFAULT_WEIGHTS, symbolMatch: 0.8, pathMatch: 0.9 },
-  refactor:   { ...DEFAULT_WEIGHTS, symbolMatch: 0.9, exactToken: 0.8 },
-  review:     { ...DEFAULT_WEIGHTS, pathMatch: 1.0, exactToken: 0.9 },
-  test:       { ...DEFAULT_WEIGHTS, exactToken: 0.7, symbolMatch: 0.4 },
-  integrate:  { ...DEFAULT_WEIGHTS, graphBoost: 0.7, pathMatch: 1.1 },
-  navigate:   { ...DEFAULT_WEIGHTS, pathMatch: 1.2, exactToken: 0.9 },
-};
+// Per-intent weight profiles were removed in favour of a single weight set.
+// They were provably inert: scoreFile's score was discarded by rank(), so the
+// profiles only ever reached the explain table. Once the signal WAS wired into
+// the score (see SIGNAL_BLEND below), a sweep over the leak-free hard corpus
+// showed intent-specific profiles produced byte-identical metrics to the flat
+// DEFAULT_WEIGHTS at every blend value — so they earn nothing and are gone.
+// `detectIntent` is retained: it is still reported to the user and is the right
+// hook for shaping OUTPUT depth later.
+
+// How much the weighted keyword/symbol/path signal modulates the BM25 base.
+// Multiplicative and bounded, so it can only reorder files that already match —
+// it can never lift a zero-BM25 file into the results. Tuned on the leak-free
+// corpus: 0.5 gave hit@5 50.0% -> 56.7% and MRR 0.419 -> 0.447; higher values
+// held hit@5 but degraded MRR.
+const SIGNAL_BLEND = 0.5;
+
+// TRIED AND REJECTED: a same-line co-occurrence bonus, on the theory that a file
+// declaring `parseAuthToken` should outrank one mentioning `parseAuth` and
+// `token` on separate lines. Swept 0.15-1.0: hit@5 did not move on either the
+// 90-task authored corpus or the 32-task mined one, and MRR degraded
+// monotonically as the weight rose. Signatures are short and dense enough that
+// BM25's bag already captures this. Not reinstated without new evidence.
 
 // Penalty multipliers for negative signals
 const PENALTY_SIGNALS = {
@@ -63,12 +74,36 @@ const PENALTY_SIGNALS = {
   nodeModules:   0.0,    // node_modules (zero score)
 };
 
-function _computePenalty(filePath) {
+// Query terms that mean the penalised category IS the target. Read from the
+// query tokens directly, NOT via detectIntent: that classifier is first-match-
+// wins over its pattern object, and `debug` precedes `test`, so "fix the failing
+// test" classifies as debug and never reaches the test branch.
+const WANTS_TESTS = new Set(['test', 'tests', 'spec', 'specs', 'unit', 'integration', 'e2e', 'assertion', 'assert', 'mock', 'fixture', 'coverage', 'testing']);
+const WANTS_DOCS = new Set(['doc', 'docs', 'documentation', 'readme', 'changelog', 'guide', 'tutorial']);
+
+/** Which penalised categories the query is explicitly asking for. */
+function _queryWants(queryTokens) {
+  const wants = { tests: false, docs: false };
+  for (const t of queryTokens || []) {
+    if (WANTS_TESTS.has(t)) wants.tests = true;
+    if (WANTS_DOCS.has(t)) wants.docs = true;
+  }
+  return wants;
+}
+
+function _computePenalty(filePath, wants) {
   const pathLower = filePath.toLowerCase();
   if (pathLower.includes('node_modules')) return PENALTY_SIGNALS.nodeModules;
-  if (/(^|\/)(test|tests|spec|__tests__|e2e)($|\/)/.test(pathLower)) return PENALTY_SIGNALS.testFile;
+  // A penalty must never fire on the very thing the user asked for. Before
+  // this, "write tests for the ranker" multiplied every test file by 0.4 —
+  // the query and the penalty were pulling in opposite directions.
+  if (/(^|\/)(test|tests|spec|__tests__|e2e)($|\/)/.test(pathLower) || /\.(test|spec)\./.test(pathLower)) {
+    return (wants && wants.tests) ? 1.0 : PENALTY_SIGNALS.testFile;
+  }
   if (/(^|\/)(dist|build|\.next|\.nuxt|out|\.venv|venv)($|\/)/.test(pathLower)) return PENALTY_SIGNALS.generatedCode;
-  if (/(^|\/)(docs|doc|readme|changelog)($|\/)/.test(pathLower)) return PENALTY_SIGNALS.docsFile;
+  if (/(^|\/)(docs|doc|readme|changelog)($|\/)/.test(pathLower)) {
+    return (wants && wants.docs) ? 1.0 : PENALTY_SIGNALS.docsFile;
+  }
   return 1.0;
 }
 
@@ -87,6 +122,26 @@ function _computeHubs(graph) {
 }
 
 // Common utility paths that should be treated as hubs regardless of fanout
+// The graph builders disagree on key case: src/graph/builder.js lowercases every
+// node (normalizePath), while src/graph/call-graph.js keys by a case-preserving
+// path.resolve. Assuming either one breaks the other, so every graph lookup in
+// this file probes both forms — the same thing the centrality blend already does.
+function _graphKeys(p) {
+  const norm = require('path').normalize(p);
+  const lower = norm.toLowerCase();
+  return lower === norm ? [norm] : [norm, lower];
+}
+function _graphGet(map, absPath) {
+  for (const k of _graphKeys(absPath)) {
+    const hit = map.get(k);
+    if (hit !== undefined) return hit;
+  }
+  return undefined;
+}
+function _registerKeys(map, absPath, value) {
+  for (const k of _graphKeys(absPath)) if (!map.has(k)) map.set(k, value);
+}
+
 function _isHub(filePath) {
   return /\/(utils|helpers|shared|common|constants|types|interfaces|index|zzz|globals)\.(ts|tsx|js|jsx|r|R)$/.test(filePath)
       || filePath.endsWith('/index.ts') || filePath.endsWith('/index.js')
@@ -102,14 +157,18 @@ function _isHub(filePath) {
  * @param {object}   weights
  * @returns {{ score: number, signals: { exactToken: number, symbolMatch: number, prefixMatch: number, pathMatch: number, penalty: number } }}
  */
-function scoreFile(filePath, sigs, queryTokens, weights) {
+function scoreFile(filePath, sigs, queryTokens, weights, wants) {
   if (!sigs || sigs.length === 0) return { score: 0, signals: { exactToken: 0, symbolMatch: 0, prefixMatch: 0, pathMatch: 0, penalty: 1.0 } };
 
   const w = weights || DEFAULT_WEIGHTS;
-  const signals = { exactToken: 0, symbolMatch: 0, prefixMatch: 0, pathMatch: 0, penalty: _computePenalty(filePath) };
+  const signals = { exactToken: 0, symbolMatch: 0, prefixMatch: 0, pathMatch: 0, penalty: _computePenalty(filePath, wants) };
 
-  // Build token set from all signatures
-  const sigText = sigs.join(' ');
+  // Module-doc prose is excluded here on purpose. This signal measures overlap
+  // with DECLARED IDENTIFIERS; prose relevance is BM25's job, where it is scored
+  // as its own weighted field. Letting descriptive text inflate the identifier
+  // signal double-counts it and measurably degraded MRR.
+  const codeSigs = sigs.filter((line) => !MODULE_DOC_RE.test(line));
+  const sigText = codeSigs.join(' ');
   const sigTokenSet = new Set(tokenize(sigText));
 
   // Build token set from the file path
@@ -127,7 +186,7 @@ function scoreFile(filePath, sigs, queryTokens, weights) {
       signals.exactToken += bonus;
 
       // Bonus: appears directly in a function/class/method name line
-      const nameLineMatch = sigs.some((sig) => {
+      const nameLineMatch = codeSigs.some((sig) => {
         const nt = tokenize(sig.replace(/[^a-zA-Z0-9_\s]/g, ' '));
         return nt.includes(qt);
       });
@@ -189,13 +248,18 @@ function rank(query, sigIndex, opts) {
   const graph = (opts && opts.graph && opts.graph.forward instanceof Map) ? opts.graph : null;
   const cwd = (opts && opts.cwd) || null;
 
-  // Detect query intent and get appropriate weights
+  // Intent is reported to the user and shapes output depth; it no longer
+  // selects scoring weights (see SIGNAL_BLEND).
   const intent = detectIntent(query);
-  const intentWeights = INTENT_WEIGHTS[intent] || DEFAULT_WEIGHTS;
-  const weights = (opts && opts.weights) ? Object.assign({}, intentWeights, opts.weights) : intentWeights;
-  const learnedWeights = opts && opts.cwd ? loadWeights(opts.cwd) : null;
+  const weights = (opts && opts.weights) ? Object.assign({}, DEFAULT_WEIGHTS, opts.weights) : DEFAULT_WEIGHTS;
+  // Learned per-file multipliers are a LOCAL, evolving signal (.context/weights.json).
+  // Benchmarks and CI gates must opt out via { learned: false }, or a developer's
+  // local learned state silently changes the score and CI stops being reproducible.
+  const useLearned = !(opts && opts.learned === false);
+  const learnedWeights = opts && opts.cwd && useLearned ? loadWeights(opts.cwd) : null;
 
   const queryTokens = tokenize(query);
+  const queryWants = _queryWants(queryTokens);
   if (queryTokens.length === 0) {
     // Empty query: return top-K by file count (most signatures = most useful)
     const all = [];
@@ -212,18 +276,32 @@ function rank(query, sigIndex, opts) {
   // are matched. The existing negative-signal penalty and recency/graph/learned
   // boosts are layered on top; the per-token signals stay for the explain table.
   const bm25Scores = new Map();
-  for (const c of bm25rank(query, [...sigIndex.entries()].map(([file, sigs]) => ({ file, sigs })))) {
+  for (const c of bm25rank(query, [...sigIndex.entries()].map(([file, sigs]) => ({ file, sigs })), opts)) {
     bm25Scores.set(c.file, c.score);
   }
 
-  const scored = [];
+  // Two passes: scoreFile's weighted signal needs the max across the corpus to
+  // normalise against, so collect first, then combine.
+  const prescored = [];
+  let maxSignal = 0;
   for (const [file, sigs] of sigIndex.entries()) {
-    const result = scoreFile(file, sigs, queryTokens, weights);
+    const result = scoreFile(file, sigs, queryTokens, weights, queryWants);
+    if (result.score > maxSignal) maxSignal = result.score;
+    prescored.push({ file, sigs, result });
+  }
+
+  const scored = [];
+  for (const { file, sigs, result } of prescored) {
     const penalty = result.signals.penalty;
     const base = bm25Scores.get(file) || 0;
-    let score = base * penalty;
+    // Blend the weighted keyword/symbol/path signal into the BM25 base. This
+    // was previously computed and thrown away — `result.score` was never read,
+    // which silently made DEFAULT_WEIGHTS and every intent profile dead config.
+    const signalNorm = maxSignal > 0 ? result.score / maxSignal : 0;
+    let score = base * penalty * (1 + SIGNAL_BLEND * signalNorm);
     const signals = result.signals;
     signals.bm25 = base;
+    signals.signalBlend = signalNorm;
 
     // Recency boost
     if (recencySet && recencySet.has(file) && score > 0) {
@@ -253,44 +331,46 @@ function rank(query, sigIndex, opts) {
   // Hub suppression: files with high fanout (>20%) are not boosted
   if (graph && cwd) {
     const path = require('path');
-    // Build maps for relative ↔ absolute path conversion and index lookup
-    const relToIdx = new Map();
-    const absToRel = new Map();
+    // Every graph node is keyed by `path.normalize(p).toLowerCase()` (see
+    // normalizePath in src/graph/builder.js and src/graph/call-graph.js).
+    // Lookups MUST use the same key space: a bare path.resolve() preserves
+    // case, so on any repo whose absolute path contains an uppercase letter
+    // every .get() missed and this entire block was silently inert.
+    const keyToIdx = new Map();
     for (let i = 0; i < scored.length; i++) {
-      relToIdx.set(scored[i].file, i);
-      const abs = path.resolve(cwd, scored[i].file);
-      absToRel.set(abs, scored[i].file);
+      _registerKeys(keyToIdx, path.resolve(cwd, scored[i].file), i);
     }
 
     const hubs = _computeHubs(graph);
-    const hop1Files = new Set(); // track which files received hop1 boost
+    const hop1Files = new Set(); // normalised keys that received a hop1 boost
+    const hop1Seeds = [];        // original (un-normalised) paths, for hop-2 lookup
 
     // Hop 1: direct neighbors of scored files
     for (const entry of scored) {
       if (entry.score <= 0) continue;
-      const abs = path.resolve(cwd, entry.file);
-      const neighbors = graph.forward.get(abs) || [];
+      const neighbors = _graphGet(graph.forward, path.resolve(cwd, entry.file)) || [];
       for (const neighborAbs of neighbors) {
-        if (_isHub(neighborAbs) || hubs.has(neighborAbs)) continue;
-        const neighborRel = path.relative(cwd, neighborAbs).replace(/\\/g, '/');
-        const idx = relToIdx.get(neighborRel);
+        const nk = path.normalize(neighborAbs);
+        if (_isHub(nk) || hubs.has(nk) || hubs.has(nk.toLowerCase())) continue;
+        const idx = _graphGet(keyToIdx, nk);
         if (idx !== undefined) {
           scored[idx].score += GRAPH_BOOST_AMOUNTS.hop1;
           scored[idx].signals.graphBoost = (scored[idx].signals.graphBoost || 0) + GRAPH_BOOST_AMOUNTS.hop1;
-          hop1Files.add(neighborAbs);
+          hop1Files.add(nk);
+          hop1Seeds.push(neighborAbs);
         }
       }
     }
 
     // Hop 2: neighbors of hop1 files (only if they didn't get a direct score)
-    for (const hop1File of hop1Files) {
-      if (!absToRel.has(hop1File)) continue; // skip files not in index
-      const neighbors = graph.forward.get(hop1File) || [];
+    for (const hop1Key of hop1Seeds) {
+      if (_graphGet(keyToIdx, hop1Key) === undefined) continue; // skip files not in index
+      const neighbors = _graphGet(graph.forward, hop1Key) || [];
       for (const neighborAbs of neighbors) {
-        if (_isHub(neighborAbs) || hubs.has(neighborAbs)) continue;
-        if (hop1Files.has(neighborAbs)) continue; // skip already hop1-boosted
-        const neighborRel = path.relative(cwd, neighborAbs).replace(/\\/g, '/');
-        const idx = relToIdx.get(neighborRel);
+        const nk = path.normalize(neighborAbs);
+        if (_isHub(nk) || hubs.has(nk) || hubs.has(nk.toLowerCase())) continue;
+        if (hop1Files.has(nk)) continue; // skip already hop1-boosted
+        const idx = _graphGet(keyToIdx, nk);
         if (idx !== undefined && scored[idx].score > 0) {
           // Only boost files that have some baseline score (not noise)
           scored[idx].score += GRAPH_BOOST_AMOUNTS.hop2;
@@ -307,16 +387,17 @@ function rank(query, sigIndex, opts) {
   const callGraph = (opts && opts.callGraph && opts.callGraph.forward instanceof Map) ? opts.callGraph : null;
   if (callGraph && cwd) {
     const path = require('path');
-    const relToIdx = new Map();
-    for (let i = 0; i < scored.length; i++) relToIdx.set(scored[i].file, i);
+    // buildCallFileGraph keys by a CASE-PRESERVING path.resolve, unlike the
+    // import graph builder which lowercases — hence the dual-form probe.
+    const keyToIdx = new Map();
+    for (let i = 0; i < scored.length; i++) _registerKeys(keyToIdx, path.resolve(cwd, scored[i].file), i);
     const hubs = _computeHubs(callGraph);
     const seeds = scored.filter((e) => e.score > 0).map((e) => e.file);
     for (const file of seeds) {
-      const abs = path.resolve(cwd, file);
-      for (const neighborAbs of (callGraph.forward.get(abs) || [])) {
-        if (_isHub(neighborAbs) || hubs.has(neighborAbs)) continue;
-        const neighborRel = path.relative(cwd, neighborAbs).replace(/\\/g, '/');
-        const idx = relToIdx.get(neighborRel);
+      for (const neighborAbs of (_graphGet(callGraph.forward, path.resolve(cwd, file)) || [])) {
+        const nk = path.normalize(neighborAbs);
+        if (_isHub(nk) || hubs.has(nk) || hubs.has(nk.toLowerCase())) continue;
+        const idx = _graphGet(keyToIdx, nk);
         if (idx !== undefined && scored[idx].file !== file) {
           scored[idx].score += GRAPH_BOOST_AMOUNTS.callHop;
           scored[idx].signals.callGraphBoost = (scored[idx].signals.callGraphBoost || 0) + GRAPH_BOOST_AMOUNTS.callHop;
@@ -490,6 +571,18 @@ function _enrichSigIndexFromStrategy(cwd, index) {
     }
   } catch (_) {}
   _mergeSigIndex(index, _buildSigIndexFromCache(cwd));
+
+  // The complete retrieval index (written by generate before applyTokenBudget)
+  // takes precedence: it is the only source containing files the budget dropped,
+  // and full signatures for files the budget collapsed to line anchors. It is
+  // merged as the BASE rather than on top because _mergeSigIndex only replaces
+  // when the source has MORE signatures — a collapsed entry has the same count
+  // as its full form, so merging the other way would keep the anchors.
+  try {
+    const full = require('./sig-index-store').readFullIndex(cwd);
+    if (full.size > 0) return _mergeSigIndex(full, index);
+  } catch (_) { /* absent → budgeted view is still served */ }
+
   return index;
 }
 
@@ -615,22 +708,53 @@ function formatRankJSON(results, query) {
 // ---------------------------------------------------------------------------
 // Intent detection — 7 intents
 // ---------------------------------------------------------------------------
+// Nouns carry an optional plural: `\btest\b` does not match "tests", so
+// "write unit tests for the ranker" matched NO intent at all and fell through
+// to the 'search' default.
 const INTENT_PATTERNS = {
-  debug:    /\b(bug|fix|error|crash|exception|broken|failing|issue|problem|regression)\b/i,
+  debug:    /\b(bugs?|fix(es|ed)?|errors?|crash(es)?|exceptions?|broken|failing|failures?|issues?|problems?|regressions?)\b/i,
   explain:  /\b(explain|how does|what is|understand|overview|architecture|describe|walk me|teach)\b/i,
-  refactor: /\b(refactor|restructure|redesign|clean up|extract|move|rename|simplify|optimize)\b/i,
+  refactor: /\b(refactor|restructure|redesign|clean up|extract|move|rename|simplify|optimi[sz]e)\b/i,
   review:   /\b(review|check|audit|security|pr|pull request|assess|validate)\b/i,
-  test:     /\b(test|unit test|integration test|testing|spec|assert|mock)\b/i,
-  integrate:/\b(import|integrate|connect|wire|bind|require|export|depend|graph)\b|require[ds]\b/i,
+  test:     /\b(tests?|unit tests?|integration tests?|testing|specs?|assert(ion)?s?|mocks?|fixtures?)\b/i,
+  integrate:/\b(imports?|integrate|connect|wire|bind|requires?|exports?|depends?|dependenc(y|ies)|graph)\b/i,
   navigate: /\b(find|locate|where|search|look for|show me|navigate|browse|list)\b/i,
 };
 
-function detectIntent(query) {
-  if (!query || typeof query !== 'string') return 'search';
+/**
+ * Every intent whose pattern matches, strongest first.
+ *
+ * A real request is routinely multi-intent — "fix the failing test" is both a
+ * debug task and a test task — and reporting one label discards that. Worse,
+ * the single-label version returned the FIRST key in INTENT_PATTERNS order, so
+ * `debug` permanently shadowed `test`: no query containing "fix" or "failing"
+ * could ever be labelled a test, no matter how test-shaped it was.
+ *
+ * Ranked by how many distinct terms each pattern matched, so the dominant
+ * intent leads; ties fall back to declaration order for determinism.
+ *
+ * @param {string} query
+ * @returns {string[]} matched intents, never empty (defaults to ['search'])
+ */
+function detectIntents(query) {
+  if (!query || typeof query !== 'string') return ['search'];
+  const scored = [];
+  let order = 0;
   for (const [intent, re] of Object.entries(INTENT_PATTERNS)) {
-    if (re.test(query)) return intent;
+    const hits = query.match(new RegExp(re.source, re.flags.includes('g') ? re.flags : re.flags + 'g'));
+    if (hits && hits.length) {
+      scored.push({ intent, hits: new Set(hits.map((h) => h.toLowerCase())).size, order: order });
+    }
+    order++;
   }
-  return 'search';
+  if (scored.length === 0) return ['search'];
+  scored.sort((a, b) => (b.hits - a.hits) || (a.order - b.order));
+  return scored.map((s) => s.intent);
 }
 
-module.exports = { rank, buildSigIndex, scoreFile, formatRankTable, formatRankJSON, DEFAULT_WEIGHTS, GRAPH_BOOST_AMOUNTS, CENTRALITY_BLEND_WEIGHT, detectIntent };
+/** Primary intent. Kept for callers that want a single label. */
+function detectIntent(query) {
+  return detectIntents(query)[0];
+}
+
+module.exports = { rank, buildSigIndex, scoreFile, _queryWants, detectIntents, formatRankTable, formatRankJSON, DEFAULT_WEIGHTS, GRAPH_BOOST_AMOUNTS, CENTRALITY_BLEND_WEIGHT, detectIntent };

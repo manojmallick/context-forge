@@ -108,6 +108,33 @@ const EXPANSION_GROUPS = [
 // the literal query token always outranks a synonym-only match.
 const EXPANSION_WEIGHT = 0.15;
 
+// Module-doc prose is indexed as a `# module: ...` pseudo-signature (index-only,
+// see src/retrieval/module-doc.js). Per token it is a weaker relevance signal
+// than a real signature — descriptive rather than definitional — so it is scored
+// as its own BM25F field rather than pooled with the code terms.
+const MODULE_DOC_RE = /^#\s*(module|docs):/;
+
+// Line anchors are metadata, not content, and this ranker is documented as
+// anchor-invariant. The previous strip was end-anchored, so it only fired when
+// the anchor was the last thing on the line — but extractors append a doc hint
+// AFTER it ("... :27-59  # Compute a normalized centrality score"). 27% of
+// signatures therefore leaked their line numbers into the term space as tokens
+// like "27" and "59": 840 junk terms, inflating document length for exactly the
+// well-documented files, which BM25 then penalised via length normalisation.
+const ANCHOR_RE = /\s*:\d+(?:-\d+)?(?=\s|$)/g;
+
+function stripAnchor(line) {
+  return String(line).replace(ANCHOR_RE, '');
+}
+// Tuned on the 30-task leak-free corpus. The 0.5-0.8 band is flat
+// (hit@5 63.3-66.7%, easy MRR steady at 0.825); adjacent values swing by up to
+// 6.7pp, which at 30 tasks is literally two tasks — noise, not signal. 0.6 is
+// chosen from the middle of that band rather than at its peak, because a
+// per-token weight below 1 is the principled position (prose is descriptive,
+// a signature is definitional) and picking the argmax of a 30-task sweep is
+// how you overfit a benchmark.
+const DOC_WEIGHT = 0.6;
+
 // Build a stemmed lookup: stem(member) → Set of the group's other stemmed members.
 const EXPANSIONS = (() => {
   const map = new Map();
@@ -151,22 +178,45 @@ function expandQuery(qToks) {
  * @param {{ file: string, sigs: string[] }[]} candidates
  * @returns {Array<object & { score: number }>}
  */
-function bm25rank(query, candidates) {
+function bm25rank(query, candidates, opts) {
   if (!Array.isArray(candidates) || candidates.length === 0) return [];
 
   const k1 = 1.5;
   const b = 0.75;
+
+  const docWeight = (opts && typeof opts.docWeight === 'number') ? opts.docWeight : DOC_WEIGHT;
 
   const docs = candidates.map((c) => {
     const pathToks = tokenize(c.file || '');
     // Ranking is anchor-invariant: `:start-end` line anchors are metadata,
     // not content — strip them before tokenizing so adding anchors to an
     // extractor never shifts BM25 length normalization or token counts.
-    const toks = tokenize((c.sigs || []).map((s) => String(s).replace(/\s*:\d+(?:-\d+)?\s*$/, '')).join(' '));
-    for (let i = 0; i < PATH_BOOST; i++) toks.push(...pathToks);
+    // BM25F-style fields. Module-doc prose and code signatures are different
+    // kinds of evidence and must not share one term-frequency pool: prose is
+    // ~30% of all indexed tokens, and a short file with a long header (few
+    // signatures, lots of description) otherwise wins unrelated queries purely
+    // through length normalisation.
+    const docLines = [];
+    const codeLines = [];
+    for (const line of (c.sigs || [])) (MODULE_DOC_RE.test(line) ? docLines : codeLines).push(line);
+    // TRIED AND REJECTED: splitting the declared symbol NAME into its own
+    // weighted BM25F field, on the IR prior that a name is a "title" and params
+    // are "body". Swept 1.0-4.0. hit@5 on the mined corpus rose 60.9% -> 65.2%,
+    // which is a single task crossing the rank-5 line — over 113 combined tasks
+    // hit@1 fell 52.2% -> 51.3%, hit@3 fell 66.4% -> 65.5%, hit@10 was identical
+    // and MRR dropped. It moves correct answers DOWN and happens to nudge one
+    // past a cutoff. A hit@5-only view would have shipped this.
+    const codeToks = tokenize(codeLines.map((x) => stripAnchor(x)).join(' '));
+    const docToks = tokenize(docLines.join(' '));
     const tf = new Map();
-    for (const t of toks) tf.set(t, (tf.get(t) || 0) + 1);
-    return { cand: c, tf, len: toks.length };
+    const addField = (toks, weight) => { for (const t of toks) tf.set(t, (tf.get(t) || 0) + weight); };
+    addField(codeToks, 1);
+    addField(pathToks, PATH_BOOST);
+    addField(docToks, docWeight);
+    // Length accumulates with the SAME weights, or a field's influence leaks
+    // back in through the normalisation term.
+    const len = codeToks.length + (PATH_BOOST * pathToks.length) + (docWeight * docToks.length);
+    return { cand: c, tf, len };
   });
 
   const N = docs.length || 1;
@@ -195,4 +245,4 @@ function bm25rank(query, candidates) {
     .sort((a, c) => c.score - a.score || String(a.file).localeCompare(String(c.file)));
 }
 
-module.exports = { tokenize, stem, bm25rank, PATH_BOOST, STOP, expandQuery, EXPANSIONS, EXPANSION_WEIGHT };
+module.exports = { tokenize, stem, bm25rank, PATH_BOOST, STOP, expandQuery, EXPANSIONS, EXPANSION_WEIGHT, DOC_WEIGHT, MODULE_DOC_RE, stripAnchor };

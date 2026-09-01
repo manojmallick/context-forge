@@ -1,0 +1,21 @@
+{
+  "hard": {
+    "hitAt5": 0.767,
+    "mrr": 0.639,
+    "precisionAt5": 0.153,
+    "tasks": 90
+  },
+  "mined": {
+    "hitAt5": 0.609,
+    "mrr": 0.447,
+    "precisionAt5": 0.13,
+    "tasks": 23
+  },
+  "easy": {
+    "hitAt5": 0.9,
+    "mrr": 0.825,
+    "precisionAt5": 0.22,
+    "tasks": 20
+  },
+  "recordedBy": "run-retrieval-gate.mjs"
+}

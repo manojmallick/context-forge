@@ -28,23 +28,63 @@ low-priority files rather than collapsing signatures to bare line anchors.
 
 Always run `sigmap ask` (or `sigmap --query`) before searching for files relevant to a task.
 
-## deps
+## todos
 ```
-src/extractors/python_ast.py ← ast
+gen-context.js:22350  # TODO: s');
 ```
 
-## changes (last 5 commits — 0 seconds ago)
+## changes (last 5 commits — 10 days ago)
 ```
-src/extractors/csharp.js                      ~extract  ~extractMembers
-src/extractors/dart.js                        ~extract  ~extractMembers
-src/extractors/go.js                          ~extract  ~extractInterfaceMethods
-src/extractors/java.js                        ~extract  ~extractMembers
-src/extractors/kotlin.js                      ~extract  ~extractMembers
-src/extractors/php.js                         ~extract  ~extractMembers
-src/extractors/rust.js                        ~extract  ~extractMethods  ~extractReturnType
-src/extractors/scala.js                       ~extract  ~extractMembers
-src/extractors/swift.js                       ~extract  ~extractMembers  ~extractArrowType
-src/evidence/pack.js                          +riskFactorsFor  ~parseAnchor  ~buildEvidencePack  ~formatMarkdown
+src/graph/builder.js                          ~extractFileDeps
+src/retrieval/ranker.js                       ~_buildSigIndexFromCache  ~_enrichSigIndexFromStrategy
+gen-context.js                                +whose  +extractClassMembers  +stripComments  +maskCode
+src/extractors/javascript.js                  +whose  +extractClassMembers  ~whose  ~extractClassMembers
+src/extractors/scan.js                        +stripComments  +maskCode  +readBalanced
+src/extractors/typescript.js                  +extractClassMembers  ~extractClassMembers  ~extract  ~extractBlock
+src/verify/arity.js                           +exist  +cleanSig  +parseParams  +buildArityIndex
+src/verify/hallucination-guard.js             +whose  ~buildSymbolSet  ~verify
+```
+
+## .
+
+### gen-context.js
+```
+function __require(key)  :9-20
+function __git(args, opts = {})  :21630-21633
+function __tryGit(args, opts = {})  :21634-21637
+function requireSourceOrBundled(key)  :21642-21649
+function isDockerfile(filename)  :21695-21697
+function loadIgnorePatterns(cwd)  :21702-21715
+function matchesIgnore(relPath, patterns)  :21717-21738
+function walkDir(dir, exclude, maxDepth, depth = 0)  :21743-21766
+function buildFileList(cwd, config)  :21768-21779
+function collectTestEntries(cwd, config, existing)  :21790-21816  # Source files a project declares as its own entrypoints in pa
+function declaredEntrypoints(cwd, config, existing)  :21818-21838
+function getExtractor(name)  :21844-21854
+function detectAndExtract(filePath, content, maxSigsPerFile)  :21856-21874
+function extractFileDeps(filePath, content, config) → string[]  :21876-21886  # Extract absolute dependency paths from a single file
+function extractSignatureName(sig)  :21888-21892
+function annotateCoverage(sigs, testIndex, enabled)  :21894-21904
+function nextRecentMtime()  :21925-21927
+function estimateTokens(str) → number  :21929-21931  # Estimate token count from character count (chars/4, ±5%)
+function isTestFile(filePath)  :21933-21935
+function isConfigFile(filePath)  :21937-21940
+function isGeneratedFile(filePath)  :21942-21944
+function isMockFile(filePath)  :21946-21951
+function computeEffectiveMaxTokens(fileEntries, config) → number  :21968-22006  # Compute the effective token budget based on repo size and co
+function applyTokenBudget(fileEntries, maxTokens)  :22008-22076
+function getRecentlyCommittedFiles(cwd, count)  :22107-22115
+… +45 more signatures
+```
+
+### gen-project-map.js
+```
+function detectInvokedAs()  :27-37
+function walkDir(dir, excludeSet, maxDepth, depth, results)  :77-90
+function buildFileList(cwd, srcDirs, exclude, maxDepth)  :92-103
+function runAnalyzer(name, files, cwd)  :108-116
+function formatOutput(sections)  :121-151
+function main()  :156-191
 ```
 
 ## packages
@@ -52,106 +92,60 @@ src/evidence/pack.js                          +riskFactorsFor  ~parseAnchor  ~bu
 ### packages/adapters/claude.js
 ```
 module.exports = { name, format, outputPath, write }  :124-124
-function format(context, opts = {}) → string  :58-69
+function format(context, opts = {}) → string  :58-69  # Format context suited for CLAUDE
 function _confidenceMeta(opts)  :71-78
-function outputPath(cwd) → string  :85-87
-function write(context, cwd, opts = {})  :96-122
+function outputPath(cwd) → string  :85-87  # Return the output file path for this adapter
+function write(context, cwd, opts = {})  :96-122  # Write signatures into CLAUDE
 ```
 
 ### packages/adapters/codex.js
 ```
 module.exports = { name, format, outputPath, write }  :74-74
-function format(context, opts = {}) → string  :27-30
-function outputPath(cwd) → string  :37-39
-function write(context, cwd, opts = {})  :49-72
+function format(context, opts = {}) → string  :27-30  # Format context for AGENTS
+function outputPath(cwd) → string  :37-39  # Return the output file path for this adapter
+function write(context, cwd, opts = {})  :49-72  # Write signatures into AGENTS
 ```
 
 ### packages/adapters/copilot.js
 ```
 module.exports = { name, format, outputPath, write }  :93-93
-function format(context, opts = {}) → string  :25-40
+function format(context, opts = {}) → string  :25-40  # Format context for GitHub Copilot instructions
 function _confidenceMeta(opts)  :42-49
-function outputPath(cwd) → string  :56-58
-function write(context, cwd, opts = {})  :68-91
+function outputPath(cwd) → string  :56-58  # Return the output file path for this adapter
+function write(context, cwd, opts = {})  :68-91  # Write signatures into copilot-instructions
 ```
 
 ### packages/adapters/cursor.js
 ```
 module.exports = { name, format, outputPath }  :56-56
-function format(context, opts = {}) → string  :23-36
+function format(context, opts = {}) → string  :23-36  # Format context for Cursor rules file
 function _confidenceMeta(opts)  :38-45
-function outputPath(cwd) → string  :52-54
+function outputPath(cwd) → string  :52-54  # Return the output file path for this adapter
 ```
 
 ### packages/adapters/gemini.js
 ```
 module.exports = { name, format, outputPath, write }  :104-104
-function format(context, opts = {}) → string  :31-51
-function outputPath(cwd) → string  :58-60
-function write(context, cwd, opts = {})  :70-93
+function format(context, opts = {}) → string  :31-51  # Format context as a Gemini system instruction
+function outputPath(cwd) → string  :58-60  # Return the output file path for this adapter
+function write(context, cwd, opts = {})  :70-93  # Write signatures into gemini-context
 function _confidenceMeta(opts)  :95-102
-```
-
-### packages/adapters/index.js
-```
-module.exports = { getAdapter, listAdapters, adapt, outputsToAdapters }  :81-81
-function getAdapter(name) → { name: string, format: F  :26-38
-function listAdapters() → string[]  :44-46
-function adapt(context, adapterName, opts = {}) → string  :55-64
-function outputsToAdapters(outputs) → string[]  :72-79
-```
-
-### packages/adapters/llm-full.js
-```
-module.exports = { name: 'llm-full', format, outputPath, write }  :4-4
-function outputPath(cwd)  :6-6
-function format(context, opts)  :8-20
-function write(context, cwd, opts)  :22-25
 ```
 
 ### packages/adapters/openai.js
 ```
 module.exports = { name, format, outputPath }  :70-70
-function format(context, opts = {}) → string  :29-49
-function outputPath(cwd) → string  :57-59
+function format(context, opts = {}) → string  :29-49  # Format context as an OpenAI system prompt
+function outputPath(cwd) → string  :57-59  # Return the output file path for this adapter
 function _confidenceMeta(opts)  :61-68
-```
-
-### packages/adapters/willow.js
-```
-module.exports = { name, format, outputPath, write }  :200-200
-function format(context, opts = {}) → string  :36-40
-function outputPath(cwd) → string  :47-49
-function generateAtomId(filepath) → string  :57-63
-async function fetchWithTimeout(url, opts, timeoutMs) → Promise<Response>  :72-80
-async function postAtomWithRetry(atom, mcpUrl, timeoutMs, maxRetries) → Promise<boolean>  :90-142
-async function write(context, cwd, opts = {}) → Promise<void>  :155-198
 ```
 
 ### packages/adapters/windsurf.js
 ```
 module.exports = { name, format, outputPath }  :56-56
-function format(context, opts = {}) → string  :23-36
+function format(context, opts = {}) → string  :23-36  # Format context for Windsurf rules file
 function _confidenceMeta(opts)  :38-45
-function outputPath(cwd) → string  :52-54
-```
-
-### packages/cli/index.js
-```
-module.exports = { CLI_ENTRY, run }  :58-63
-function run(argv, cwd) → void  :36-56
-```
-
-### packages/core/index.js
-```
-module.exports = { extract, rank, buildSigIndex, scan, score, adapt }  :254-267
-function _resolveExtractor(language)  :64-71
-function extract(src, language) → string[]  :91-120
-function rank(query, sigIndex, opts) → { file: string, score: nu  :143-150
-function buildSigIndex(cwd) → Map<string, string[]>  :162-169
-function scan(sigs, filePath) → { safe: string[], redacte  :185-192
-function score(cwd) → { * score: number, * grad  :215-222
-function adapt(context, adapterName, opts = {}) → string  :241-249
+function outputPath(cwd) → string  :52-54  # Return the output file path for this adapter
 ```
 
 ### packages/core/README.md
@@ -176,128 +170,52 @@ code-fence ---
 
 ## src
 
-### src/config/defaults.js
+### src/graph/builder.js
 ```
-module.exports = { DEFAULTS }  :165-165
-```
-
-### src/extractors/csharp.js
-```
-module.exports = { extract }  :71-71
-function extract(src) → string[]  :12-71
-function extractBlock(src, startIndex)  :35-44
-function extractMembers(block)  :46-59
-function normalizeParams(params)  :61-64
-function normalizeType(type)  :66-69
-```
-
-### src/extractors/dart.js
-```
-module.exports = { extract }  :84-84
-function extract(src) → string[]  :12-84
-function extractBlock(src, startIndex)  :54-63
-function extractMembers(block)  :65-77
-function normalizeParams(params)  :79-81
-```
-
-### src/extractors/go.js
-```
-module.exports = { extract }  :81-81
-function extract(src) → string[]  :12-81
-function extractBlock(src, startIndex)  :51-60
-function extractInterfaceMethods(block)  :62-74
-function normalizeParams(params)  :76-79
-```
-
-### src/extractors/java.js
-```
-module.exports = { extract }  :71-71
-function extract(src) → string[]  :12-71
-function extractBlock(src, startIndex)  :34-44
-function extractMembers(block)  :46-59
-function normalizeParams(params)  :61-64
-function normalizeType(type)  :66-69
-```
-
-### src/extractors/kotlin.js
-```
-module.exports = { extract }  :90-90
-function extract(src) → string[]  :12-90
-function extractBlock(src, startIndex)  :54-63
-function extractMembers(block)  :65-90
-function normalizeParams(params)  :81-88
-```
-
-### src/extractors/php.js
-```
-module.exports = { extract }  :96-96
-function extract(src) → string[]  :12-96
-function extractBlock(src, startIndex)  :58-67
-function extractMembers(block)  :69-96
-function normalizeParams(params)  :86-89
-function normalizeType(type)  :91-94
-```
-
-### src/extractors/rust.js
-```
-module.exports = { extract }  :110-110
-function extract(src) → string[]  :12-110
-function extractBlock(src, startIndex)  :72-81
-function extractMethods(block)  :83-110
-function normalizeParams(params)  :97-100
-function extractReturnType(afterParen)  :102-110
-```
-
-### src/extractors/scala.js
-```
-module.exports = { extract }  :88-88
-function extract(src) → string[]  :12-88
-function extractBlock(src, startIndex)  :47-56
-function extractMembers(block)  :58-88
-function normalizeParams(params)  :74-81
-function normalizeType(type)  :83-86
-```
-
-### src/extractors/swift.js
-```
-module.exports = { extract }  :97-97
-function extract(src) → string[]  :12-97
-function extractBlock(src, startIndex)  :54-63
-function extractMembers(block)  :65-97
-function normalizeParams(params)  :80-87
-function extractArrowType(str)  :89-97
+module.exports = { build, buildFromCwd, extractFileDeps, normalizePath, loadAliasMap, resolveAlias }  :503-503
+function normalizePath(p)  :18-20
+function probeJs(base, fileSet) → string|null  :41-54  # Probe an absolute base path for a JS/TS module file in fileS
+function resolveJsPath(dir, importStr, fileSet) → string|null  :63-65  # Resolve a JS/TS relative import string to an absolute path i
+function stripJsonc(src)  :71-85  # Strip comments and trailing commas so a tsconfig/jsconfig (J
+function loadAliasMap(cwd) → { baseUrl: string|null, e  :97-118  # Load the JS/TS path-alias map from tsconfig
+function resolveAlias(spec, aliasMap, fileSet) → string|null  :127-151  # Resolve a non-relative JS/TS import specifier through the al
+function escapeRegex(s)  :158-160  # Resolve an R `source(
+function resolveRPath(dir, importStr, fileSet, cwd)  :162-177
+function extractFileDeps(filePath, content, fileSet, cwd, ctx) → string[]  :191-287  # Extract absolute dependency paths from a single file
+function build(files, cwd, ctx) → { forward: Map<string,str  :396-435  # Build a forward and reverse dependency graph for all given f
+function buildFromCwd(cwd, opts) → { forward: Map<string,str  :447-501  # Build a dependency graph scoped to a single cwd by walking a
 ```
 
 ### src/mcp/server.js
 ```
-module.exports = { start }  :141-141
+module.exports = { start }  :142-142
 function respond(id, result)  :28-30
 function respondError(id, code, message)  :32-36
-function dispatch(msg, cwd)  :41-108
-function start(cwd)  :113-139
+function dispatch(msg, cwd)  :41-109
+function start(cwd)  :114-140
 ```
 
-### src/retrieval/enrich-from-maps.js
+### src/retrieval/ranker.js
 ```
-module.exports = { enrichWithSurfaces }  :55-55
-function enrichWithSurfaces(index, cwd) → number  :25-53
-```
-
-### src/analysis/coverage-score.js
-```
-module.exports = { coverageScore, CODE_EXTS }  :105-105
-function coverageScore(cwd, fileEntries, config)  :41-90
-function _walk(dir, excludeSet, out)  :92-103
-```
-
-### src/analysis/diagnostics.js
-```
-module.exports = { formatFileDecision, computeFileMetrics, explainInclusion, explainExclusion, estimateTokens }  :80-86
-function estimateTokens(text)  :14-16
-function formatFileDecision(entry, decision, reason, score = null)  :18-26
-function computeFileMetrics(entry)  :28-41
-function explainInclusion(fileEntries, budgetLimit)  :43-74
-function explainExclusion(dropped, reason)  :76-78
+module.exports = { rank, buildSigIndex, scoreFile, _queryWants, detectIntents, formatRankTable, formatRankJSON, DEFAULT_WEIGHTS, GRAPH_BOOST_AMOUNTS, CENTRALITY_BLEND_WEIGHT, detectIntent }  :760-760
+function _queryWants(queryTokens)  :85-92  # Which penalised categories the query is explicitly asking fo
+function _computePenalty(filePath, wants)  :94-108
+function _computeHubs(graph)  :111-122
+function _graphKeys(p)  :129-133
+function _graphGet(map, absPath)  :134-140
+function _registerKeys(map, absPath, value)  :141-143
+function _isHub(filePath)  :145-149
+function scoreFile(filePath, sigs, queryTokens, weights, wants) → { score: number, signals:  :160-221  # Score a single file against a query, returning detailed sign
+function rank(query, sigIndex, opts) → { file: string, score: nu  :241-331  # Rank all files in a signature index against a query
+function _parseContextFile(contextPath) → Map<string, string[]>  :478-510  # Parse a single context file into a Map<filePath, string[]>
+function _mergeSigIndex(target, source)  :513-521  # Merge source index into target; prefer non-empty sig lists
+function _buildSigIndexFromCache(cwd) → Map<string, string[]>  :528-548  # Load signatures from
+function _enrichSigIndexFromStrategy(cwd, index) → Map<string, string[]>  :556-587  # Hot-cold and per-module strategies store most signatures out
+function buildSigIndex(cwd, opts) → Map<string, string[]>  :604-637  # Build a signature index from the generated context file
+function formatRankTable(results, query) → string  :646-682  # Format ranked results as a markdown table string
+function formatRankJSON(results, query) → object  :691-706  # Format ranked results as a structured JSON-serialisable obje
+function detectIntents(query) → string[]  :739-753  # Every intent whose pattern matches, strongest first
+function detectIntent(query)  :756-758  # Primary intent
 ```
 
 ### src/cache/freshen.js
@@ -305,91 +223,97 @@ function explainExclusion(dropped, reason)  :76-78
 module.exports = { freshen }  :123-123
 function _readConfig(cwd)  :35-40
 function _pkgVersion(cwd)  :42-45
-function _contextMtime(cwd)  :48-54
+function _contextMtime(cwd)  :48-54  # Newest mtime among existing generated context files, or 0 if
 function _walk(dir, exclude, out, depth, maxDepth)  :56-66
-function freshen(cwd, opts = {}) → number  :74-121
+function freshen(cwd, opts = {}) → number  :74-121  # Re-extract source files changed since the last generate; dro
 ```
 
-### src/cache/sig-cache.js
+### src/config/defaults.js
 ```
-module.exports = { loadCache, saveCache, getChangedFiles, updateCacheEntries }  :105-105
-function cachePath(cwd)  :19-21
-function loadCache(cwd, currentVersion) → Map<string, { mtime: numb  :32-42
-function saveCache(cwd, currentVersion, cache)  :51-61
-function getChangedFiles(files, cache) → { changed: string[], unch  :71-88
-function updateCacheEntries(cache, extracted)  :96-103
+module.exports = { DEFAULTS }  :175-175
 ```
 
 ### src/config/loader.js
 ```
 module.exports = { loadConfig, loadBaseConfig }  :313-313
-function loadBaseConfig(extendsVal, cwd)  :9-54
-function detectAutoSrcDirs(cwd, excludeList) → string[]  :99-114
-function _legacyDetectAutoSrcDirs(cwd, excludeList) → string[]  :123-225
-function loadConfig(cwd) → object  :236-307
+function loadBaseConfig(extendsVal, cwd)  :9-64
+function detectAutoSrcDirs(cwd, excludeList) → string[]  :99-114  # Detect source directories for the given project root
+function _legacyDetectAutoSrcDirs(cwd, excludeList) → string[]  :123-218  # Legacy source directory detection (fallback)
+function loadConfig(cwd) → object  :236-307  # Load and merge configuration for a given working directory
 function deepClone(obj)  :309-311
+```
+
+### src/config/tune.js
+```
+module.exports = { buildTuneProposal, applyTuneProposal, formatTuneProposal, JUNK_DIRS, TOKENS_PER_FILE }  :210-210
+function _readUserConfig(cwd)  :45-51  # Raw user config file content, or null when absent/unparsable
+function _countSourceFiles(cwd, roots, exclude, depth = 5)  :54-72  # Count source files under `roots` (relative to cwd), depth-ca
+function _monorepoMarker(cwd)  :75-84  # The workspace marker present at cwd, or null
+function buildTuneProposal(cwd) → { changes: Array<{key:str  :94-176  # Build the recommended config diff for a repo
+function applyTuneProposal(cwd, proposal) → { path: string, applied:   :184-190  # Merge a proposal's changes into gen-context
+function formatTuneProposal(proposal)  :193-208  # Human rendering of a proposal (one block per change, reason 
 ```
 
 ### src/conventions/ci.js
 ```
 module.exports = { ciGate, DEFAULT_MIN }  :48-48
-function ciGate(result, opts = {}, prior = null) → { score:number, min:numbe  :25-46
+function ciGate(result, opts = {}, prior = null) → { score:number, min:numbe  :25-46  # Evaluate the consistency gate
 ```
 
 ### src/conventions/conflicts.js
 ```
 module.exports = { analyzeConflicts, toNamingStyle, renameSuggestion }  :111-111
-function _splitName(filename)  :13-18
-function _words(stem)  :21-29
-function toNamingStyle(stem, style) → string  :39-49
-function renameSuggestion(filename, dominantStyle)  :52-56
-function analyzeConflicts(result) → { hasConflicts: boolean,   :72-109
+function _splitName(filename)  :13-18  # Split a file name into its stem (before the first dot) and t
+function _words(stem)  :21-29  # Break a stem into lowercase word parts regardless of its cur
+function toNamingStyle(stem, style) → string  :39-49  # Convert a file stem to a target naming style
+function renameSuggestion(filename, dominantStyle)  :52-56  # Rename suggestion to bring a file to the dominant naming sty
+function analyzeConflicts(result) → { hasConflicts: boolean,   :72-109  # Analyze an `extractConventions` result for conflicts
 ```
 
 ### src/conventions/extract.js
 ```
 module.exports = { classifyNaming, scoreConvention, extractConventions }  :188-188
-function classifyNaming(basename) → 'PascalCase'|'camelCase'|  :40-51
-function scoreConvention(labels, refs) → { dominant: string|null,   :65-103
-function _jsExportStyle(src)  :106-188
-function _detectTestFramework(cwd, files)  :122-150
-function extractConventions(cwd, files) → { fileNaming: object, exp  :159-186
+function classifyNaming(basename) → 'PascalCase'|'camelCase'|  :40-51  # Classify a file's base name (without extension) into a namin
+function scoreConvention(labels, refs) → { dominant: string|null,   :65-103  # Score a set of categorical observations into a dominant conv
+function _jsExportStyle(src)  :106-188  # Detect JS/TS export style for a single file's source
+function _detectTestFramework(cwd, files)  :122-150  # Detect the test framework in use from manifests + source heu
+function extractConventions(cwd, files) → { fileNaming: object, exp  :159-186  # Extract repo coding conventions for the scoped languages (TS
 ```
 
 ### src/conventions/fix.js
 ```
 module.exports = { buildFixList }  :61-61
-function _renamePath(relPath, style)  :24-31
-function buildFixList(cwd, files, conventions) → { dominant: string|null,   :40-59
+function _renamePath(relPath, style)  :24-31  # Rename a file path's basename to the target naming style (ke
+function buildFixList(cwd, files, conventions) → { dominant: string|null,   :40-59  # Build the exhaustive rename checklist for the dominant file-
 ```
 
 ### src/conventions/inject.js
 ```
 module.exports = { renderConventionsBlock, injectConventions, START, END }  :98-98
 function _conventionLine(label, conv)  :29-38
-function renderConventionsBlock(result, version) → string  :46-72
-function injectConventions(existing, block) → string  :82-96
+function renderConventionsBlock(result, version) → string  :46-72  # Render the conventions block (including its start/end marker
+function injectConventions(existing, block) → string  :82-96  # Inject (or replace) the conventions block in existing CLAUDE
 ```
 
 ### src/conventions/report.js
 ```
 module.exports = { scoreReport, snapshot, overallScore }  :75-75
-function overallScore(result)  :14-22
-function scoreReport(result, prior) → { conventions: object[],   :31-55
-function snapshot(result, ts)  :62-73
+function overallScore(result)  :14-22  # File-count-weighted mean of the scored conventions' dominant
+function scoreReport(result, prior) → { conventions: object[],   :31-55  # Build a consistency report with trend vs a prior snapshot
+function snapshot(result, ts)  :62-73  # A compact, persistable snapshot of a run (one line in the hi
 ```
 
 ### src/conventions/update.js
 ```
 module.exports = { changedSince, planUpdate }  :46-46
-function changedSince(files, sinceMs) → string[]  :20-26
-function planUpdate(cwd, files, snapshotPath) → { snapshotExists: boolean  :35-44
+function changedSince(files, sinceMs) → string[]  :20-26  # Source files modified after a reference time
+function planUpdate(cwd, files, snapshotPath) → { snapshotExists: boolean  :35-44  # Decide whether the conventions snapshot needs a rescan
 ```
 
 ### src/create/orchestrate.js
 ```
 module.exports = { orchestrate, TOTAL }  :86-86
-function orchestrate(ctx = {}, cwd) → { task: string|null, step  :34-84
+function orchestrate(ctx = {}, cwd) → { task: string|null, step  :34-84  # Run the create pipeline over whatever inputs are available
 ```
 
 ### src/daemon/daemon.js
@@ -398,52 +322,12 @@ module.exports = { start, stop, status, pidFile, logFile, isAlive, readPid }  :2
 function daemonDir(cwd)  :22-24
 function pidFile(cwd)  :26-28
 function logFile(cwd)  :30-32
-function isAlive(pid)  :35-44
-function readPid(cwd)  :47-55
+function isAlive(pid)  :35-44  # True if a process with this PID exists (signal 0 probes with
+function readPid(cwd)  :47-55  # Read the recorded PID, or null if the file is missing/unpars
 function removePidFile(cwd)  :57-61
 function status(cwd) → { running: boolean, pid:   :66-72
-function start(cwd, opts = {}) → { status: 'started'|'alre  :82-105
-function stop(cwd) → { status: 'stopped'|'not-  :112-124
-```
-
-### src/discovery/framework-detector.js
-```
-module.exports = { detectFrameworks }  :7-7
-function detectFrameworks(cwd)  :9-57
-function _readDeps(cwd)  :59-64
-function _readFile(p)  :66-68
-function _existsAnywhere(cwd, filename, maxDepth)  :70-74
-function _walkFind(dir, name, depth)  :76-88
-```
-
-### src/discovery/language-detector.js
-```
-module.exports = { detectLanguages }  :7-7
-function detectLanguages(cwd)  :26-61
-function _walkDepth(dir, depth, extCount)  :63-76
-```
-
-### src/discovery/r-manifest.js
-```
-module.exports = { readDescription, readNamespace, collectLocalDefs }  :176-176
-function readDescription(cwd) → object|null  :28-59
-function splitDeps(value)  :66-71
-function readNamespace(cwd) → object|null  :88-132
-function splitArgs(raw)  :134-136
-function stripQuotes(s)  :138-140
-function collectLocalDefs(rFiles) → Map<string, string>  :150-174
-```
-
-### src/discovery/sigmapignore.js
-```
-module.exports = { loadIgnorePatterns, matchesIgnorePattern }  :6-6
-function loadIgnorePatterns(cwd)  :8-19
-function matchesIgnorePattern(dirName, patterns)  :21-29
-```
-
-### src/discovery/source-root-registry.js
-```
-module.exports = { REGISTRY }  :175-175
+function start(cwd, opts = {}) → { status: 'started'|'alre  :82-105  # Launch a detached `--watch` process
+function stop(cwd) → { status: 'stopped'|'not-  :112-124  # Stop the running watcher (SIGTERM) and clear its PID file
 ```
 
 ### src/discovery/source-root-resolver.js
@@ -471,386 +355,220 @@ module.exports = { diagnose, formatDoctor, formatDoctorJSON }  :236-236
 function _short(p, cwd)  :37-40
 function _contextFiles(cwd)  :42-49
 function _mcpTargets(cwd)  :51-65
-function _countChangedSince(cwd, srcDirs, config, ctxMtime)  :68-94
-function diagnose(cwd, opts = {}) → { checks: Array<{id,label  :101-180
-function formatDoctor(result)  :216-229
-function formatDoctorJSON(result)  :232-234
+function _countChangedSince(cwd, srcDirs, config, ctxMtime)  :68-94  # Count code files under srcDirs modified after the context wa
+function diagnose(cwd, opts = {}) → { checks: Array<{id,label  :101-178  # Run all diagnostic checks
+function formatDoctor(result)  :216-229  # Human-readable checklist
+function formatDoctorJSON(result)  :232-234  # Machine-readable result
 ```
 
-### src/eval/analyzer.js
+### src/eval/corpus.js
 ```
-module.exports = { analyzeFiles, formatAnalysisTable, formatAnalysisJSON }  :235-235
-function isDockerfile(name)  :49-51
-function getExtractorName(filePath)  :53-59
-function tokenCount(sigs)  :62-64
-function hasCoverage(filePath, cwd)  :70-85
-function loadExtractor(name, cwd)  :91-100
-function analyzeFiles(files, cwd, opts) → object[]  :113-170
-function formatAnalysisTable(stats, showSlow) → string  :179-213
-function formatAnalysisJSON(stats) → object  :221-233
+module.exports = { basenameTokens, queryLeakage, validateTasks, sizeBucket, BUCKET_LIMITS }  :83-83
+function basenameTokens(filePath) → string[]  :31-34  # Stemmed tokens of a file path's basename (extension stripped
+function queryLeakage(query, expectedFiles) → { leaked: string[], clean  :42-51  # Leaked tokens between a query and its expected files' basena
+function validateTasks(tasks) → { results: object[], hard  :59-70  # Validate a task list: every task gets a leakage result; hard
+function sizeBucket(fileCount) → 'small'|'medium'|'large'  :77-81  # Size bucket for a repo by indexed file count
 ```
 
 ### src/eval/llm-ablation.js
 ```
 module.exports = { buildGrounding, scoreAnswer, scoreAnswerDetail, runAblation, aggregateRuns }  :168-168
-function _cleanSig(sig)  :19-21
-function buildGrounding(cwd, opts = {}) → string  :34-70
-function scoreAnswerDetail(answerText, cwd) → { total: number, issues:   :78-85
-function scoreAnswer(answerText, cwd)  :88-90
-function runAblation(tasks, cwd, complete, opts = {}) → { tasks: object[], aggreg  :102-137
-function _stats(nums)  :140-144
-function aggregateRuns(aggregates) → { runs:number, n:number,   :154-166
+function _cleanSig(sig)  :19-21  # Strip a signature's trailing line anchor (` :12-20`) for pro
+function buildGrounding(cwd, opts = {}) → string  :34-70  # Build the SigMap grounding block for a repo — what we prepen
+function scoreAnswerDetail(answerText, cwd) → { total: number, issues:   :78-85  # Score an answer: flagged codebase-fact errors + the issue li
+function scoreAnswer(answerText, cwd)  :88-90  # Count flagged codebase-fact errors in an answer (the §9 metr
+function runAblation(tasks, cwd, complete, opts = {}) → { tasks: object[], aggreg  :102-137  # Run the A/B ablation over a task corpus
+function _stats(nums)  :140-144  # mean/min/max of a number list (0s for an empty list)
+function aggregateRuns(aggregates) → { runs:number, n:number,   :154-166  # Aggregate several `runAblation` passes into a stable estimat
 ```
 
 ### src/eval/runner.js
 ```
-module.exports = { run, rank, loadTasks, buildSigIndex, formatTable, formatMetrics, tokenize }  :256-256
-function buildSigIndex(cwd) → Map<string, string[]>  :40-82
-function rank(query, index, topK = 10) → { file: string, score: nu  :99-105
-function estimateTokens(sigs) → number  :116-119
-function loadTasks(tasksFile) → Array<{id:string, query:s  :132-154
-function run(tasksFile, cwd, opts = {}) → { * tasks: Array<{id, que  :172-219
-function formatTable(taskResults) → string  :230-238
-function formatMetrics(metrics) → string  :245-254
-```
-
-### src/eval/scorer.js
-```
-module.exports = { hitAtK, reciprocalRank, precisionAtK, aggregate, firstRank }  :126-126
-function firstRank(ranked, expected) → number  :22-29
-function normalizePath(p) → string  :38-40
-function hitAtK(ranked, expected, k = 5) → 0|1  :49-51
-function reciprocalRank(ranked, expected) → number  :59-62
-function precisionAtK(ranked, expected, k = 5) → number  :72-78
-function aggregate(results, k = 5) → { * hitAt5: number, // fr  :93-120
-function round(x)  :122-124
-```
-
-### src/eval/usefulness-scorer.js
-```
-module.exports = { scoreUsefulness, computeUsefulnessStats }  :3-3
-function scoreUsefulness(taskResult, rankingScore)  :11-38
-function computeUsefulnessStats(taskResults)  :40-66
+module.exports = { run, rank, loadTasks, buildSigIndex, formatTable, formatMetrics, tokenize }  :226-226
+function buildSigIndex(cwd) → Map<string, string[]>  :40-47  # Read the generated context file and build a simple signature
+function rank(query, index, topK = 10, opts = {}) → { file: string, score: nu  :64-71  # Rank all files in the index against a query with the identif
+function estimateTokens(sigs) → number  :82-85  # Estimate token count from character count (chars/4, ±5%)
+function loadTasks(tasksFile) → Array<{id:string, query:s  :98-121  # Load tasks from a JSONL file
+function run(tasksFile, cwd, opts = {}) → { * tasks: Array<{id, que  :139-189  # Run all tasks in tasksFile against the repo at cwd
+function formatTable(taskResults) → string  :200-208  # Format task results as a markdown table string
+function formatMetrics(metrics) → string  :215-224  # Format aggregate metrics as a human-readable string
 ```
 
 ### src/evidence/pack.js
 ```
 module.exports = { buildEvidencePack, formatJSON, formatMarkdown, parseAnchor, riskLabelFor, riskFactorsFor, findRelatedTests, SCHEMA_VERSION, SCHEMA_URL, TEST_DISCOVERY }  :326-337
-function parseAnchor(sig) → { symbol: string, start:   :64-72
-function riskLabelFor(relPath) → 'generated'|'test'|'migra  :84-86
-function riskFactorsFor(relPath) → string[]  :96-108
-function stemOf(relPath)  :111-114
-function testTargetStem(relPath) → string  :126-132
-function findRelatedTests(relPath, allFiles) → string[]  :143-154
-function reasonFor(signals)  :157-168
-function sigTokens(sigs)  :171-173
-function canonicalize(value) → string  :180-182
+function parseAnchor(sig) → { symbol: string, start:   :64-72  # Split a signature's `  :start-end` line anchor from its symb
+function riskLabelFor(relPath) → 'generated'|'test'|'migra  :84-86  # Classify a file into a risk label (C3, v8
+function riskFactorsFor(relPath) → string[]  :96-108  # Every risk category a file matches, in the same strict prece
+function stemOf(relPath)  :111-114  # Filename stem (basename minus the first extension chain)
+function testTargetStem(relPath) → string  :126-132  # Infer the implementation stem a test file targets, by stripp
+function findRelatedTests(relPath, allFiles) → string[]  :143-154  # Impl→test discovery (C2, v8
+function reasonFor(signals)  :157-168  # Map a ranker `signals` object into a short human-readable re
+function sigTokens(sigs)  :171-173  # Token estimate for a signature block (matches the ranker's h
+function canonicalize(value) → string  :180-182  # Stable stringify with recursively sorted object keys, for ha
 function sortKeys(value)  :184-192
-function buildEvidencePack(query, cwd, opts = {}) → object  :205-281
+function buildEvidencePack(query, cwd, opts = {}) → object  :205-281  # Build an Evidence Pack for a query
 function ranked0Empty(query)  :284-286
-function formatJSON(pack)  :289-291
-function formatMarkdown(pack)  :294-324
+function formatJSON(pack)  :289-291  # Pretty-printed canonical JSON rendering of a pack
+function formatMarkdown(pack)  :294-315  # Markdown handoff rendering of a pack
 ```
 
-### src/extractors/coverage.js
+### src/extractors/csharp.js
 ```
-module.exports = { buildTestIndex, isTested }  :79-79
-function walkFiles(dir)  :6-20
-function buildTestIndex(cwd, testDirs)  :22-62
-function isTested(funcName, testIndex)  :64-77
-```
-
-### src/extractors/cpp.js
-```
-module.exports = { extract }  :69-69
-function extract(src) → string[]  :8-69
-function extractBlock(src, startIndex)  :36-45
-function extractMembers(block)  :47-57
-function normalizeParams(params)  :59-62
-function normalizeType(type)  :64-67
+module.exports = { extract }  :71-71
+function extract(src) → string[]  :12-71  # Extract signatures from C# source code
+function extractBlock(src, startIndex)  :35-44
+function extractMembers(block)  :46-59
+function normalizeParams(params)  :61-64
+function normalizeType(type)  :66-69
 ```
 
-### src/extractors/css.js
+### src/extractors/dart.js
 ```
-module.exports = { extract }  :69-69
-function extract(src) → string[]  :8-17
+module.exports = { extract }  :84-84
+function extract(src) → string[]  :12-84  # Extract signatures from Dart source code
+function extractBlock(src, startIndex)  :54-63
+function extractMembers(block)  :65-77
+function normalizeParams(params)  :79-81
 ```
 
 ### src/extractors/deps.js
 ```
-module.exports = { extractPythonDeps, extractTSDeps, extractRDeps, buildReverseDepMap }  :110-110
-function extractPythonDeps(src) → string[]  :26-41
-function extractTSDeps(src) → string[]  :48-61
-function extractRDeps(src) → string[]  :76-90
-function buildReverseDepMap(forwardMap) → Map<string, string[]>  :97-108
+module.exports  :110-110
+function extractPythonDeps  :26-41
+function extractTSDeps  :48-59
+function extractRDeps  :76-82
+function buildReverseDepMap  :97-108
 ```
 
 ### src/extractors/dispatch.js
 ```
 module.exports = { extractFile, langFor }  :112-112
-function langFor(filePathOrName)  :86-91
-function extractFile(filePathOrName, src) → string[]  :99-110
+function langFor(filePathOrName)  :86-91  # Resolve a language key from a file path/name
+function extractFile(filePathOrName, src) → string[]  :99-110  # Extract signatures from a file's content using the right ext
 ```
 
-### src/extractors/dockerfile.js
+### src/extractors/go.js
 ```
-module.exports = { extract }  :49-49
-function extract(src) → string[]  :8-47
-```
-
-### src/extractors/gdscript.js
-```
-module.exports = { extract }  :131-131
-function extract(src) → string[]  :9-42
-function extractInnerMembers(stripped, startIndex)  :98-114
-function normalizeParams(params)  :116-129
+module.exports = { extract }  :109-109
+function extract(src) → string[]  :12-109  # Extract signatures from Go source code
+function extractBlock(src, startIndex)  :55-64
+function extractInterfaceMethods(block)  :66-78
+function normalizeParams(params)  :80-83
+function buildDocHints(src)  :89-98
+function firstDocSentence(block)  :101-107
 ```
 
-### src/extractors/generic.js
+### src/extractors/java.js
 ```
-module.exports = { extract }  :2-2
-function extract(src)  :14-26
-```
-
-### src/extractors/graphql.js
-```
-module.exports = { extract }  :66-66
-function extract(src) → string[]  :11-66
-```
-
-### src/extractors/html.js
-```
-module.exports = { extract }  :39-39
-function extract(src) → string[]  :9-37
+module.exports = { extract }  :106-106
+function extract(src) → string[]  :12-106  # Extract signatures from Java source code
+function extractBlock(src, startIndex)  :38-48
+function extractMembers(block)  :50-64
+function normalizeParams(params)  :66-69
+function normalizeType(type)  :71-74
+function buildDocHints(src)  :82-95
+function firstDocSentence(body)  :98-104
 ```
 
 ### src/extractors/javascript.js
 ```
-module.exports = { extract }  :147-147
-function extract(src) → string[]  :13-112
-function extractBlock(src, startIndex)  :88-98
-function extractClassMembers(block, returnHints)  :103-124
-function buildReturnHints(src)  :119-121
-function normalizeType(type)  :133-136
-function formatReturnHint(type)  :138-140
-function normalizeParams(params)  :142-145
+module.exports = { extract }  :218-218
+function extract(src) → string[]  :14-95  # Extract signatures from JavaScript source code
+function extractBlock(src, startIndex)  :119-129
+function extractClassMembers(block, maskedBlock, returnHints)  :137-165
+function buildReturnHints(src)  :160-162
+function buildDocHints(src)  :177-193
+function firstDocSentence(body)  :196-202
+function normalizeType(type)  :204-207
+function formatReturnHint(type)  :209-211
+function normalizeParams(params)  :213-216
+```
+
+### src/extractors/kotlin.js
+```
+module.exports = { extract }  :90-90
+function extract(src) → string[]  :12-90  # Extract signatures from Kotlin source code
+function extractBlock(src, startIndex)  :54-63
+function extractMembers(block)  :65-90
+function normalizeParams(params)  :81-88
 ```
 
 ### src/extractors/line-anchor.js
 ```
-module.exports = { lineAt, anchor, withAnchor }  :52-52
-function lineAt(src, idx) → number  :22-29
-function anchor(start, end) → string  :37-39
-function withAnchor(sig, start, end) → string  :48-50
+module.exports  :52-52
+function lineAt  :22-29
+function anchor  :37-39
+function withAnchor  :48-50
 ```
 
-### src/extractors/markdown.js
+### src/extractors/php.js
 ```
-module.exports = { extract }  :30-30
-function extract(src) → string[]  :10-28
-```
-
-### src/extractors/patterns.js
-```
-module.exports = { extract }  :135-135
-function extract(src) → string[]  :10-133
+module.exports = { extract }  :96-96
+function extract(src) → string[]  :12-96  # Extract signatures from PHP source code
+function extractBlock(src, startIndex)  :58-67
+function extractMembers(block)  :69-96
+function normalizeParams(params)  :86-89
+function normalizeType(type)  :91-94
 ```
 
 ### src/extractors/prdiff.js
 ```
 module.exports = { diffSignatures, extractName }  :70-70
-function diffSignatures(baseSigs, currentSigs) → {added:string[], removed:  :9-36
-function extractName(sig)  :47-70
+function diffSignatures(baseSigs, currentSigs) → {added:string[], removed:  :9-36  # Compare signature arrays and produce compact diff markers
+function extractName(sig)  :47-70  # Extract the declared symbol name from a signature line
 ```
 
-### src/extractors/properties.js
+### src/extractors/rust.js
 ```
-module.exports = { extract }  :37-37
-function extract(src) → string[]  :10-35
-```
-
-### src/extractors/protobuf.js
-```
-module.exports = { extract }  :63-63
-function extract(src) → string[]  :10-63
-```
-
-### src/extractors/python_ast.py
-```
-def annotation_to_str(node)  :25-48  # Convert an AST annotation node to a string representation
-def format_args(args_node)  :51-103  # Format a function arguments node into a compact signature st
-def get_decorator_names(node)  :106-120  # Return a list of decorator name strings for a function/class
-def is_dataclass(node)  :123-124
-def is_basemodel(bases)  :127-133  # Check if class bases include BaseModel or BaseSettings
-def is_optional_annotation(annotation)  :136-146  # Check if an annotation represents an Optional type
-def get_docstring_hint(node)  :149-158  # Extract first sentence of docstring, if present
-def extract_dataclass_fields(class_node)  :161-171  # Return a collapsed fields string for a @dataclass class
-def extract_basemodel_fields(class_node)  :174-190  # Return a compact {required*, optional
-def extract_class_constants(class_node)  :193-213  # Yield ALL_CAPS constant assignments from class body
-def extract_method_sig(func_node)  :222-229  # Format a method signature string (already indented by caller
-def extract_function_sig(func_node, src_lines)  :232-241  # Format a top-level function signature string
-def extract_fastapi_routes(tree, src_lines)  :244-265  # Extract FastAPI route signatures from top-level decorated fu
-def extract(filepath)  :268-338
-def main()  :341-351
+module.exports = { extract }  :138-138
+function extract(src) → string[]  :12-116  # Extract signatures from Rust source code
+function extractBlock(src, startIndex)  :76-85
+function extractMethods(block)  :87-138
+function normalizeParams(params)  :102-105
+function extractReturnType(afterParen)  :107-138
+function buildDocHints(src)  :119-127
+function firstDocSentence(block)  :130-136
 ```
 
-### src/extractors/python_dataclass.js
+### src/extractors/scala.js
 ```
-module.exports = { extract }  :77-77
-function extract(src) → string[]  :10-75
-```
-
-### src/extractors/python.js
-```
-module.exports = { extract, tryNativeExtract }  :262-262
-function pyBlockEnd(srcLines, startLine) → number  :14-24
-function tryNativeExtract(filePath) → string[]|null  :32-44
-function extract(src, filePath) → string[]  :55-140
-function extractClassMethods(stripped, startIndex)  :142-161
-function tryExtractDataclassFields(stripped, classIndex)  :163-177
-function tryExtractBaseModelFields(stripped, bodyStart)  :179-194
-function extractClassConstants(stripped, startIndex)  :196-210
-function extractReturnType(sigLine)  :212-218
-function normalizeParams(params)  :220-238
-function extractDocHint(src, fnName, fnSigLine)  :240-260
+module.exports = { extract }  :88-88
+function extract(src) → string[]  :12-88  # Extract signatures from Scala source code
+function extractBlock(src, startIndex)  :47-56
+function extractMembers(block)  :58-88
+function normalizeParams(params)  :74-81
+function normalizeType(type)  :83-86
 ```
 
-### src/extractors/r.js
+### src/extractors/scan.js
 ```
-module.exports = { extract }  :273-273
-function extract(src) → string[]  :20-117
-function collectRoxygenHints(src)  :125-153
-function pickRoxygenLine(block, tag)  :155-169
-function applyHint(hints, name)  :171-174
-function extractListMethods(body, cap)  :180-193
-function inAnyRange(pos, ranges)  :195-200
-function readFirstStringArg(body)  :203-206
-function readBalancedParens(src, openIdx, cap = 16384)  :214-237
-function normalizeParams(raw)  :244-271
+module.exports = { stripComments, maskCode, readBalanced }  :91-91
+function stripComments(src) → string  :23-39  # Blank comments only — string-aware, so `//` or `/*` INSIDE a
+function maskCode(src) → string  :47-63  # Blank comments AND string/template contents (quotes included
+function readBalanced(masked, openIdx, open = '(', close = ')', cap = 4000) → number  :76-89  # Index of the delimiter that closes the one open at `openIdx`
 ```
 
-### src/extractors/ruby.js
+### src/extractors/swift.js
 ```
-module.exports = { extract }  :54-54
-function extract(src) → string[]  :8-38
-function normalizeParams(params)  :40-43
-function extractReturnHint(stripped, index)  :45-52
-```
-
-### src/extractors/shell.js
-```
-module.exports = { extract }  :43-43
-function extract(src) → string[]  :8-43
-```
-
-### src/extractors/sql.js
-```
-module.exports = { extract }  :93-93
-function extract(src) → string[]  :10-78
-function _cleanName(raw)  :80-82
-function _normalizeParams(raw)  :84-91
-```
-
-### src/extractors/svelte.js
-```
-module.exports = { extract }  :58-58
-function extract(src) → string[]  :8-58
-function normalizeParams(params)  :48-51
-function normalizeType(type)  :53-56
-```
-
-### src/extractors/terraform.js
-```
-module.exports = { extract }  :74-74
-function extract(src) → string[]  :11-74
-```
-
-### src/extractors/todos.js
-```
-module.exports = { extractTodos }  :26-26
-function extractTodos(src) → {line:number, tag:string,  :8-24
-```
-
-### src/extractors/toml.js
-```
-module.exports = { extract }  :42-42
-function extract(src) → string[]  :10-40
-```
-
-### src/extractors/typescript_react.js
-```
-module.exports = { extract }  :60-60
-function extract(src) → string[]  :10-20
+module.exports = { extract }  :97-97
+function extract(src) → string[]  :12-97  # Extract signatures from Swift source code
+function extractBlock(src, startIndex)  :54-63
+function extractMembers(block)  :65-97
+function normalizeParams(params)  :80-87
+function extractArrowType(str)  :89-97
 ```
 
 ### src/extractors/typescript.js
 ```
-module.exports = { extract }  :221-221
-function extract(src) → string[]  :13-118
-function extractBlock(src, startIndex)  :160-170
-function extractInterfaceMembers(block)  :174-188
-function extractClassMembers(block)  :195-221
-function normalizeParams(params)  :216-219
-```
-
-### src/extractors/vue_sfc.js
-```
-module.exports = { extract }  :99-99
-function extract(src) → string[]  :10-68
-```
-
-### src/extractors/vue.js
-```
-module.exports = { extract }  :80-80
-function extract(src) → string[]  :8-35
-function normalizeParams(params)  :70-73
-function normalizeType(type)  :75-78
-```
-
-### src/extractors/xml.js
-```
-module.exports = { extract }  :46-46
-function extract(src) → string[]  :10-44
-```
-
-### src/extractors/yaml.js
-```
-module.exports = { extract }  :59-59
-function extract(src) → string[]  :8-57
-```
-
-### src/format/benchmark-report.js
-```
-module.exports = { loadBenchmarkReports, buildBenchmarkSummary, generateBenchmarkReportHtml, writeBenchmarkReport }  :438-443
-function escapeHtml(value)  :6-12
-function formatInt(value)  :14-18
-function formatCompact(value)  :20-26
-function formatPct(value, digits = 1)  :28-32
-function formatMaybePct(value, digits = 1)  :34-38
-function formatRatio(value, digits = 1)  :40-44
-function formatMoney(value)  :46-50
-function durationLabel(ms)  :52-60
-function maxOrZero(values)  :62-65
-function readJson(filePath)  :67-74
-function loadBenchmarkReports(cwd)  :76-86
-function buildRetrievalSummary(retrieval)  :88-123
-function buildBenchmarkSummary(reports, matrixSummary)  :125-159
-function renderCard(label, value, hint, tone)  :161-170
-function renderProgress(label, value, max, suffix)  :172-185
-function renderMatrixSection(matrix)  :187-211
-function renderTokenSection(token)  :213-239
-function renderRetrievalSection(retrieval)  :241-268
-function renderQualitySection(quality)  :270-296
-function renderTaskSection(task)  :298-327
-function generateBenchmarkReportHtml(reports, opts = {})  :329-388
-function writeBenchmarkReport(cwd, opts = {})  :426-436
-```
-
-### src/format/cache.js
-```
-module.exports = { formatCache, formatCachePayload }  :53-53
-function formatCache(content) → string  :19-27
-function formatCachePayload(content, model) → string  :37-51
+module.exports = { extract }  :326-326
+function extract(src) → string[]  :14-98  # Extract signatures from TypeScript source code
+function extractBlock(src, startIndex)  :195-205
+function extractInterfaceMembers(block)  :209-227
+function extractClassMembers(block, maskedBlock)  :234-318
+function normalizeParams(params)  :264-294
+function buildDocHints(src)  :299-315
+function firstDocSentence(body)  :318-324
 ```
 
 ### src/format/dashboard.js
@@ -886,17 +604,10 @@ function fmtDuration(ms)  :45-51
 function fmtPct(p)  :53-55
 function colorPct(p, text)  :57-61
 function pad(s, w, align)  :63-68
-function bar(pct, width)  :71-76
-function impactBar(sharePct, width)  :79-82
-function renderSummary(agg, opts = {}) → string  :94-153
-function renderBreakdown(agg) → string  :160-199
-```
-
-### src/format/llm-txt.js
-```
-module.exports = { format, outputPath }  :3-3
-function outputPath(cwd)  :5-5
-function format(context, cwd, version)  :7-28
+function bar(pct, width)  :71-76  # Solid horizontal efficiency bar with a dotted remainder
+function impactBar(sharePct, width)  :79-82  # Proportional impact bar (share of total saved)
+function renderSummary(agg, opts = {}) → string  :94-153  # Render the global summary + by-operation table
+function renderBreakdown(agg) → string  :160-199  # Render daily / weekly / monthly trend tables
 ```
 
 ### src/format/llms-txt.js
@@ -911,17 +622,17 @@ function format(context, cwd, writtenFiles, sigmapVersion)  :21-69
 ### src/format/terse.js
 ```
 module.exports = { encodeTerseSig, encodeTerseSigs, measureTerse, splitAnchor }  :86-86
-function splitAnchor(sig) → { text: string, suffix: s  :25-30
-function encodeTerseSig(sig) → string  :37-50
-function encodeTerseSigs(sigs) → string[]  :57-59
-function _tokens(sigs)  :62-64
-function measureTerse(sigsList) → { beforeTokens: number, a  :72-84
+function splitAnchor(sig) → { text: string, suffix: s  :25-30  # Split a signature into the compactable text and the byte-pre
+function encodeTerseSig(sig) → string  :37-50  # Compact one signature line
+function encodeTerseSigs(sigs) → string[]  :57-59  # Compact an array of signature lines
+function _tokens(sigs)  :62-64  # Estimated tokens of joined signature lines (same chars/4 rul
+function measureTerse(sigsList) → { beforeTokens: number, a  :72-84  # Measure the real reduction terse encoding buys over a set of
 ```
 
 ### src/format/usage-guidance.js
 ```
 module.exports = { usageBlock }  :28-28
-function usageBlock()  :12-26
+function usageBlock()  :12-26  # Canonical "how to use SigMap" guidance block (v6
 ```
 
 ### src/format/verify-report.js
@@ -930,8 +641,8 @@ module.exports = { renderReportHtml, renderReportMarkdown, escapeHtml }  :164-16
 function escapeHtml(value)  :23-29
 function toneFor(issue)  :31-35
 function labelFor(issue)  :37-39
-function renderReportHtml(result, opts = {}) → string  :48-115
-function renderReportMarkdown(result)  :144-162
+function renderReportHtml(result, opts = {}) → string  :48-115  # Render the verify result to a full HTML document
+function renderReportMarkdown(result)  :144-162  # Compact Markdown rendering of the same result (CI / PR comme
 ```
 
 ### src/graph/blast-radius.js
@@ -940,81 +651,77 @@ module.exports = { methodBlastRadius, tierFor, DIRECT_WEIGHT, TRANSITIVE_WEIGHT 
 function tierFor(score)  :25-31
 function _normRel(p)  :33-35
 function _bfs(seedIds, reverse, maxDepth)  :38-60
-function methodBlastRadius(changedFiles, cwd, opts = {}) → { * available: boolean, *  :78-130
-```
-
-### src/graph/builder.js
-```
-module.exports = { build, buildFromCwd, extractFileDeps, normalizePath, loadAliasMap, resolveAlias }  :494-494
-function normalizePath(p)  :17-19
-function probeJs(base, fileSet) → string|null  :40-53
-function resolveJsPath(dir, importStr, fileSet) → string|null  :62-64
-function stripJsonc(src)  :70-84
-function loadAliasMap(cwd) → { baseUrl: string|null, e  :96-117
-function resolveAlias(spec, aliasMap, fileSet) → string|null  :126-150
-function escapeRegex(s)  :157-159
-function resolveRPath(dir, importStr, fileSet, cwd)  :161-176
-function extractFileDeps(filePath, content, fileSet, cwd, ctx) → string[]  :190-330
-function build(files, cwd, ctx) → { forward: Map<string,str  :387-426
-function buildFromCwd(cwd, opts) → { forward: Map<string,str  :438-492
+function methodBlastRadius(changedFiles, cwd, opts = {}) → { * available: boolean, *  :78-130  # Score the method-level blast radius of a changed-file list
 ```
 
 ### src/graph/call-graph.js
 ```
-module.exports = { buildCallGraph, buildCallFileGraph, methodImpact, methodCallees, formatCallGraph, formatCallGraphJSON, extractDefs, maskJs, maskPy, maskRust }  :563-567
-function normalizePath(p)  :41-41
-function toRel(cwd, f)  :42-42
-function symId(cwd, absFile, name)  :43-43
-function maskJs(src)  :49-65
-function maskRust(src)  :70-91
-function maskPy(src)  :93-110
-function matchDelim(masked, openIdx, open, close)  :113-120
-function lineAt(src, idx)  :122-127
-function jsDefs(masked)  :132-237
-function pyDefs(masked)  :200-220
-function goDefs(masked)  :224-344
-function javaDefs(masked)  :250-367
-function rustDefs(masked)  :278-401
-function maskFor(filePath, src)  :300-305
-function extractDefs(filePath, src)  :307-315
-function callsInRange(masked, start, end)  :318-330
-function _walk(dir, excludeSet, out, depth)  :334-347
-function buildCallGraph(cwd, opts = {}) → { * forward: Map<string,s  :363-446
-function buildCallFileGraph(cwd, opts = {}) → { forward: Map<string,str  :459-482
-function _resolveSymbol(symbol, defs)  :485-490
-function _bfs(seedIds, graph, maxDepth)  :493-506
-function methodImpact(symbol, cwd, opts = {}) → { symbol:string, resolved  :516-522
-function methodCallees(symbol, cwd, opts = {}) → { symbol:string, resolved  :528-534
-function formatCallGraph(result, kind)  :537-549
+module.exports = { buildCallGraph, buildCallFileGraph, methodImpact, methodCallees, formatCallGraph, formatCallGraphJSON, extractDefs, maskJs, maskPy, maskRust }  :567-571
+function normalizePath(p)  :42-42
+function toRel(cwd, f)  :43-43
+function symId(cwd, absFile, name)  :44-44
+function maskJs(src)  :50-66
+function maskRust(src)  :71-92
+function maskPy(src)  :94-111
+function matchDelim(masked, openIdx, open, close)  :114-121
+function lineAt(src, idx)  :123-128
+function jsDefs(masked)  :133-199
+function pyDefs(masked)  :201-221
+function goDefs(masked)  :225-246
+function javaDefs(masked)  :251-274
+function rustDefs(masked)  :279-297
+function maskFor(filePath, src)  :301-306
+function extractDefs(filePath, src)  :308-316
+function callsInRange(masked, start, end)  :319-331
+function _walk(dir, excludeSet, out, depth)  :335-348
+function buildCallGraph(cwd, opts = {}) → { * forward: Map<string,s  :364-447  # Build the method-level call-graph for a project
+function buildCallFileGraph(cwd, opts = {}) → { forward: Map<string,str  :460-486  # Collapse the symbol-level call-graph to FILE-level bidirecti
+function _resolveSymbol(symbol, defs)  :489-494
+function _bfs(seedIds, graph, maxDepth)  :497-510
+function methodImpact(symbol, cwd, opts = {}) → { symbol:string, resolved  :520-526  # Method-level blast radius: everything that (transitively) ca
+function methodCallees(symbol, cwd, opts = {}) → { symbol:string, resolved  :532-538  # What `symbol` (transitively) calls
+function formatCallGraph(result, kind)  :541-553
 … +1 more signatures
+```
+
+### src/graph/centrality.js
+```
+module.exports = { computeCentrality, DAMPING, ITERATIONS }  :61-61
+function computeCentrality(graph) → Map<string, number>  :27-59  # Compute a normalized centrality score for every file in a de
 ```
 
 ### src/graph/impact.js
 ```
 module.exports = { getImpact, analyzeImpact, formatImpact, formatImpactJSON }  :240-240
 function normalizePath(p)  :16-18
-function bfs(startFile, reverseGraph, maxDepth) → { direct: Set<string>, tr  :33-70
+function bfs(startFile, reverseGraph, maxDepth) → { direct: Set<string>, tr  :33-70  # Walk the reverse graph from `startFile` using BFS up to `max
 function isTestFile(f)  :92-92
 function isRouteFile(f)  :93-93
-function getImpact(changedFile, graph, opts) → { * changed: string, * di  :116-142
-function analyzeImpact(changedFiles, cwd, opts) → { file: string, impact: o  :156-171
-function formatImpact(result) → string  :183-221
-function formatImpactJSON(result) → object  :229-238
+function getImpact(changedFile, graph, opts) → { * changed: string, * di  :116-142  # Compute the impact of changing `changedFile`
+function analyzeImpact(changedFiles, cwd, opts) → { file: string, impact: o  :156-171  # Analyse the impact of one or more changed files, building th
+function formatImpact(result) → string  :183-221  # Format an impact result as a readable markdown string
+function formatImpactJSON(result) → object  :229-238  # Format an impact result as a JSON-serialisable object
+```
+
+### src/graph/path-key.js
+```
+module.exports = { graphKey }  :26-26
+function graphKey(p)  :22-24  # Canonical key for a filesystem path used as a graph node
 ```
 
 ### src/health/scorer.js
 ```
 module.exports = { score, composeHealth }  :227-227
 function gradeFor(points)  :52-57
-function composeHealth(s) → object  :66-117
-function score(cwd)  :123-225
+function composeHealth(s) → object  :66-117  # Pure scoring core
+function score(cwd)  :123-225  # Gather health signals from disk and score them
 ```
 
 ### src/init/creation-workflow.js
 ```
 module.exports = { renderCreationWorkflowBlock, injectCreationWorkflow, START, END }  :59-59
-function renderCreationWorkflowBlock()  :18-35
-function injectCreationWorkflow(existing, block) → string  :45-57
+function renderCreationWorkflowBlock()  :18-35  # Render the Creation workflow block (including its start/end 
+function injectCreationWorkflow(existing, block) → string  :45-57  # Inject (or replace) the Creation workflow block in existing 
 ```
 
 ### src/judge/judge-engine.js
@@ -1022,26 +729,9 @@ function injectCreationWorkflow(existing, block) → string  :45-57
 module.exports = { groundedness, claimGrounding, judge }  :182-182
 function tokenize(text)  :15-17
 function groundedness(response, context)  :19-27
-function claimGrounding(response, context) → { total: number, grounded  :48-78
+function claimGrounding(response, context) → { total: number, grounded  :48-78  # Claim-level grounding (v8
 function extractContextFiles(context, cwd)  :89-111
 function judge(response, context, opts = {})  :113-180
-```
-
-### src/learning/weights.js
-```
-module.exports = { BASELINE, DECAY, MAX_MULT, MIN_MULT, weightsPath, clampMultiplier, normalizeFile, loadWeights, saveWeights, updateWeights, boostFiles, penalizeFiles, resetWeights, exportWeights, importWeights }  :154-170
-function weightsPath(cwd)  :11-13
-function clampMultiplier(value)  :15-20
-function normalizeFile(cwd, filePath)  :22-31
-function sanitizeWeights(cwd, weights)  :33-46
-function loadWeights(cwd)  :48-55
-function saveWeights(cwd, weights)  :57-76
-function updateWeights(cwd, opts = {})  :78-109
-function boostFiles(cwd, files, amount = 0.15)  :111-113
-function penalizeFiles(cwd, files, amount = 0.10)  :115-117
-function resetWeights(cwd)  :119-122
-function exportWeights(cwd, outputPath)  :124-134
-function importWeights(cwd, importPath, replace)  :136-152
 ```
 
 ### src/map/build-ci.js
@@ -1052,12 +742,6 @@ function npmScripts(cwd, rows)  :24-30
 function ciWorkflows(cwd, rows)  :32-56
 function makeTargets(cwd, rows)  :58-69
 function analyze(files, cwd)  :71-89
-```
-
-### src/map/class-hierarchy.js
-```
-module.exports = { analyze }  :117-117
-function analyze(files, cwd)  :16-117
 ```
 
 ### src/map/config-manifest.js
@@ -1074,19 +758,9 @@ function analyze(files, cwd)  :83-99
 ### src/map/env-schema.js
 ```
 module.exports = { analyze }  :90-90
-function collectMatches(re, content, into)  :30-37
-function readExampleKeys(cwd)  :39-52
-function analyze(files, cwd)  :54-88
-```
-
-### src/map/import-graph.js
-```
-module.exports = { analyze, extractImports, buildReverseGraph, resolveJsPath, detectCycles }  :185-185
-function extractImports(filePath, content, fileSet)  :22-76
-function resolveJsPath(dir, importStr, fileSet)  :78-95
-function detectCycles(graph)  :100-126
-function buildReverseGraph(graph)  :131-140
-function analyze(files, cwd)  :145-183
+function collectMatches(re, content, into)  :30-82
+function readExampleKeys(cwd)  :39-82
+function analyze(files, cwd)  :54-82
 ```
 
 ### src/map/migrations.js
@@ -1096,21 +770,58 @@ function walk(dir, cwd, depth, out)  :31-62
 function analyze(files, cwd)  :64-82
 ```
 
+### src/map/route-table.js
+```
+module.exports = { analyze, collectRoutes }  :139-139
+function shouldSkipFile(rel)  :18-21
+function collectRoutes(files, cwd) → string  :30-127  # Structured route rows across the supported frameworks — the 
+function analyze(files, cwd)  :125-137
+```
+
+### src/mcp/handlers.js
+```
+module.exports = { readContext, searchSignatures, getMap, createCheckpoint, getRouting, explainFile, listModules, queryContext, getMethodImpact, getImpact, getLines, readMemory, getCalleeSignatures, notifyFileCreated, notifySymbolAdded, notifyFileDeleted, getDiffContext, getArchitectureOverview, verifySuggestion, squeezeOutput, getBudget }  :1017-1017
+function _readContextFiles(cwd)  :10-17
+function readContext(args, cwd)  :36-66  # read_context({ module
+function searchSignatures(args, cwd)  :74-100  # search_signatures({ query }) → string
+function getMap(args, cwd)  :108-131  # get_map({ type }) → string
+function createCheckpoint(args, cwd)  :143-215  # create_checkpoint({ note
+function getRouting(args, cwd)  :224-261  # get_routing({}) → string
+function explainFile(args, cwd)  :269-356  # explain_file({ path }) → string
+function listModules(args, cwd)  :364-403  # list_modules({}) → string
+function queryContext(args, cwd)  :411-445  # query_context({ query, topK
+function getMethodImpact(args, cwd)  :453-467  # get_method_impact({ symbol, direction
+function getImpact(args, cwd)  :475-487  # get_impact({ file, depth
+function getLines(args, cwd)  :496-544  # get_lines({ file, start, end }) → string
+function readMemory(args, cwd)  :552-587  # read_memory({ limit
+function getBudget(args, cwd)  :596-622  # get_budget({ session
+function getCalleeSignatures(args, cwd)  :631-676  # get_callee_signatures — return the exact defining signature(
+function _pkgVersion(cwd)  :683-686
+function notifyFileCreated(args, cwd)  :690-712  # notify_file_created — extract a file's signatures and index 
+function notifySymbolAdded(args, cwd)  :715-735  # notify_symbol_added — append one signature to a file's live 
+function notifyFileDeleted(args, cwd)  :738-752  # notify_file_deleted — drop a file's cache-overlay entry
+function _changedFiles(cwd, args)  :758-770  # List the files changed in the working tree, staged area, or 
+function getDiffContext(args, cwd)  :779-850  # get_diff_context({ base
+function getArchitectureOverview(args, cwd)  :859-927  # get_architecture_overview({}) → string
+function verifySuggestion(args, cwd)  :937-972  # verify_suggestion({ code }) → string
+function squeezeOutput(args, cwd)  :982-1015  # squeeze_output({ content }) → string
+```
+
 ### src/mcp/install.js
 ```
 module.exports = { CLIENTS, listClients, installClient, resolveTarget }  :142-142
-function resolveTarget(spec, cwd, home, useGlobal)  :39-45
-function listClients(opts = {})  :48-62
+function resolveTarget(spec, cwd, home, useGlobal)  :39-45  # Resolve the absolute config path for a client, honoring `glo
+function listClients(opts = {})  :48-62  # List supported clients with their resolved target paths
 function serverArgs(scriptPath)  :64-66
-function _installJson(filePath, scriptPath)  :69-81
-function _installZed(filePath, scriptPath)  :84-96
-function _installYaml(filePath, scriptPath)  :99-117
-function installClient(client, opts = {}) → client, label, path, stat  :124-140
+function _installJson(filePath, scriptPath)  :69-81  # Install into a JSON `mcpServers` config (create file/dir if 
+function _installZed(filePath, scriptPath)  :84-96  # Install into Zed's `context_servers` config (create file/dir
+function _installYaml(filePath, scriptPath)  :99-117  # Install into Codex CLI YAML (append block; create file if ab
+function installClient(client, opts = {}) → client, label, path, stat  :124-140  # Install the sigmap MCP server for a single client
 ```
 
 ### src/mcp/tools.js
 ```
-module.exports = { TOOLS }  :392-392
+module.exports = { TOOLS }  :418-418
 ```
 
 ### src/nudge.js
@@ -1121,7 +832,7 @@ function defaultUsage()  :20-25
 function readUsage(cwd)  :27-30
 function writeUsageAtomic(cwd, usage)  :32-38
 function showStarNudge(write)  :52-54
-function checkStarNudge(cwd, runSuccess, opts = {}) → { usage, nudged  :67-90
+function checkStarNudge(cwd, runSuccess, opts = {}) → { usage, nudged  :67-90  # Record one run and, when the thresholds are first met, show 
 ```
 
 ### src/plan/planner.js
@@ -1133,48 +844,48 @@ function createPlan(goal, cwd, config = {})  :12-94
 ### src/plan/verify-plan.js
 ```
 module.exports = { verifyPlan, DEFAULT_BLAST_THRESHOLD, DEFAULT_SCOPE_THRESHOLD }  :108-108
-function _fileExists(cwd, ref)  :24-30
-function verifyPlan(planText, cwd, opts = {}) → { issues: object[], blast  :42-106
+function _fileExists(cwd, ref)  :24-30  # Resolve a referenced path against cwd (handles a leading "
+function verifyPlan(planText, cwd, opts = {}) → { issues: object[], blast  :42-106  # Verify a plan against the live index
 ```
 
 ### src/retrieval/bm25.js
 ```
-module.exports = { tokenize, stem, bm25rank, PATH_BOOST, STOP, expandQuery, EXPANSIONS, EXPANSION_WEIGHT }  :195-195
-function stem(w) → string  :36-45
-function tokenize(text) → string[]  :54-65
-function expandQuery(qToks) → Map<string, number>  :132-141
-function bm25rank(query, candidates) → Array<object & { score: n  :154-193
+module.exports = { tokenize, stem, bm25rank, PATH_BOOST, STOP, expandQuery, EXPANSIONS, EXPANSION_WEIGHT, DOC_WEIGHT, MODULE_DOC_RE, stripAnchor }  :248-248
+function stem(w) → string  :36-45  # Light suffix stemmer — conservative, tuned for code identifi
+function tokenize(text) → string[]  :54-65  # Split on non-alphanumeric characters AND camelCase / snake_c
+function stripAnchor(line)  :126-128
+function expandQuery(qToks) → Map<string, number>  :159-168  # Expand stemmed query tokens with curated synonyms
+function bm25rank(query, candidates, opts) → Array<object & { score: n  :181-246  # BM25 re-rank of candidates against a query
 ```
 
-### src/retrieval/ranker.js
+### src/retrieval/enrich-from-maps.js
 ```
-module.exports = { rank, buildSigIndex, scoreFile, formatRankTable, formatRankJSON, DEFAULT_WEIGHTS, GRAPH_BOOST_AMOUNTS, detectIntent }  :598-598
-function _computePenalty(filePath)  :63-70
-function _computeHubs(graph)  :73-84
-function _isHub(filePath)  :87-91
-function scoreFile(filePath, sigs, queryTokens, weights) → { score: number, signals:  :102-159
-function rank(query, sigIndex, opts) → { file: string, score: nu  :177-302
-function _parseContextFile(contextPath) → Map<string, string[]>  :372-404
-function _mergeSigIndex(target, source)  :407-415
-function _buildSigIndexFromCache(cwd) → Map<string, string[]>  :422-442
-function _enrichSigIndexFromStrategy(cwd, index) → Map<string, string[]>  :450-456
-function buildSigIndex(cwd, opts) → Map<string, string[]>  :473-506
-function formatRankTable(results, query) → string  :515-551
-function formatRankJSON(results, query) → object  :560-575
-function detectIntent(query)  :590-596
+module.exports = { enrichWithSurfaces }  :55-55
+function enrichWithSurfaces(index, cwd) → number  :25-53  # Enrich a signature index with route pseudo-signatures
 ```
 
-### src/retrieval/tokenizer.js
+### src/retrieval/module-doc.js
 ```
-module.exports = { tokenize, STOP_WORDS }  :54-54
-function tokenize(text, opts) → string[]  :31-52
+module.exports = { extractModuleDoc, moduleDocSig, MAX_CHARS }  :120-120
+function _extOf(filePath)  :33-36
+function _cleanLine(line)  :39-120  # Strip comment furniture, JSDoc tags, and markup from one raw
+function extractModuleDoc(src, filePath) → string  :55-117  # Extract a module's leading documentation prose
+function moduleDocSig(src, filePath)  :115-117  # Render as an index-only pseudo-signature, or '' when there i
+```
+
+### src/retrieval/sig-index-store.js
+```
+module.exports = { writeFullIndex, readFullIndex, indexPath, SCHEMA, INDEX_FILE }  :95-95
+function indexPath(cwd)  :34-36  # Absolute path to the retrieval index artifact
+function writeFullIndex(cwd, fileEntries, opts = {}) → { path: string, files: nu  :47-70  # Persist the complete signature index
+function readFullIndex(cwd) → Map<string, string[]>  :83-93  # Load the complete signature index, or an empty Map when abse
 ```
 
 ### src/review/pr-evidence.js
 ```
 module.exports = { buildPrEvidence, formatPrEvidenceMarkdown }  :157-157
-function buildPrEvidence(changedFiles, cwd, opts = {}) → { scope:string, files:obj  :31-84
-function formatPrEvidenceMarkdown(evidence, opts = {})  :89-155
+function buildPrEvidence(changedFiles, cwd, opts = {}) → { scope:string, files:obj  :31-84  # Build the structured PR evidence for a changed-file list
+function formatPrEvidenceMarkdown(evidence, opts = {})  :89-155  # Render the branded, deterministic "PR Evidence Report" Markd
 ```
 
 ### src/review/review-pr.js
@@ -1182,57 +893,38 @@ function formatPrEvidenceMarkdown(evidence, opts = {})  :89-155
 module.exports = { reviewPr, SECURITY_PATTERNS, GOD_NODE_THRESHOLD, SCOPE_DIR_THRESHOLD }  :150-150
 function isTestFile(p)  :32-34
 function isSource(p)  :35-37
-function reviewPr(changedFiles, cwd, opts = {}) → { findings: object[], bla  :48-148
-```
-
-### src/routing/classifier.js
-```
-module.exports = { classify, classifyAll }  :102-102
-function classify(filePath, sigs) → 'fast'|'balanced'|'powerf  :15-83
-function classifyAll(fileEntries, cwd) → { fast: string[], balance  :92-100
-```
-
-### src/routing/hints.js
-```
-module.exports = { TIERS, formatRoutingSection }  :103-103
-function formatRoutingSection(groups) → string  :66-101
+function reviewPr(changedFiles, cwd, opts = {}) → { findings: object[], bla  :48-134  # Audit a changed-file list
 ```
 
 ### src/scaffold/persist.js
 ```
 module.exports = { scaffoldPath, renderScaffoldMarkdown }  :45-45
-function scaffoldPath(cwd)  :15-17
-function renderScaffoldMarkdown(decision, opts = {}) → string  :26-43
+function scaffoldPath(cwd)  :15-17  # Path to the persisted scaffold record
+function renderScaffoldMarkdown(decision, opts = {}) → string  :26-43  # Render an accepted scaffold decision to a markdown record
 ```
 
 ### src/scaffold/propose.js
 ```
 module.exports = { proposeScaffold, DEFAULT_THRESHOLD, HARD_FLOOR }  :112-112
-function _tier(pct)  :21-25
-function _stem(name)  :28-34
-function _testFile(styledStem, framework, ext)  :37-42
-function proposeScaffold(name, conventions, opts = {}) → { ok:boolean, refused:boo  :57-110
+function _tier(pct)  :21-25  # Tier for a consistency score (matches the conventions tiers)
+function _stem(name)  :28-34  # Strip any extension/compound suffix from a requested name → 
+function _testFile(styledStem, framework, ext)  :37-42  # Test file path for a styled stem given the detected framewor
+function proposeScaffold(name, conventions, opts = {}) → { ok:boolean, refused:boo  :57-110  # Propose a convention-matched scaffold, gated by a confidence
 ```
 
-### src/security/patterns.js
+### src/security/redact.js
 ```
-module.exports = { PATTERNS }  :51-51
-```
-
-### src/security/scanner.js
-```
-module.exports = { scan }  :36-36
-function scan(signatures, filePath) → { safe: string[], redacte  :14-34
+module.exports = { redactText }  :56-56
+function redactText(text) → { * text: string, redacte  :30-54  # Redact secrets in arbitrary text
 ```
 
-### src/session/memory.js
+### src/session/memory-inspect.js
 ```
-module.exports = { loadSession, saveSession, mergeSessionContext, clearSession }  :6-6
-function sessionPath(cwd)  :10-12
-function loadSession(cwd)  :14-24
-function saveSession(cwd, { intent, topFiles, query })  :26-35
-function mergeSessionContext(scores, session, currentIntent)  :40-51
-function clearSession(cwd)  :53-56
+module.exports = { inspectMemory, clearMemory, STORES, CLEARABLE }  :86-86
+function storePath(cwd, name)  :25-27
+function countEntries(kind, filePath)  :29-42
+function inspectMemory(cwd) → Array<{store:string, path  :49-64  # Describe every cross-session store
+function clearMemory(cwd, store) → string[]  :72-84  # Delete one clearable store (or 'all' clearable stores)
 ```
 
 ### src/session/notes.js
@@ -1240,16 +932,29 @@ function clearSession(cwd)  :53-56
 module.exports = { notesPath, addNote, readNotes, formatNotes, clearNotes }  :93-93
 function notesPath(cwd)  :23-25
 function _currentBranch(cwd)  :27-29
-function addNote(cwd, text, opts = {})  :39-52
-function readNotes(cwd, limit = 0) → object[]  :60-72
-function formatNotes(notes)  :75-85
-function clearNotes(cwd)  :88-91
+function addNote(cwd, text, opts = {})  :39-52  # Append a note
+function readNotes(cwd, limit = 0) → object[]  :60-72  # Read notes in chronological order (oldest first)
+function formatNotes(notes)  :75-85  # Format notes as a Markdown list (pass already-ordered notes)
+function clearNotes(cwd)  :88-91  # Delete the notes log
+```
+
+### src/skills/skills.js
+```
+module.exports = { SKILLS, SKILL_CLIENTS, renderSkill, renderAgentsBlock, injectSkillsBlock, installSkills, listSkillClients, clientPresent, START, END }  :182-182
+function _footer(version)  :66-69
+function renderSkill(client, skillName, version)  :72-85  # Render one skill's client-specific file content
+function renderAgentsBlock(version)  :88-95  # Render the combined AGENTS
+function injectSkillsBlock(existing, block)  :103-118  # Inject (or replace) the skills block in AGENTS
+function _writeIfChanged(filePath, content)  :120-130
+function installSkills(client, opts = {}) → { client, label, results:  :137-159  # Install both skills for one client
+function clientPresent(client, cwd)  :162-165  # True when the client's parent artifact exists (plain-install
+function listSkillClients(opts = {})  :168-180  # List clients with target paths, presence, and installed stat
 ```
 
 ### src/squeeze/cilog.js
 ```
 module.exports = { squeezeCiLog, stripTimestamp, ERROR_RE }  :71-71
-function stripTimestamp(line)  :17-19
+function stripTimestamp(line)  :17-19  # Remove a leading timestamp prefix from a single line
 function squeezeCiLog(input, opts = {}) → { squeezed: string, kept:  :27-69
 ```
 
@@ -1259,7 +964,7 @@ module.exports = { classify, countFrames }  :115-115
 function countFrames(lines)  :32-38
 function matchesStackTrace(input, lines)  :40-50
 function matchesCiLog(input, lines)  :55-74
-function matchesJsonPayload(input)  :76-93
+function matchesJsonPayload(input)  :76-115
 function classify(input) → { category: 'stacktrace'|  :99-113
 ```
 
@@ -1268,8 +973,8 @@ function classify(input) → { category: 'stacktrace'|  :99-113
 module.exports = { squeeze, shouldPrompt, formatSummary, estimateTokens }  :69-69
 function estimateTokens(s)  :17-17
 function squeeze(input, opts = {}) → { category, confidence, o  :24-49
-function shouldPrompt(reduction, threshold)  :52-55
-function formatSummary(result)  :58-67
+function shouldPrompt(reduction, threshold)  :52-55  # True when the reduction clears the threshold (accepts 0–1 or
+function formatSummary(result)  :58-67  # A compact human summary of what squeeze would do (for the pr
 ```
 
 ### src/squeeze/jsonpayload.js
@@ -1282,41 +987,50 @@ function squeezeJsonPayload(input, opts = {}) → { squeezed, kept, strippe  :41
 ### src/squeeze/stacktrace.js
 ```
 module.exports = { squeezeStackTrace, parseFrame, isVendor, inSrcDirs, enrichFrame }  :135-135
-function parseFrame(line)  :20-28
+function parseFrame(line)  :20-28  # Parse a frame line across JS/TS, Python, Java/Kotlin, Go, Ru
 function isVendor(file)  :30-30
 function inSrcDirs(file, srcDirs)  :32-38
-function enrichFrame(frame, symbolIndex)  :41-66
+function enrichFrame(frame, symbolIndex)  :41-66  # Look up the real signature for a frame in the SigMap symbol 
 function squeezeStackTrace(input, opts = {}) → { squeezed, kept, strippe  :76-133
 ```
 
 ### src/tracking/aggregate.js
 ```
 module.exports = { aggregate, bucketBy, parseSince, normalize }  :195-195
-function normalize(rec)  :25-44
+function normalize(rec)  :25-44  # Normalize one raw record into a canonical shape
 function normalizeOp(op)  :46-49
 function num(v)  :51-54
-function parseSince(since, nowMs) → Date|null  :63-75
-function bucketBy(records, granularity) → Array<{key,count,baseline  :83-100
+function parseSince(since, nowMs) → Date|null  :63-75  # Parse a --since value into a cutoff Date (or null for "all t
+function bucketBy(records, granularity) → Array<{key,count,baseline  :83-100  # Bucket records by calendar granularity
 function bucketKey(ts, granularity)  :102-117
-function aggregate(rawRecords, opts = {}) → object  :129-193
+function aggregate(rawRecords, opts = {}) → object  :129-193  # Full aggregation for the `gain` dashboard
+```
+
+### src/tracking/budget.js
+```
+module.exports = { sessionKey, budgetStatus, contextMtime, entryInSession }  :113-113
+function sessionKey(env)  :30-34  # Session key: SIGMAP_SESSION override, else UTC day bucket
+function contextMtime(cwd)  :37-43  # Newest mtime (ms) among generated context files, or 0 if non
+function entryInSession(entry, session)  :46-50  # Does a gain-log entry belong to this session
+function budgetStatus(cwd, opts = {}) → { * session: string, unit  :70-111  # Session spend status
 ```
 
 ### src/tracking/logger.js
 ```
-module.exports = { logRun, recordUsage, readLog, readGainLog, summarize, isTrackingEnabled, GAIN_FILE }  :197-197
-function logRun(entry, cwd)  :30-55
-function readLog(cwd) → object[]  :62-77
-function readGainLog(cwd) → object[]  :84-96
-function summarize(entries) → object  :103-135
-function isTrackingEnabled(config, argv) → boolean  :147-153
-function recordUsage(entry, cwd)  :169-195
+module.exports = { logRun, recordUsage, readLog, readGainLog, summarize, isTrackingEnabled, GAIN_FILE }  :199-199
+function logRun(entry, cwd)  :30-55  # Append one run entry to the usage log
+function readLog(cwd) → object[]  :62-77  # Read and parse all usage log entries
+function readGainLog(cwd) → object[]  :84-96  # Read and parse all `gain` dashboard records (oldest first)
+function summarize(entries) → object  :103-135  # Compute summary statistics from an array of log records
+function isTrackingEnabled(config, argv) → boolean  :147-153  # Whether `gain` savings capture is enabled
+function recordUsage(entry, cwd)  :169-197  # Append one operation to the usage log using the extended `ga
 ```
 
 ### src/tracking/pricing.js
 ```
-module.exports = { PRICES, DEFAULT_MODEL, resolvePrice, listModels }  :44-44
-function resolvePrice(model) → { model: string, perMtok:  :32-37
-function listModels() → string[]  :40-42
+module.exports = { PRICES, DEFAULT_MODEL, resolvePrice, listModels }  :46-46
+function resolvePrice(model) → { model: string, perMtok:  :34-39  # Resolve a price (USD per token) for a model name
+function listModels() → string[]  :42-44
 ```
 
 ### src/util/git.js
@@ -1329,57 +1043,67 @@ function tryGit(args, opts = {})  :26-29
 ### src/util/truncate.js
 ```
 module.exports = { capWithNotice, capMembersWithNotice }  :42-42
-function capWithNotice(items, limit, label) → string[]  :22-26
-function capMembersWithNotice(members, limit, label = 'methods') → Array<{text:string  :36-40
+function capWithNotice(items, limit, label) → string[]  :22-26  # Cap a string array, appending a `… +N more <label>` marker w
+function capMembersWithNotice(members, limit, label = 'methods') → Array<{text:string  :36-40  # Cap an array of member objects ({ text,
+```
+
+### src/verify/arity.js
+```
+module.exports = { parseParams, buildArityIndex, extractCallArgCounts, checkArity, cleanSig, EXACT_PARAM_EXTS }  :180-180
+function cleanSig(sig)  :35-37  # Strip the `  :start-end` anchor and `  # hint` tail from a s
+function parseParams(paramText) → { min: number, max: numbe  :47-84  # Parse a parameter-list string into an arity range
+function buildArityIndex(sigIndex) → Map<string, { min, max, v  :93-122  # Build a per-name arity index from a SigMap signature index
+function extractCallArgCounts(code) → { name: string, args: num  :132-166  # Extract call sites with argument counts from answer code
+function checkArity(name, argCount, arityIndex) → null | { min, max, variad  :172-178  # Check one call against the arity index
 ```
 
 ### src/verify/closest-match.js
 ```
 module.exports = { levenshtein, closestMatch, buildSymbolCandidates, suggestionConfidence, formatSuggestion }  :139-145
-function levenshtein(a, b, max = Infinity)  :20-47
-function suggestionConfidence(distance, targetLen)  :50-55
-function closestMatch(target, candidates, opts = {}) → { name, file, line, dista  :67-98
-function buildSymbolCandidates(sigIndex)  :104-126
-function formatSuggestion(match, asCall)  :129-137
+function levenshtein(a, b, max = Infinity)  :20-47  # Levenshtein edit distance with an early-exit ceiling
+function suggestionConfidence(distance, targetLen)  :50-55  # Bucket a normalized edit distance into a confidence label (p
+function closestMatch(target, candidates, opts = {}) → { name, file, line, dista  :67-98  # Find the nearest candidate name to `target`
+function buildSymbolCandidates(sigIndex)  :104-126  # Build `[{ name, file, line }]` symbol candidates from a SigM
+function formatSuggestion(match, asCall)  :129-137  # Format a suggestion object into a human one-liner for report
 ```
 
 ### src/verify/hallucination-guard.js
 ```
-module.exports = { verify, buildSymbolSet, loadDeps, loadScripts, isTestPath }  :345-345
-function isTestPath(p)  :29-29
-function buildSymbolSet(cwd)  :76-94
-function loadDeps(cwd)  :97-110
-function loadScripts(cwd)  :113-122
-function defaultFileExists(cwd, ref)  :125-133
-function defaultRelativeResolvable(cwd, mod, fileBasenames)  :136-153
-function verify(answerText, cwd, opts = {}) → { issues: object[], summa  :177-301
+module.exports = { verify, buildSymbolSet, loadDeps, loadScripts, isTestPath }  :378-378
+function isTestPath(p)  :30-30
+function buildSymbolSet(cwd)  :77-97  # Build the set of known symbol identifiers from the SigMap si
+function loadDeps(cwd)  :100-113  # Load declared dependency names from package
+function loadScripts(cwd)  :116-125  # Load the set of npm script names declared in package
+function defaultFileExists(cwd, ref)  :128-136  # Default file-existence check: resolve a referenced path agai
+function defaultRelativeResolvable(cwd, mod, fileBasenames)  :139-156  # Default relative-import resolver: fs candidates + basename m
+function verify(answerText, cwd, opts = {}) → { issues: object[], summa  :180-282  # Verify an AI answer against the repository
 ```
 
 ### src/verify/lib-index.js
 ```
 module.exports = { buildLibraryIndex, extractDtsExports, directDeps, resolveEntry, formatVersionPins, collectVersionPins, extractPyExports, pythonDirectDeps, findSitePackages, resolvePyEntry }  :329-333
-function extractDtsExports(src) → string[]  :40-50
-function directDeps(cwd)  :68-79
-function resolveEntry(cwd, dep) → { version: string|null, d  :85-105
-function extractPyExports(src) → string[]  :118-146
-function pythonDirectDeps(cwd)  :149-172
-function findSitePackages(cwd)  :175-190
-function normalizePy(name)  :193-195
-function findPyVersion(sitePkgsDir, dep)  :198-207
-function resolvePyEntry(sitePkgsDirs, dep) → { version: string|null, s  :213-229
-function buildLibraryIndex(cwd, opts = {}) → { symbols: Set<string>, l  :240-292
-function formatVersionPins(libraries)  :295-299
-function collectVersionPins(cwd, opts = {}) → { pins: string[], total:   :311-327
+function extractDtsExports(src) → string[]  :40-50  # Extract exported symbol names from a `
+function directDeps(cwd)  :68-79  # Read direct dependency names declared in the project's packa
+function resolveEntry(cwd, dep) → { version: string|null, d  :85-105  # Resolve an installed dependency's version + entry `
+function extractPyExports(src) → string[]  :118-146  # Extract exported symbol names from a Python module's `__init
+function pythonDirectDeps(cwd)  :149-172  # Read direct Python dependency names from requirements
+function findSitePackages(cwd)  :175-190  # Locate the project's venv `site-packages` directories (no Py
+function normalizePy(name)  :193-195  # PEP 503 name normalization (case-insensitive, `-`/`_`/`
+function findPyVersion(sitePkgsDir, dep)  :198-207  # Find an installed distribution's version from its `*
+function resolvePyEntry(sitePkgsDirs, dep) → { version: string|null, s  :213-229  # Resolve a Python dependency to its installed module entry fi
+function buildLibraryIndex(cwd, opts = {}) → { symbols: Set<string>, l  :240-292  # Build the installed-library signature index for `cwd`
+function formatVersionPins(libraries)  :295-299  # D8: render `name@version` pins for the typed/installed libra
+function collectVersionPins(cwd, opts = {}) → { pins: string[], total:   :311-327  # D8: collect `name@version` pins for direct dependencies — ve
 ```
 
 ### src/verify/parsers.js
 ```
 module.exports = { extractCodeBlocks, extractFilePaths, extractImports, extractSymbols, extractNpmScripts }  :211-217
-function extractCodeBlocks(text) → { lang: string, content:   :43-67
-function extractFilePaths(text) → { path: string, line: num  :76-97
-function extractImports(text) → { module: string, kind: '  :104-159
-function extractNpmScripts(text) → { name: string, line: num  :168-184
-function extractSymbols(text) → { name: string, line: num  :192-209
+function extractCodeBlocks(text) → { lang: string, content:   :43-155  # Extract fenced code blocks
+function extractFilePaths(text) → { path: string, line: num  :76-95  # Extract file-path references (deduped, first-seen line kept)
+function extractImports(text) → { module: string, kind: '  :104-137  # Extract import / require statements
+function extractNpmScripts(text) → { name: string, line: num  :168-184  # Extract npm/pnpm/yarn script invocations (`npm run <name>`)
+function extractSymbols(text) → { name: string, line: num  :192-217  # Extract function/class symbol references that look like call
 ```
 
 ### src/wiki/generate.js
@@ -1387,20 +1111,11 @@ function extractSymbols(text) → { name: string, line: num  :192-209
 module.exports = { buildWiki, renderWikiMarkdown }  :250-250
 function _rel(cwd, f)  :22-24
 function _pct(fraction)  :26-28
-function _identity(cwd)  :31-37
-function _modules(index)  :40-67
-function _flow(cwd)  :70-97
-function _conventions(cwd, index)  :100-117
+function _identity(cwd)  :31-37  # Project name + version from package
+function _modules(index)  :40-67  # Module rollup from the signature index (keys are cwd-relativ
+function _flow(cwd)  :70-97  # Hubs, entry points, and cycle count from the dependency grap
+function _conventions(cwd, index)  :100-117  # Conventions summary; index keys are resolved back to absolut
 function _health(cwd)  :119-127
-function buildWiki(cwd, opts = {}) → { data: object, markdown:  :137-162
-function renderWikiMarkdown(data, sigmapVersion) → string  :171-248
-```
-
-### src/workspace/detector.js
-```
-module.exports = { detectWorkspaces, inferPackage, scopeToPackage }  :4-4
-function detectWorkspaces(cwd)  :6-36
-function inferPackage(query, workspaceDirs, cwd)  :39-61
-function _getMatchLength(name, token)  :63-68
-function scopeToPackage(filePath, packageDir)  :71-85
+function buildWiki(cwd, opts = {}) → { data: object, markdown:  :137-162  # Build the wiki
+function renderWikiMarkdown(data, sigmapVersion) → string  :171-248  # Render the narrative markdown
 ```

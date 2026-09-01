@@ -33,3 +33,5 @@ jobs:
         run: npm run test:python
       - name: Run integration tests
         run: node test/integration/all.js
+      - name: Retrieval quality gate (leak-free hard corpus)
+        run: npm run validate:retrieval
