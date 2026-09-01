@@ -1,0 +1,23 @@
+{"id":"m001","split":"hard","source":"git","sha":"05bcfc9d","query":"shared balanced scanner — JS/TS nested-paren fix","expected_files":["gen-context.js"],"repo":"."}
+{"id":"m002","split":"hard","source":"git","sha":"4d4f93dd","query":"sigmap budget session spend ledger + get_budget tool","expected_files":["gen-context.js"],"repo":"."}
+{"id":"m003","split":"hard","source":"git","sha":"2abd4338","query":"line anchors for Kotlin, Swift, PHP, Scala, and Dart","expected_files":["gen-context.js"],"repo":"."}
+{"id":"m004","split":"hard","source":"git","sha":"08032fc7","query":"line anchors for Java, Go, Rust, and C#","expected_files":["gen-context.js"],"repo":"."}
+{"id":"m005","split":"hard","source":"git","sha":"da6cd953","query":"method-level blast-radius scoring wired into review-pr, PR Evidence, and MCP","expected_files":["gen-context.js"],"repo":"."}
+{"id":"m006","split":"hard","source":"git","sha":"9e6aa1c4","query":"merge hot-cold cache and context-cold into MCP index","expected_files":["src/mcp/handlers.js","src/retrieval/ranker.js"],"repo":"."}
+{"id":"m007","split":"hard","source":"git","sha":"daf9fcd0","query":"implement case-insensitive path normalization for Windows compatibility","expected_files":["src/graph/builder.js"],"repo":"."}
+{"id":"m008","split":"hard","source":"git","sha":"b6229395","query":"DESCRIPTION + NAMESPACE awareness for R packages","expected_files":["src/discovery/r-manifest.js"],"repo":"."}
+{"id":"m009","split":"hard","source":"git","sha":"40740eb0","query":"R6, S7, and roxygen2 hints in","expected_files":["src/extractors/r.js"],"repo":"."}
+{"id":"m010","split":"hard","source":"git","sha":"ee25d9ee","query":"add Python absolute imports to for get_impact","expected_files":["src/graph/builder.js"],"repo":"."}
+{"id":"m011","split":"hard","source":"git","sha":"9ee9e0ce","query":"normalize Windows path separators in nested path deduplication","expected_files":["src/discovery/source-root-resolver.js"],"repo":"."}
+{"id":"m012","split":"hard","source":"git","sha":"3edb85de","query":"query-aware retrieval + query_context MCP tool","expected_files":["src/retrieval/ranker.js"],"repo":"."}
+{"id":"m013","split":"hard","source":"git","sha":"56b656b6","query":"benchmark & evaluation system","expected_files":["src/eval/runner.js"],"repo":"."}
+{"id":"m014","split":"hard","source":"git","sha":"325d8da3","query":"add explain_file and list_modules tools (v1.4)","expected_files":["src/mcp/handlers.js"],"repo":"."}
+{"id":"m015","split":"hard","source":"git","sha":"a88b9096","query":"correct fast tier GPT model — gpt-5-mini (0x) → gpt-5-1-codex-mini (0.33x)","expected_files":["src/routing/hints.js"],"repo":"."}
+{"id":"m016","split":"hard","source":"git","sha":"b41b8e12","query":"update model names to current (April 2026)","expected_files":["src/routing/hints.js"],"repo":"."}
+{"id":"m017","split":"hard","source":"git","sha":"47bf0237","query":"add --health composite score output","expected_files":["src/health/scorer.js"],"repo":"."}
+{"id":"m018","split":"hard","source":"git","sha":"65824e1b","query":"add --report --json flag for CI token reporting","expected_files":["src/tracking/logger.js"],"repo":"."}
+{"id":"m019","split":"hard","source":"git","sha":"da5d7841","query":"add get_routing tool — 5th MCP tool","expected_files":["src/mcp/handlers.js"],"repo":"."}
+{"id":"m020","split":"hard","source":"git","sha":"d9ba611d","query":"add create_checkpoint tool — session state snapshot","expected_files":["src/mcp/handlers.js"],"repo":"."}
+{"id":"m021","split":"hard","source":"git","sha":"69bd314b","query":"scaffold — zero deps entry point","expected_files":["gen-project-map.js"],"repo":"."}
+{"id":"m022","split":"hard","source":"git","sha":"7f587ed2","query":"add external config file support with deep merge and unknown-key warnings","expected_files":["src/config/loader.js"],"repo":"."}
+{"id":"m023","split":"hard","source":"git","sha":"6c7f9af2","query":"add TypeScript and JavaScript extractors","expected_files":["src/extractors/javascript.js","src/extractors/typescript.js"],"repo":"."}

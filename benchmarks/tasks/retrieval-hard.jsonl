@@ -1,0 +1,90 @@
+{"id": "h001", "split": "hard", "query": "stop credentials from leaking into generated output", "expected_files": ["src/security/scanner.js", "src/security/redact.js"], "repo": "."}
+{"id": "h002", "split": "hard", "query": "which files does the rest of the repo depend on most", "expected_files": ["src/graph/centrality.js"], "repo": "."}
+{"id": "h003", "split": "hard", "query": "confirm a suggested call passes the right number of arguments", "expected_files": ["src/verify/arity.js"], "repo": "."}
+{"id": "h004", "split": "hard", "query": "shrink a pasted exception dump before ranking it", "expected_files": ["src/squeeze/stacktrace.js"], "repo": "."}
+{"id": "h005", "split": "hard", "query": "flag files that disagree with the dominant naming style", "expected_files": ["src/conventions/conflicts.js"], "repo": "."}
+{"id": "h006", "split": "hard", "query": "how much money does one query cost for a given model", "expected_files": ["src/tracking/pricing.js"], "repo": "."}
+{"id": "h007", "split": "hard", "query": "what else breaks if I change this one function", "expected_files": ["src/graph/blast-radius.js"], "repo": "."}
+{"id": "h008", "split": "hard", "query": "remember something for later on the current branch", "expected_files": ["src/session/notes.js"], "repo": "."}
+{"id": "h009", "split": "hard", "query": "launch the watcher in the background and stop it later", "expected_files": ["src/daemon/daemon.js"], "repo": "."}
+{"id": "h010", "split": "hard", "query": "make signature lines shorter to save tokens", "expected_files": ["src/format/terse.js"], "repo": "."}
+{"id": "h011", "split": "hard", "query": "compare model answers with and without grounding", "expected_files": ["src/eval/llm-ablation.js"], "repo": "."}
+{"id": "h012", "split": "hard", "query": "register the server with Cursor and Zed", "expected_files": ["src/mcp/install.js"], "repo": "."}
+{"id": "h013", "split": "hard", "query": "create a new file that follows existing repo style", "expected_files": ["src/scaffold/propose.js"], "repo": "."}
+{"id": "h014", "split": "hard", "query": "suggest the nearest real symbol when a name is wrong", "expected_files": ["src/verify/closest-match.js"], "repo": "."}
+{"id": "h015", "split": "hard", "query": "trim continuous integration output down to the failing lines", "expected_files": ["src/squeeze/cilog.js"], "repo": "."}
+{"id": "h016", "split": "hard", "query": "how many tokens have I spent in this working session", "expected_files": ["src/tracking/budget.js"], "repo": "."}
+{"id": "h017", "split": "hard", "query": "turn a natural language question into weighted scoring signals", "expected_files": ["src/retrieval/ranker.js", "src/retrieval/bm25.js"], "repo": "."}
+{"id": "h018", "split": "hard", "query": "walk a directory tree and decide where the code actually lives", "expected_files": ["src/discovery/source-root-resolver.js", "src/discovery/source-root-scorer.js"], "repo": "."}
+{"id": "h019", "split": "hard", "query": "adjust how strongly a file is favoured based on past runs", "expected_files": ["src/learning/weights.js"], "repo": "."}
+{"id": "h020", "split": "hard", "query": "figure out which package of a monorepo a question belongs to", "expected_files": ["src/workspace/detector.js"], "repo": "."}
+{"id": "h021", "split": "hard", "query": "carry the previous question's files into a follow-up", "expected_files": ["src/session/memory.js"], "repo": "."}
+{"id": "h022", "split": "hard", "query": "recognise that a project uses Django or Rails", "expected_files": ["src/discovery/framework-detector.js"], "repo": "."}
+{"id": "h023", "split": "hard", "query": "skip re-extracting files that have not been modified", "expected_files": ["src/cache/sig-cache.js"], "repo": "."}
+{"id": "h024", "split": "hard", "query": "how many files were left out when the budget was applied", "expected_files": ["src/analysis/coverage-score.js"], "repo": "."}
+{"id": "h025", "split": "hard", "query": "pick which model tier a task needs", "expected_files": ["src/routing/classifier.js"], "repo": "."}
+{"id": "h026", "split": "hard", "query": "collect leftover reminders developers left in comments", "expected_files": ["src/extractors/todos.js"], "repo": "."}
+{"id": "h027", "split": "hard", "query": "map which types inherit from which", "expected_files": ["src/map/class-hierarchy.js"], "repo": "."}
+{"id": "h028", "split": "hard", "query": "find circular references between modules", "expected_files": ["src/map/import-graph.js"], "repo": "."}
+{"id": "h029", "split": "hard", "query": "split camelCase identifiers into separate words", "expected_files": ["src/retrieval/tokenizer.js"], "repo": "."}
+{"id": "h030", "split": "hard", "query": "wrap context so Anthropic can reuse it between calls", "expected_files": ["src/format/cache.js"], "repo": "."}
+{"id": "h031", "split": "hard", "query": "append to an assistant file without clobbering hand-written notes", "expected_files": ["packages/adapters/claude.js"], "repo": "."}
+{"id": "h032", "split": "hard", "query": "emit a rules file the editor reads on every workspace open", "expected_files": ["packages/adapters/cursor.js"], "repo": "."}
+{"id": "h033", "split": "hard", "query": "the public programmatic entry points other code imports", "expected_files": ["packages/core/index.js"], "repo": "."}
+{"id": "h034", "split": "hard", "query": "explain why a particular file was left out", "expected_files": ["src/analysis/diagnostics.js"], "repo": "."}
+{"id": "h035", "split": "hard", "query": "keep signatures in step with edits since the last run", "expected_files": ["src/cache/freshen.js"], "repo": "."}
+{"id": "h036", "split": "hard", "query": "recommend better settings for this repository automatically", "expected_files": ["src/config/tune.js"], "repo": "."}
+{"id": "h037", "split": "hard", "query": "fail the build when house style consistency drops", "expected_files": ["src/conventions/ci.js"], "repo": "."}
+{"id": "h038", "split": "hard", "query": "work out the dominant coding style of a repo", "expected_files": ["src/conventions/extract.js"], "repo": "."}
+{"id": "h039", "split": "hard", "query": "list every file that should be renamed to match house style", "expected_files": ["src/conventions/fix.js"], "repo": "."}
+{"id": "h040", "split": "hard", "query": "run the guard stages in sequence for grounded creation", "expected_files": ["src/create/orchestrate.js"], "repo": "."}
+{"id": "h041", "split": "hard", "query": "one-shot setup check with an actionable remedy per problem", "expected_files": ["src/doctor/diagnose.js"], "repo": "."}
+{"id": "h042", "split": "hard", "query": "per-file statistics about what was pulled out of each source", "expected_files": ["src/eval/analyzer.js"], "repo": "."}
+{"id": "h043", "split": "hard", "query": "make sure benchmark queries do not give away their answer", "expected_files": ["src/eval/corpus.js"], "repo": "."}
+{"id": "h044", "split": "hard", "query": "compute hit rate and reciprocal rank metrics", "expected_files": ["src/eval/scorer.js"], "repo": "."}
+{"id": "h045", "split": "hard", "query": "a machine-readable bundle of proof for one question", "expected_files": ["src/evidence/pack.js"], "repo": "."}
+{"id": "h046", "split": "hard", "query": "read selectors and rules out of stylesheets", "expected_files": ["src/extractors/css.js"], "repo": "."}
+{"id": "h047", "split": "hard", "query": "choose the right parser for a given file type", "expected_files": ["src/extractors/dispatch.js"], "repo": "."}
+{"id": "h048", "split": "hard", "query": "render a savings dashboard with coloured bars for the console", "expected_files": ["src/format/gain-terminal.js"], "repo": "."}
+{"id": "h049", "split": "hard", "query": "the identical how-to block every adapter emits", "expected_files": ["src/format/usage-guidance.js"], "repo": "."}
+{"id": "h050", "split": "hard", "query": "turn guard results into a standalone HTML page", "expected_files": ["src/format/verify-report.js"], "repo": "."}
+{"id": "h051", "split": "hard", "query": "resolve import statements into a dependency map", "expected_files": ["src/graph/builder.js"], "repo": "."}
+{"id": "h052", "split": "hard", "query": "everything that transitively imports a changed file", "expected_files": ["src/graph/impact.js"], "repo": "."}
+{"id": "h053", "split": "hard", "query": "give the project a 0-100 grade with a breakdown of deductions", "expected_files": ["src/health/scorer.js"], "repo": "."}
+{"id": "h054", "split": "hard", "query": "surface the scripts and workflows that compile and check a project", "expected_files": ["src/map/build-ci.js"], "repo": "."}
+{"id": "h055", "split": "hard", "query": "which environment variables does the code actually read", "expected_files": ["src/map/env-schema.js"], "repo": "."}
+{"id": "h056", "split": "hard", "query": "find database schema change files across frameworks", "expected_files": ["src/map/migrations.js"], "repo": "."}
+{"id": "h057", "split": "hard", "query": "speak JSON-RPC over standard input and output", "expected_files": ["src/mcp/server.js"], "repo": "."}
+{"id": "h058", "split": "hard", "query": "the catalogue of callable operations exposed to an agent", "expected_files": ["src/mcp/tools.js"], "repo": "."}
+{"id": "h059", "split": "hard", "query": "show a one-time star message after enough successful runs", "expected_files": ["src/nudge.js"], "repo": "."}
+{"id": "h060", "split": "hard", "query": "validate a written proposal before any of it is executed", "expected_files": ["src/plan/verify-plan.js"], "repo": "."}
+{"id": "h061", "split": "hard", "query": "fold route surfaces into the ranking candidates", "expected_files": ["src/retrieval/enrich-from-maps.js"], "repo": "."}
+{"id": "h062", "split": "hard", "query": "keep the full symbol list apart from what goes in the prompt", "expected_files": ["src/retrieval/sig-index-store.js"], "repo": "."}
+{"id": "h063", "split": "hard", "query": "a branded summary of a changeset for reviewers", "expected_files": ["src/review/pr-evidence.js"], "repo": "."}
+{"id": "h064", "split": "hard", "query": "audit a changeset for creep beyond what was asked", "expected_files": ["src/review/review-pr.js"], "repo": "."}
+{"id": "h065", "split": "hard", "query": "which complexity tier maps to which example model", "expected_files": ["src/routing/hints.js"], "repo": "."}
+{"id": "h066", "split": "hard", "query": "write an accepted proposal record to disk", "expected_files": ["src/scaffold/persist.js"], "repo": "."}
+{"id": "h067", "split": "hard", "query": "the regexes that spot API keys and credentials", "expected_files": ["src/security/patterns.js"], "repo": "."}
+{"id": "h068", "split": "hard", "query": "show what cross-session state is kept and let me clear it", "expected_files": ["src/session/memory-inspect.js"], "repo": "."}
+{"id": "h069", "split": "hard", "query": "install agent playbooks for several different clients", "expected_files": ["src/skills/skills.js"], "repo": "."}
+{"id": "h070", "split": "hard", "query": "decide what kind of text somebody just pasted in", "expected_files": ["src/squeeze/classify.js"], "repo": "."}
+{"id": "h071", "split": "hard", "query": "decide whether minimising pasted input is worth asking about", "expected_files": ["src/squeeze/index.js"], "repo": "."}
+{"id": "h072", "split": "hard", "query": "collapse repeated array elements while keeping the shape", "expected_files": ["src/squeeze/jsonpayload.js"], "repo": "."}
+{"id": "h073", "split": "hard", "query": "turn raw usage records into totals by day and week", "expected_files": ["src/tracking/aggregate.js"], "repo": "."}
+{"id": "h074", "split": "hard", "query": "append one record per operation to an append-only file", "expected_files": ["src/tracking/logger.js"], "repo": "."}
+{"id": "h075", "split": "hard", "query": "invoke version control directly without spawning a shell", "expected_files": ["src/util/git.js"], "repo": "."}
+{"id": "h076", "split": "hard", "query": "show a visible marker when signatures were capped", "expected_files": ["src/util/truncate.js"], "repo": "."}
+{"id": "h077", "split": "hard", "query": "flag statements in an answer contradicted by the actual code", "expected_files": ["src/verify/hallucination-guard.js"], "repo": "."}
+{"id": "h078", "split": "hard", "query": "catalogue exported symbols of installed third-party packages", "expected_files": ["src/verify/lib-index.js"], "repo": "."}
+{"id": "h079", "split": "hard", "query": "pull referenced paths and imports out of an answer", "expected_files": ["src/verify/parsers.js"], "repo": "."}
+{"id": "h080", "split": "hard", "query": "produce a readable architecture narrative document", "expected_files": ["src/wiki/generate.js"], "repo": "."}
+{"id": "h081", "split": "hard", "query": "build edges showing which routine invokes which other routine", "expected_files": ["src/graph/call-graph.js"], "repo": "."}
+{"id": "h082", "split": "hard", "query": "merge user settings with defaults and auto-detected roots", "expected_files": ["src/config/loader.js"], "repo": "."}
+{"id": "h083", "split": "hard", "query": "honour a file listing paths that should be skipped", "expected_files": ["src/discovery/sigmapignore.js"], "repo": "."}
+{"id": "h084", "split": "hard", "query": "determine which syntaxes appear across a checkout", "expected_files": ["src/discovery/language-detector.js"], "repo": "."}
+{"id": "h085", "split": "hard", "query": "surface each ecosystem's package metadata and dependency counts", "expected_files": ["src/map/config-manifest.js"], "repo": "."}
+{"id": "h086", "split": "hard", "query": "the implementations behind each agent-callable operation", "expected_files": ["src/mcp/handlers.js"], "repo": "."}
+{"id": "h087", "split": "hard", "query": "the built-in settings applied before any overrides", "expected_files": ["src/config/defaults.js"], "repo": "."}
+{"id": "h088", "split": "hard", "query": "write instructions the GitHub assistant picks up automatically", "expected_files": ["packages/adapters/copilot.js"], "repo": "."}
+{"id": "h089", "split": "hard", "query": "read package metadata for the R ecosystem", "expected_files": ["src/discovery/r-manifest.js"], "repo": "."}
+{"id": "h090", "split": "hard", "query": "the guard-rail block written in during first-time setup", "expected_files": ["src/init/creation-workflow.js"], "repo": "."}

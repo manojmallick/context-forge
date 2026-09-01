@@ -17,6 +17,7 @@ const { spawnSync } = require('child_process');
 
 const GEN_CONTEXT = path.resolve(__dirname, '../../gen-context.js');
 const { buildCallFileGraph } = require('../../src/graph/call-graph');
+const { graphKey } = require('../../src/graph/path-key');
 const { buildFromCwd } = require('../../src/graph/builder');
 const { rank, buildSigIndex } = require('../../src/retrieval/ranker');
 
@@ -59,12 +60,16 @@ function withGoProject(fn, config) {
 test('buildCallFileGraph: bidirectional file edge where the import graph has none', () => {
   withGoProject((dir) => {
     const cg = buildCallFileGraph(dir);
-    const app = path.resolve(dir, 'src/app.go');
-    const util = path.resolve(dir, 'src/util.go');
+    // Both graphs key nodes through the one shared convention (src/graph/path-key.js).
+    // This used to read cg.forward.get(<case-preserving path>) and ig.forward.get(x)
+    // || ig.forward.get(x.toLowerCase()) — a dual probe on one graph only, which is
+    // what a silent divergence between two builders looks like from the test side.
+    const app = graphKey(path.resolve(dir, 'src/app.go'));
+    const util = graphKey(path.resolve(dir, 'src/util.go'));
     assert.deepStrictEqual(cg.forward.get(app), [util], 'app→util edge missing');
     assert.deepStrictEqual(cg.forward.get(util), [app], 'util→app (reverse) edge missing');
     const ig = buildFromCwd(dir);
-    const igNeighbors = ig.forward.get(app) || ig.forward.get(app.toLowerCase()) || [];
+    const igNeighbors = ig.forward.get(app) || [];
     assert.strictEqual(igNeighbors.length, 0, 'import graph unexpectedly has the edge — fixture invalid');
   });
 });

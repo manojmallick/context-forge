@@ -38,47 +38,12 @@ const { bm25rank } = require('../retrieval/bm25');
  * @returns {Map<string, string[]>}
  */
 function buildSigIndex(cwd) {
-  const contextPath = path.join(cwd, '.github', 'copilot-instructions.md');
-  const index = new Map();
-
-  if (!fs.existsSync(contextPath)) return index;
-
-  const content = fs.readFileSync(contextPath, 'utf8');
-  const lines = content.split('\n');
-
-  let currentFile = null;
-  let inBlock = false;
-  let sigs = [];
-
-  for (const line of lines) {
-    // Section header: ### path/to/file.js
-    const headerMatch = line.match(/^###\s+(\S+\.\w+)\s*$/);
-    if (headerMatch) {
-      if (currentFile !== null) {
-        index.set(currentFile, sigs);
-      }
-      currentFile = headerMatch[1];
-      sigs = [];
-      inBlock = false;
-      continue;
-    }
-
-    if (line.startsWith('```')) {
-      inBlock = !inBlock;
-      continue;
-    }
-
-    if (inBlock && currentFile && line.trim()) {
-      sigs.push(line.trim());
-    }
-  }
-
-  // Flush last file
-  if (currentFile !== null) {
-    index.set(currentFile, sigs);
-  }
-
-  return index;
+  // Delegate to the production index builder. This used to parse
+  // .github/copilot-instructions.md directly — a second parallel implementation
+  // that saw only the token-BUDGETED view, ignored the other adapters, the
+  // hot-cold/per-module strategy splits, and the complete retrieval index. The
+  // corpus therefore scored a smaller index than `sigmap ask` actually uses.
+  return require('../retrieval/ranker').buildSigIndex(cwd);
 }
 
 // ---------------------------------------------------------------------------
@@ -96,12 +61,13 @@ const { tokenize } = require('../retrieval/bm25');
  * @param {number} topK
  * @returns {{ file: string, score: number, sigs: string[] }[]}
  */
-function rank(query, index, topK = 10) {
-  const candidates = [];
-  for (const [file, sigs] of index.entries()) {
-    candidates.push({ file, sigs });
-  }
-  return bm25rank(query, candidates).slice(0, topK);
+function rank(query, index, topK = 10, opts = {}) {
+  // Measure the ranker users actually hit. This used to call bm25rank directly,
+  // which meant the corpus scored a parallel implementation with no penalties,
+  // graph boost, recency or learned weights — so no ranking regression in
+  // src/retrieval/ranker.js could ever show up in the benchmark numbers.
+  const { rank: prodRank } = require('../retrieval/ranker');
+  return prodRank(query, index, Object.assign({ topK }, opts)).slice(0, topK);
 }
 
 // ---------------------------------------------------------------------------
@@ -188,11 +154,14 @@ function run(tasksFile, cwd, opts = {}) {
 
   // Build index once (re-used across all tasks in the same repo)
   const index = buildSigIndex(cwd);
+  // Import graph built once too — the hop-1/hop-2 boost is part of what ships.
+  let graph = null;
+  try { graph = require('../graph/builder').buildFromCwd(cwd); } catch (_) {}
 
   const taskResults = [];
   for (const task of tasks) {
-    const ranked = rank(task.query, index, topK).map((r) => r.file);
-    const topResult = rank(task.query, index, topK);
+    const topResult = rank(task.query, index, topK, { cwd, graph, learned: opts.learned });
+    const ranked = topResult.map((r) => r.file);
     const tokens = topResult.reduce((sum, r) => sum + estimateTokens(r.sigs), 0);
 
     const { hitAtK, reciprocalRank, precisionAtK } = require('./scorer');

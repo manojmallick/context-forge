@@ -15,7 +15,7 @@
   },
   "scripts": {
     "test": "node test/run.js && node test/r-language.test.js",
-    "test:integration": "node test/integration/strategy.test.js && node test/integration/secret-scan.test.js && node test/integration/token-budget.test.js && node test/integration/auto-budget.test.js && node test/integration/mcp/server.test.js && node test/integration/verify-ai-output.test.js && node test/integration/memory-tools.test.js && node test/integration/squeeze.test.js && node test/integration/context-consistency.test.js && node test/integration/features/llms-current.test.js",
+    "test:integration": "node test/integration/all.js",
     "test:integration:all": "node test/integration/all.js",
     "test:python": "python3 test/test_python_ast_extractor.py",
     "test:all": "node test/run.js && node test/r-language.test.js && node test/integration/strategy.test.js && node test/integration/secret-scan.test.js",
@@ -53,7 +53,9 @@
     "prepublishOnly": "node scripts/check-bundle.mjs && node scripts/build-bundle.mjs --check && node scripts/gen-benchmark-latest.mjs --check && node scripts/check-version-meta.mjs && node scripts/sync-metrics.mjs --check && node scripts/generate-llms.mjs",
     "benchmark:grounding": "node scripts/run-hallucination-benchmark.mjs",
     "benchmark:honest": "node scripts/run-honest-benchmark.mjs --save",
-    "benchmark:llm-ablation": "node scripts/run-llm-ablation.mjs"
+    "benchmark:llm-ablation": "node scripts/run-llm-ablation.mjs",
+    "benchmark:retrieval": "node scripts/run-retrieval-gate.mjs",
+    "validate:retrieval": "node scripts/check-corpus.mjs && node scripts/check-corpus.mjs benchmarks/tasks/retrieval-mined.jsonl && node scripts/run-retrieval-gate.mjs --gate --no-regress"
   },
   "files": [
     "gen-context.js",
