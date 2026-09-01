@@ -228,10 +228,14 @@ test('docs/impact-banner.svg: uses 75.6% hit@5', () => {
   assert.ok(src.includes('81.1%'), 'missing 81.1% in impact-banner.svg');
 });
 
-test('docs/impact-banner.svg: uses 1.46 prompts (not 1.68)', () => {
+test('docs/impact-banner.svg: prompts-per-task matches version.json', () => {
+  // Was hardcoded to a literal ('1.53', and the title still says 1.46/1.68) and
+  // so drifted every time the benchmark moved. Derive it, like the
+  // softwareVersion guard below, so the banner is checked against its source.
   const src = readDocs('impact-banner.svg');
-  assert.ok(!src.includes('1.68'), 'found stale 1.68 in impact-banner.svg');
-  assert.ok(src.includes('1.53'), 'missing 1.53 in impact-banner.svg');
+  const expected = String(JSON.parse(readRoot('version.json')).metrics.prompts_per_task);
+  assert.ok(src.includes(expected),
+    `impact-banner.svg should show ${expected} prompts per task (from version.json)`);
 });
 
 test('docs/comparison-chart.svg: uses 75.6% (not 80.0%)', () => {
