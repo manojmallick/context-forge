@@ -4623,47 +4623,12 @@ __factories["./src/eval/runner"] = function(module, exports) {
    * @returns {Map<string, string[]>}
    */
   function buildSigIndex(cwd) {
-    const contextPath = path.join(cwd, '.github', 'copilot-instructions.md');
-    const index = new Map();
-
-    if (!fs.existsSync(contextPath)) return index;
-
-    const content = fs.readFileSync(contextPath, 'utf8');
-    const lines = content.split('\n');
-
-    let currentFile = null;
-    let inBlock = false;
-    let sigs = [];
-
-    for (const line of lines) {
-      // Section header: ### path/to/file.js
-      const headerMatch = line.match(/^###\s+(\S+\.\w+)\s*$/);
-      if (headerMatch) {
-        if (currentFile !== null) {
-          index.set(currentFile, sigs);
-        }
-        currentFile = headerMatch[1];
-        sigs = [];
-        inBlock = false;
-        continue;
-      }
-
-      if (line.startsWith('```')) {
-        inBlock = !inBlock;
-        continue;
-      }
-
-      if (inBlock && currentFile && line.trim()) {
-        sigs.push(line.trim());
-      }
-    }
-
-    // Flush last file
-    if (currentFile !== null) {
-      index.set(currentFile, sigs);
-    }
-
-    return index;
+    // Delegate to the production index builder. This used to parse
+    // .github/copilot-instructions.md directly — a second parallel implementation
+    // that saw only the token-BUDGETED view, ignored the other adapters, the
+    // hot-cold/per-module strategy splits, and the complete retrieval index. The
+    // corpus therefore scored a smaller index than `sigmap ask` actually uses.
+    return __require('./src/retrieval/ranker').buildSigIndex(cwd);
   }
 
   // ---------------------------------------------------------------------------
@@ -4681,12 +4646,13 @@ __factories["./src/eval/runner"] = function(module, exports) {
    * @param {number} topK
    * @returns {{ file: string, score: number, sigs: string[] }[]}
    */
-  function rank(query, index, topK = 10) {
-    const candidates = [];
-    for (const [file, sigs] of index.entries()) {
-      candidates.push({ file, sigs });
-    }
-    return bm25rank(query, candidates).slice(0, topK);
+  function rank(query, index, topK = 10, opts = {}) {
+    // Measure the ranker users actually hit. This used to call bm25rank directly,
+    // which meant the corpus scored a parallel implementation with no penalties,
+    // graph boost, recency or learned weights — so no ranking regression in
+    // src/retrieval/ranker.js could ever show up in the benchmark numbers.
+    const { rank: prodRank } = __require('./src/retrieval/ranker');
+    return prodRank(query, index, Object.assign({ topK }, opts)).slice(0, topK);
   }
 
   // ---------------------------------------------------------------------------
@@ -4773,11 +4739,14 @@ __factories["./src/eval/runner"] = function(module, exports) {
 
     // Build index once (re-used across all tasks in the same repo)
     const index = buildSigIndex(cwd);
+    // Import graph built once too — the hop-1/hop-2 boost is part of what ships.
+    let graph = null;
+    try { graph = __require('./src/graph/builder').buildFromCwd(cwd); } catch (_) {}
 
     const taskResults = [];
     for (const task of tasks) {
-      const ranked = rank(task.query, index, topK).map((r) => r.file);
-      const topResult = rank(task.query, index, topK);
+      const topResult = rank(task.query, index, topK, { cwd, graph, learned: opts.learned });
+      const ranked = topResult.map((r) => r.file);
       const tokens = topResult.reduce((sum, r) => sum + estimateTokens(r.sigs), 0);
 
       const { hitAtK, reciprocalRank, precisionAtK } = __require('./src/eval/scorer');
@@ -11345,10 +11314,11 @@ __factories["./src/graph/builder"] = function(module, exports) {
   const fs   = require('fs');
   const path = require('path');
 
-  // Normalize paths for cross-platform consistency (Windows uses backslashes, Unix uses forward slashes)
-  // Use lowercase to enable case-insensitive lookups on case-sensitive Windows filesystems
+  // Cross-platform node key. Delegates to the ONE shared definition so this graph
+  // and the call-graph cannot drift apart again (see src/graph/path-key.js).
+  const { graphKey } = __require('./src/graph/path-key');
   function normalizePath(p) {
-    return path.normalize(p).toLowerCase();
+    return graphKey(p);
   }
 
   // ---------------------------------------------------------------------------
@@ -11877,7 +11847,8 @@ __factories["./src/graph/call-graph"] = function(module, exports) {
     'synchronized',
   ]);
 
-  function normalizePath(p) { return path.normalize(p).toLowerCase(); }
+  const { graphKey } = __require('./src/graph/path-key');
+  function normalizePath(p) { return graphKey(p); }
   function toRel(cwd, f) { return path.relative(cwd, f).replace(/\\/g, '/'); }
   function symId(cwd, absFile, name) { return `${toRel(cwd, absFile)}#${name}`; }
 
@@ -12309,8 +12280,11 @@ __factories["./src/graph/call-graph"] = function(module, exports) {
       for (const calleeId of calleeIds) {
         const calleeDef = graph.defs.get(calleeId);
         if (!calleeDef || calleeDef.file === callerDef.file) continue;
-        const a = path.resolve(cwd, callerDef.file);
-        const b = path.resolve(cwd, calleeDef.file);
+        // Keyed through graphKey so the file-level call graph shares ONE key space
+        // with the import graph. Previously this kept case while builder.js
+        // lowercased, so a lookup correct for one silently missed on the other.
+        const a = graphKey(path.resolve(cwd, callerDef.file));
+        const b = graphKey(path.resolve(cwd, calleeDef.file));
         add(a, b);
         add(b, a);
       }
@@ -12713,6 +12687,36 @@ __factories["./src/graph/impact"] = function(module, exports) {
   }
 
   module.exports = { getImpact, analyzeImpact, formatImpact, formatImpactJSON };
+  
+};
+
+// ── ./src/graph/path-key ──
+__factories["./src/graph/path-key"] = function(module, exports) {
+  
+  /**
+   * The single definition of a graph node key.
+   *
+   * src/graph/builder.js and src/graph/call-graph.js each used to normalise paths
+   * their own way — builder lowercased, call-graph did not — so a lookup written
+   * for one silently missed on the other. That divergence disabled the import
+   * boost on every repo whose path contains an uppercase letter, and later caused
+   * a "fix" for one graph to break the other. Both now key through this function,
+   * so there is one convention rather than two conventions and a convention.
+   *
+   * Lowercasing keeps lookups stable across case-insensitive filesystems (macOS,
+   * Windows), where the same file legitimately arrives spelled two ways.
+   *
+   * Zero-dependency, pure, bundle-safe.
+   */
+
+  const path = require('path');
+
+  /** Canonical key for a filesystem path used as a graph node. */
+  function graphKey(p) {
+    return path.normalize(String(p)).toLowerCase();
+  }
+
+  module.exports = { graphKey };
   
 };
 
@@ -15393,7 +15397,7 @@ __factories["./src/mcp/server"] = function(module, exports) {
 
   const SERVER_INFO = {
     name: 'sigmap',
-    version: '8.28.1',
+    version: '8.29.0',
     description: 'SigMap MCP server — code signatures on demand',
   };
 
@@ -16357,6 +16361,33 @@ __factories["./src/retrieval/bm25"] = function(module, exports) {
   // the literal query token always outranks a synonym-only match.
   const EXPANSION_WEIGHT = 0.15;
 
+  // Module-doc prose is indexed as a `# module: ...` pseudo-signature (index-only,
+  // see src/retrieval/module-doc.js). Per token it is a weaker relevance signal
+  // than a real signature — descriptive rather than definitional — so it is scored
+  // as its own BM25F field rather than pooled with the code terms.
+  const MODULE_DOC_RE = /^#\s*(module|docs):/;
+
+  // Line anchors are metadata, not content, and this ranker is documented as
+  // anchor-invariant. The previous strip was end-anchored, so it only fired when
+  // the anchor was the last thing on the line — but extractors append a doc hint
+  // AFTER it ("... :27-59  # Compute a normalized centrality score"). 27% of
+  // signatures therefore leaked their line numbers into the term space as tokens
+  // like "27" and "59": 840 junk terms, inflating document length for exactly the
+  // well-documented files, which BM25 then penalised via length normalisation.
+  const ANCHOR_RE = /\s*:\d+(?:-\d+)?(?=\s|$)/g;
+
+  function stripAnchor(line) {
+    return String(line).replace(ANCHOR_RE, '');
+  }
+  // Tuned on the 30-task leak-free corpus. The 0.5-0.8 band is flat
+  // (hit@5 63.3-66.7%, easy MRR steady at 0.825); adjacent values swing by up to
+  // 6.7pp, which at 30 tasks is literally two tasks — noise, not signal. 0.6 is
+  // chosen from the middle of that band rather than at its peak, because a
+  // per-token weight below 1 is the principled position (prose is descriptive,
+  // a signature is definitional) and picking the argmax of a 30-task sweep is
+  // how you overfit a benchmark.
+  const DOC_WEIGHT = 0.6;
+
   // Build a stemmed lookup: stem(member) → Set of the group's other stemmed members.
   const EXPANSIONS = (() => {
     const map = new Map();
@@ -16400,22 +16431,45 @@ __factories["./src/retrieval/bm25"] = function(module, exports) {
    * @param {{ file: string, sigs: string[] }[]} candidates
    * @returns {Array<object & { score: number }>}
    */
-  function bm25rank(query, candidates) {
+  function bm25rank(query, candidates, opts) {
     if (!Array.isArray(candidates) || candidates.length === 0) return [];
 
     const k1 = 1.5;
     const b = 0.75;
+
+    const docWeight = (opts && typeof opts.docWeight === 'number') ? opts.docWeight : DOC_WEIGHT;
 
     const docs = candidates.map((c) => {
       const pathToks = tokenize(c.file || '');
       // Ranking is anchor-invariant: `:start-end` line anchors are metadata,
       // not content — strip them before tokenizing so adding anchors to an
       // extractor never shifts BM25 length normalization or token counts.
-      const toks = tokenize((c.sigs || []).map((s) => String(s).replace(/\s*:\d+(?:-\d+)?\s*$/, '')).join(' '));
-      for (let i = 0; i < PATH_BOOST; i++) toks.push(...pathToks);
+      // BM25F-style fields. Module-doc prose and code signatures are different
+      // kinds of evidence and must not share one term-frequency pool: prose is
+      // ~30% of all indexed tokens, and a short file with a long header (few
+      // signatures, lots of description) otherwise wins unrelated queries purely
+      // through length normalisation.
+      const docLines = [];
+      const codeLines = [];
+      for (const line of (c.sigs || [])) (MODULE_DOC_RE.test(line) ? docLines : codeLines).push(line);
+      // TRIED AND REJECTED: splitting the declared symbol NAME into its own
+      // weighted BM25F field, on the IR prior that a name is a "title" and params
+      // are "body". Swept 1.0-4.0. hit@5 on the mined corpus rose 60.9% -> 65.2%,
+      // which is a single task crossing the rank-5 line — over 113 combined tasks
+      // hit@1 fell 52.2% -> 51.3%, hit@3 fell 66.4% -> 65.5%, hit@10 was identical
+      // and MRR dropped. It moves correct answers DOWN and happens to nudge one
+      // past a cutoff. A hit@5-only view would have shipped this.
+      const codeToks = tokenize(codeLines.map((x) => stripAnchor(x)).join(' '));
+      const docToks = tokenize(docLines.join(' '));
       const tf = new Map();
-      for (const t of toks) tf.set(t, (tf.get(t) || 0) + 1);
-      return { cand: c, tf, len: toks.length };
+      const addField = (toks, weight) => { for (const t of toks) tf.set(t, (tf.get(t) || 0) + weight); };
+      addField(codeToks, 1);
+      addField(pathToks, PATH_BOOST);
+      addField(docToks, docWeight);
+      // Length accumulates with the SAME weights, or a field's influence leaks
+      // back in through the normalisation term.
+      const len = codeToks.length + (PATH_BOOST * pathToks.length) + (docWeight * docToks.length);
+      return { cand: c, tf, len };
     });
 
     const N = docs.length || 1;
@@ -16444,7 +16498,7 @@ __factories["./src/retrieval/bm25"] = function(module, exports) {
       .sort((a, c) => c.score - a.score || String(a.file).localeCompare(String(c.file)));
   }
 
-  module.exports = { tokenize, stem, bm25rank, PATH_BOOST, STOP, expandQuery, EXPANSIONS, EXPANSION_WEIGHT };
+  module.exports = { tokenize, stem, bm25rank, PATH_BOOST, STOP, expandQuery, EXPANSIONS, EXPANSION_WEIGHT, DOC_WEIGHT, MODULE_DOC_RE, stripAnchor };
   
 };
 
@@ -16507,6 +16561,130 @@ __factories["./src/retrieval/enrich-from-maps"] = function(module, exports) {
   
 };
 
+// ── ./src/retrieval/module-doc ──
+__factories["./src/retrieval/module-doc"] = function(module, exports) {
+  
+  /**
+   * Module-level documentation extractor (retrieval only).
+   *
+   * Signatures describe a file's SHAPE — names, params, return types. A module's
+   * leading comment describes its PURPOSE, in prose, using the words a person
+   * would actually search with. That prose is the bridge between a behavioural
+   * query ("what fraction of the repo made it into the output") and the code
+   * that implements it (`coverageScore(cwd, fileEntries, config)`), which shares
+   * not one token with the query.
+   *
+   * This text is added to the RETRIEVAL INDEX ONLY — never to the generated
+   * context file. The prompt artifact is token-budgeted and prose is expensive
+   * there; the index is not injected into any prompt, so it can afford the words
+   * that make a file findable.
+   *
+   * Zero-dependency, pure, bundle-safe.
+   */
+
+  // Enough to characterise a module without letting one verbose header dominate
+  // BM25 length normalisation for the whole corpus.
+  const MAX_CHARS = 400;
+  const MAX_SCAN_LINES = 60;
+
+  // Legal boilerplate is high-frequency noise: it appears in many files, shares no
+  // vocabulary with real queries, and would flatten idf across the corpus.
+  const BOILERPLATE = /\b(copyright|licensed under|SPDX-License|all rights reserved|permission is hereby granted)\b/i;
+
+  const BLOCK_LANGS = new Set(['js', 'jsx', 'ts', 'tsx', 'java', 'go', 'rs', 'kt', 'swift', 'scala', 'cs', 'php', 'dart', 'c', 'cpp', 'h']);
+  const HASH_LANGS = new Set(['py', 'rb', 'r', 'sh', 'yml', 'yaml', 'toml']);
+
+  function _extOf(filePath) {
+    const m = String(filePath).match(/\.([A-Za-z0-9]+)$/);
+    return m ? m[1].toLowerCase() : '';
+  }
+
+  /** Strip comment furniture, JSDoc tags, and markup from one raw comment line. */
+  function _cleanLine(line) {
+    return String(line)
+      .replace(/^\s*[/*#-]+\s?/, '')      // leading // /* * # ---
+      .replace(/\*+\/\s*$/, '')            // trailing */
+      .replace(/^\s*@\w+.*$/, '')          // @param / @returns tag lines
+      .replace(/[*_`]/g, '')               // markdown emphasis / code ticks
+      .trim();
+  }
+
+  /**
+   * Extract a module's leading documentation prose.
+   *
+   * @param {string} src       file contents
+   * @param {string} filePath  used only to pick a comment syntax
+   * @returns {string} collapsed prose, capped, or '' when there is none
+   */
+  function extractModuleDoc(src, filePath) {
+    if (!src || typeof src !== 'string') return '';
+    const ext = _extOf(filePath);
+    const lines = src.split('\n', MAX_SCAN_LINES);
+
+    const collected = [];
+    let inBlock = false;
+    let started = false;
+
+    for (const raw of lines) {
+      const line = raw.trim();
+      if (!started) {
+        // Skip preamble that precedes the real header comment.
+        if (!line) continue;
+        if (line.startsWith('#!')) continue;                       // shebang
+        if (/^['"]use strict['"];?$/.test(line)) continue;
+        if (/^(package|import|from|using|#include)\b/.test(line)) continue;
+      }
+
+      if (BLOCK_LANGS.has(ext) || ext === '') {
+        if (!inBlock && line.startsWith('/*')) { inBlock = true; started = true; }
+        if (inBlock) {
+          const cleaned = _cleanLine(line);
+          if (cleaned) collected.push(cleaned);
+          if (line.includes('*/')) break;
+          continue;
+        }
+        if (line.startsWith('//')) {                                // run of // lines
+          started = true;
+          const cleaned = _cleanLine(line);
+          if (cleaned) collected.push(cleaned);
+          continue;
+        }
+        if (started || collected.length) break;
+        break;                                                      // first real code — no header
+      }
+
+      if (HASH_LANGS.has(ext)) {
+        if (/^("""|''')/.test(line)) {                              // python docstring
+          started = true; inBlock = !inBlock;
+          const cleaned = _cleanLine(line.replace(/^("""|''')/, '').replace(/("""|''')$/, ''));
+          if (cleaned) collected.push(cleaned);
+          if (!inBlock) break;
+          continue;
+        }
+        if (inBlock) { const c = _cleanLine(line); if (c) collected.push(c); continue; }
+        if (line.startsWith('#')) { started = true; const c = _cleanLine(line); if (c) collected.push(c); continue; }
+        if (collected.length) break;
+        break;
+      }
+      break;
+    }
+
+    const text = collected.join(' ').replace(/\s+/g, ' ').trim();
+    if (!text || BOILERPLATE.test(text)) return '';
+    if (text.length <= MAX_CHARS) return text;
+    return text.slice(0, MAX_CHARS).replace(/\s+\S*$/, '');        // never cut mid-word
+  }
+
+  /** Render as an index-only pseudo-signature, or '' when there is no doc. */
+  function moduleDocSig(src, filePath) {
+    const doc = extractModuleDoc(src, filePath);
+    return doc ? `# module: ${doc}` : '';
+  }
+
+  module.exports = { extractModuleDoc, moduleDocSig, MAX_CHARS };
+  
+};
+
 // ── ./src/retrieval/ranker ──
 __factories["./src/retrieval/ranker"] = function(module, exports) {
   
@@ -16529,7 +16707,7 @@ __factories["./src/retrieval/ranker"] = function(module, exports) {
 
   const { loadWeights } = __require('./src/learning/weights');
   const { tokenize, STOP_WORDS } = __require('./src/retrieval/tokenizer');
-  const { bm25rank } = __require('./src/retrieval/bm25');
+  const { bm25rank, MODULE_DOC_RE } = __require('./src/retrieval/bm25');
 
   // ---------------------------------------------------------------------------
   // Default weights
@@ -16553,17 +16731,28 @@ __factories["./src/retrieval/ranker"] = function(module, exports) {
   // Max additive prior for import-graph centrality (opt-in retrieval.centralityBlend)
   const CENTRALITY_BLEND_WEIGHT = 0.3;
 
-  // Intent-specific weight adjustments
-  const INTENT_WEIGHTS = {
-    search:     DEFAULT_WEIGHTS,
-    debug:      { ...DEFAULT_WEIGHTS, exactToken: 1.2, pathMatch: 0.6 },
-    explain:    { ...DEFAULT_WEIGHTS, symbolMatch: 0.8, pathMatch: 0.9 },
-    refactor:   { ...DEFAULT_WEIGHTS, symbolMatch: 0.9, exactToken: 0.8 },
-    review:     { ...DEFAULT_WEIGHTS, pathMatch: 1.0, exactToken: 0.9 },
-    test:       { ...DEFAULT_WEIGHTS, exactToken: 0.7, symbolMatch: 0.4 },
-    integrate:  { ...DEFAULT_WEIGHTS, graphBoost: 0.7, pathMatch: 1.1 },
-    navigate:   { ...DEFAULT_WEIGHTS, pathMatch: 1.2, exactToken: 0.9 },
-  };
+  // Per-intent weight profiles were removed in favour of a single weight set.
+  // They were provably inert: scoreFile's score was discarded by rank(), so the
+  // profiles only ever reached the explain table. Once the signal WAS wired into
+  // the score (see SIGNAL_BLEND below), a sweep over the leak-free hard corpus
+  // showed intent-specific profiles produced byte-identical metrics to the flat
+  // DEFAULT_WEIGHTS at every blend value — so they earn nothing and are gone.
+  // `detectIntent` is retained: it is still reported to the user and is the right
+  // hook for shaping OUTPUT depth later.
+
+  // How much the weighted keyword/symbol/path signal modulates the BM25 base.
+  // Multiplicative and bounded, so it can only reorder files that already match —
+  // it can never lift a zero-BM25 file into the results. Tuned on the leak-free
+  // corpus: 0.5 gave hit@5 50.0% -> 56.7% and MRR 0.419 -> 0.447; higher values
+  // held hit@5 but degraded MRR.
+  const SIGNAL_BLEND = 0.5;
+
+  // TRIED AND REJECTED: a same-line co-occurrence bonus, on the theory that a file
+  // declaring `parseAuthToken` should outrank one mentioning `parseAuth` and
+  // `token` on separate lines. Swept 0.15-1.0: hit@5 did not move on either the
+  // 90-task authored corpus or the 32-task mined one, and MRR degraded
+  // monotonically as the weight rose. Signatures are short and dense enough that
+  // BM25's bag already captures this. Not reinstated without new evidence.
 
   // Penalty multipliers for negative signals
   const PENALTY_SIGNALS = {
@@ -16573,12 +16762,36 @@ __factories["./src/retrieval/ranker"] = function(module, exports) {
     nodeModules:   0.0,    // node_modules (zero score)
   };
 
-  function _computePenalty(filePath) {
+  // Query terms that mean the penalised category IS the target. Read from the
+  // query tokens directly, NOT via detectIntent: that classifier is first-match-
+  // wins over its pattern object, and `debug` precedes `test`, so "fix the failing
+  // test" classifies as debug and never reaches the test branch.
+  const WANTS_TESTS = new Set(['test', 'tests', 'spec', 'specs', 'unit', 'integration', 'e2e', 'assertion', 'assert', 'mock', 'fixture', 'coverage', 'testing']);
+  const WANTS_DOCS = new Set(['doc', 'docs', 'documentation', 'readme', 'changelog', 'guide', 'tutorial']);
+
+  /** Which penalised categories the query is explicitly asking for. */
+  function _queryWants(queryTokens) {
+    const wants = { tests: false, docs: false };
+    for (const t of queryTokens || []) {
+      if (WANTS_TESTS.has(t)) wants.tests = true;
+      if (WANTS_DOCS.has(t)) wants.docs = true;
+    }
+    return wants;
+  }
+
+  function _computePenalty(filePath, wants) {
     const pathLower = filePath.toLowerCase();
     if (pathLower.includes('node_modules')) return PENALTY_SIGNALS.nodeModules;
-    if (/(^|\/)(test|tests|spec|__tests__|e2e)($|\/)/.test(pathLower)) return PENALTY_SIGNALS.testFile;
+    // A penalty must never fire on the very thing the user asked for. Before
+    // this, "write tests for the ranker" multiplied every test file by 0.4 —
+    // the query and the penalty were pulling in opposite directions.
+    if (/(^|\/)(test|tests|spec|__tests__|e2e)($|\/)/.test(pathLower) || /\.(test|spec)\./.test(pathLower)) {
+      return (wants && wants.tests) ? 1.0 : PENALTY_SIGNALS.testFile;
+    }
     if (/(^|\/)(dist|build|\.next|\.nuxt|out|\.venv|venv)($|\/)/.test(pathLower)) return PENALTY_SIGNALS.generatedCode;
-    if (/(^|\/)(docs|doc|readme|changelog)($|\/)/.test(pathLower)) return PENALTY_SIGNALS.docsFile;
+    if (/(^|\/)(docs|doc|readme|changelog)($|\/)/.test(pathLower)) {
+      return (wants && wants.docs) ? 1.0 : PENALTY_SIGNALS.docsFile;
+    }
     return 1.0;
   }
 
@@ -16597,6 +16810,26 @@ __factories["./src/retrieval/ranker"] = function(module, exports) {
   }
 
   // Common utility paths that should be treated as hubs regardless of fanout
+  // The graph builders disagree on key case: src/graph/builder.js lowercases every
+  // node (normalizePath), while src/graph/call-graph.js keys by a case-preserving
+  // path.resolve. Assuming either one breaks the other, so every graph lookup in
+  // this file probes both forms — the same thing the centrality blend already does.
+  function _graphKeys(p) {
+    const norm = require('path').normalize(p);
+    const lower = norm.toLowerCase();
+    return lower === norm ? [norm] : [norm, lower];
+  }
+  function _graphGet(map, absPath) {
+    for (const k of _graphKeys(absPath)) {
+      const hit = map.get(k);
+      if (hit !== undefined) return hit;
+    }
+    return undefined;
+  }
+  function _registerKeys(map, absPath, value) {
+    for (const k of _graphKeys(absPath)) if (!map.has(k)) map.set(k, value);
+  }
+
   function _isHub(filePath) {
     return /\/(utils|helpers|shared|common|constants|types|interfaces|index|zzz|globals)\.(ts|tsx|js|jsx|r|R)$/.test(filePath)
         || filePath.endsWith('/index.ts') || filePath.endsWith('/index.js')
@@ -16612,14 +16845,18 @@ __factories["./src/retrieval/ranker"] = function(module, exports) {
    * @param {object}   weights
    * @returns {{ score: number, signals: { exactToken: number, symbolMatch: number, prefixMatch: number, pathMatch: number, penalty: number } }}
    */
-  function scoreFile(filePath, sigs, queryTokens, weights) {
+  function scoreFile(filePath, sigs, queryTokens, weights, wants) {
     if (!sigs || sigs.length === 0) return { score: 0, signals: { exactToken: 0, symbolMatch: 0, prefixMatch: 0, pathMatch: 0, penalty: 1.0 } };
 
     const w = weights || DEFAULT_WEIGHTS;
-    const signals = { exactToken: 0, symbolMatch: 0, prefixMatch: 0, pathMatch: 0, penalty: _computePenalty(filePath) };
+    const signals = { exactToken: 0, symbolMatch: 0, prefixMatch: 0, pathMatch: 0, penalty: _computePenalty(filePath, wants) };
 
-    // Build token set from all signatures
-    const sigText = sigs.join(' ');
+    // Module-doc prose is excluded here on purpose. This signal measures overlap
+    // with DECLARED IDENTIFIERS; prose relevance is BM25's job, where it is scored
+    // as its own weighted field. Letting descriptive text inflate the identifier
+    // signal double-counts it and measurably degraded MRR.
+    const codeSigs = sigs.filter((line) => !MODULE_DOC_RE.test(line));
+    const sigText = codeSigs.join(' ');
     const sigTokenSet = new Set(tokenize(sigText));
 
     // Build token set from the file path
@@ -16637,7 +16874,7 @@ __factories["./src/retrieval/ranker"] = function(module, exports) {
         signals.exactToken += bonus;
 
         // Bonus: appears directly in a function/class/method name line
-        const nameLineMatch = sigs.some((sig) => {
+        const nameLineMatch = codeSigs.some((sig) => {
           const nt = tokenize(sig.replace(/[^a-zA-Z0-9_\s]/g, ' '));
           return nt.includes(qt);
         });
@@ -16699,13 +16936,18 @@ __factories["./src/retrieval/ranker"] = function(module, exports) {
     const graph = (opts && opts.graph && opts.graph.forward instanceof Map) ? opts.graph : null;
     const cwd = (opts && opts.cwd) || null;
 
-    // Detect query intent and get appropriate weights
+    // Intent is reported to the user and shapes output depth; it no longer
+    // selects scoring weights (see SIGNAL_BLEND).
     const intent = detectIntent(query);
-    const intentWeights = INTENT_WEIGHTS[intent] || DEFAULT_WEIGHTS;
-    const weights = (opts && opts.weights) ? Object.assign({}, intentWeights, opts.weights) : intentWeights;
-    const learnedWeights = opts && opts.cwd ? loadWeights(opts.cwd) : null;
+    const weights = (opts && opts.weights) ? Object.assign({}, DEFAULT_WEIGHTS, opts.weights) : DEFAULT_WEIGHTS;
+    // Learned per-file multipliers are a LOCAL, evolving signal (.context/weights.json).
+    // Benchmarks and CI gates must opt out via { learned: false }, or a developer's
+    // local learned state silently changes the score and CI stops being reproducible.
+    const useLearned = !(opts && opts.learned === false);
+    const learnedWeights = opts && opts.cwd && useLearned ? loadWeights(opts.cwd) : null;
 
     const queryTokens = tokenize(query);
+    const queryWants = _queryWants(queryTokens);
     if (queryTokens.length === 0) {
       // Empty query: return top-K by file count (most signatures = most useful)
       const all = [];
@@ -16722,18 +16964,32 @@ __factories["./src/retrieval/ranker"] = function(module, exports) {
     // are matched. The existing negative-signal penalty and recency/graph/learned
     // boosts are layered on top; the per-token signals stay for the explain table.
     const bm25Scores = new Map();
-    for (const c of bm25rank(query, [...sigIndex.entries()].map(([file, sigs]) => ({ file, sigs })))) {
+    for (const c of bm25rank(query, [...sigIndex.entries()].map(([file, sigs]) => ({ file, sigs })), opts)) {
       bm25Scores.set(c.file, c.score);
     }
 
-    const scored = [];
+    // Two passes: scoreFile's weighted signal needs the max across the corpus to
+    // normalise against, so collect first, then combine.
+    const prescored = [];
+    let maxSignal = 0;
     for (const [file, sigs] of sigIndex.entries()) {
-      const result = scoreFile(file, sigs, queryTokens, weights);
+      const result = scoreFile(file, sigs, queryTokens, weights, queryWants);
+      if (result.score > maxSignal) maxSignal = result.score;
+      prescored.push({ file, sigs, result });
+    }
+
+    const scored = [];
+    for (const { file, sigs, result } of prescored) {
       const penalty = result.signals.penalty;
       const base = bm25Scores.get(file) || 0;
-      let score = base * penalty;
+      // Blend the weighted keyword/symbol/path signal into the BM25 base. This
+      // was previously computed and thrown away — `result.score` was never read,
+      // which silently made DEFAULT_WEIGHTS and every intent profile dead config.
+      const signalNorm = maxSignal > 0 ? result.score / maxSignal : 0;
+      let score = base * penalty * (1 + SIGNAL_BLEND * signalNorm);
       const signals = result.signals;
       signals.bm25 = base;
+      signals.signalBlend = signalNorm;
 
       // Recency boost
       if (recencySet && recencySet.has(file) && score > 0) {
@@ -16763,44 +17019,46 @@ __factories["./src/retrieval/ranker"] = function(module, exports) {
     // Hub suppression: files with high fanout (>20%) are not boosted
     if (graph && cwd) {
       const path = require('path');
-      // Build maps for relative ↔ absolute path conversion and index lookup
-      const relToIdx = new Map();
-      const absToRel = new Map();
+      // Every graph node is keyed by `path.normalize(p).toLowerCase()` (see
+      // normalizePath in src/graph/builder.js and src/graph/call-graph.js).
+      // Lookups MUST use the same key space: a bare path.resolve() preserves
+      // case, so on any repo whose absolute path contains an uppercase letter
+      // every .get() missed and this entire block was silently inert.
+      const keyToIdx = new Map();
       for (let i = 0; i < scored.length; i++) {
-        relToIdx.set(scored[i].file, i);
-        const abs = path.resolve(cwd, scored[i].file);
-        absToRel.set(abs, scored[i].file);
+        _registerKeys(keyToIdx, path.resolve(cwd, scored[i].file), i);
       }
 
       const hubs = _computeHubs(graph);
-      const hop1Files = new Set(); // track which files received hop1 boost
+      const hop1Files = new Set(); // normalised keys that received a hop1 boost
+      const hop1Seeds = [];        // original (un-normalised) paths, for hop-2 lookup
 
       // Hop 1: direct neighbors of scored files
       for (const entry of scored) {
         if (entry.score <= 0) continue;
-        const abs = path.resolve(cwd, entry.file);
-        const neighbors = graph.forward.get(abs) || [];
+        const neighbors = _graphGet(graph.forward, path.resolve(cwd, entry.file)) || [];
         for (const neighborAbs of neighbors) {
-          if (_isHub(neighborAbs) || hubs.has(neighborAbs)) continue;
-          const neighborRel = path.relative(cwd, neighborAbs).replace(/\\/g, '/');
-          const idx = relToIdx.get(neighborRel);
+          const nk = path.normalize(neighborAbs);
+          if (_isHub(nk) || hubs.has(nk) || hubs.has(nk.toLowerCase())) continue;
+          const idx = _graphGet(keyToIdx, nk);
           if (idx !== undefined) {
             scored[idx].score += GRAPH_BOOST_AMOUNTS.hop1;
             scored[idx].signals.graphBoost = (scored[idx].signals.graphBoost || 0) + GRAPH_BOOST_AMOUNTS.hop1;
-            hop1Files.add(neighborAbs);
+            hop1Files.add(nk);
+            hop1Seeds.push(neighborAbs);
           }
         }
       }
 
       // Hop 2: neighbors of hop1 files (only if they didn't get a direct score)
-      for (const hop1File of hop1Files) {
-        if (!absToRel.has(hop1File)) continue; // skip files not in index
-        const neighbors = graph.forward.get(hop1File) || [];
+      for (const hop1Key of hop1Seeds) {
+        if (_graphGet(keyToIdx, hop1Key) === undefined) continue; // skip files not in index
+        const neighbors = _graphGet(graph.forward, hop1Key) || [];
         for (const neighborAbs of neighbors) {
-          if (_isHub(neighborAbs) || hubs.has(neighborAbs)) continue;
-          if (hop1Files.has(neighborAbs)) continue; // skip already hop1-boosted
-          const neighborRel = path.relative(cwd, neighborAbs).replace(/\\/g, '/');
-          const idx = relToIdx.get(neighborRel);
+          const nk = path.normalize(neighborAbs);
+          if (_isHub(nk) || hubs.has(nk) || hubs.has(nk.toLowerCase())) continue;
+          if (hop1Files.has(nk)) continue; // skip already hop1-boosted
+          const idx = _graphGet(keyToIdx, nk);
           if (idx !== undefined && scored[idx].score > 0) {
             // Only boost files that have some baseline score (not noise)
             scored[idx].score += GRAPH_BOOST_AMOUNTS.hop2;
@@ -16817,16 +17075,17 @@ __factories["./src/retrieval/ranker"] = function(module, exports) {
     const callGraph = (opts && opts.callGraph && opts.callGraph.forward instanceof Map) ? opts.callGraph : null;
     if (callGraph && cwd) {
       const path = require('path');
-      const relToIdx = new Map();
-      for (let i = 0; i < scored.length; i++) relToIdx.set(scored[i].file, i);
+      // buildCallFileGraph keys by a CASE-PRESERVING path.resolve, unlike the
+      // import graph builder which lowercases — hence the dual-form probe.
+      const keyToIdx = new Map();
+      for (let i = 0; i < scored.length; i++) _registerKeys(keyToIdx, path.resolve(cwd, scored[i].file), i);
       const hubs = _computeHubs(callGraph);
       const seeds = scored.filter((e) => e.score > 0).map((e) => e.file);
       for (const file of seeds) {
-        const abs = path.resolve(cwd, file);
-        for (const neighborAbs of (callGraph.forward.get(abs) || [])) {
-          if (_isHub(neighborAbs) || hubs.has(neighborAbs)) continue;
-          const neighborRel = path.relative(cwd, neighborAbs).replace(/\\/g, '/');
-          const idx = relToIdx.get(neighborRel);
+        for (const neighborAbs of (_graphGet(callGraph.forward, path.resolve(cwd, file)) || [])) {
+          const nk = path.normalize(neighborAbs);
+          if (_isHub(nk) || hubs.has(nk) || hubs.has(nk.toLowerCase())) continue;
+          const idx = _graphGet(keyToIdx, nk);
           if (idx !== undefined && scored[idx].file !== file) {
             scored[idx].score += GRAPH_BOOST_AMOUNTS.callHop;
             scored[idx].signals.callGraphBoost = (scored[idx].signals.callGraphBoost || 0) + GRAPH_BOOST_AMOUNTS.callHop;
@@ -17000,6 +17259,18 @@ __factories["./src/retrieval/ranker"] = function(module, exports) {
       }
     } catch (_) {}
     _mergeSigIndex(index, _buildSigIndexFromCache(cwd));
+
+    // The complete retrieval index (written by generate before applyTokenBudget)
+    // takes precedence: it is the only source containing files the budget dropped,
+    // and full signatures for files the budget collapsed to line anchors. It is
+    // merged as the BASE rather than on top because _mergeSigIndex only replaces
+    // when the source has MORE signatures — a collapsed entry has the same count
+    // as its full form, so merging the other way would keep the anchors.
+    try {
+      const full = __require('./src/retrieval/sig-index-store').readFullIndex(cwd);
+      if (full.size > 0) return _mergeSigIndex(full, index);
+    } catch (_) { /* absent → budgeted view is still served */ }
+
     return index;
   }
 
@@ -17125,25 +17396,155 @@ __factories["./src/retrieval/ranker"] = function(module, exports) {
   // ---------------------------------------------------------------------------
   // Intent detection — 7 intents
   // ---------------------------------------------------------------------------
+  // Nouns carry an optional plural: `\btest\b` does not match "tests", so
+  // "write unit tests for the ranker" matched NO intent at all and fell through
+  // to the 'search' default.
   const INTENT_PATTERNS = {
-    debug:    /\b(bug|fix|error|crash|exception|broken|failing|issue|problem|regression)\b/i,
+    debug:    /\b(bugs?|fix(es|ed)?|errors?|crash(es)?|exceptions?|broken|failing|failures?|issues?|problems?|regressions?)\b/i,
     explain:  /\b(explain|how does|what is|understand|overview|architecture|describe|walk me|teach)\b/i,
-    refactor: /\b(refactor|restructure|redesign|clean up|extract|move|rename|simplify|optimize)\b/i,
+    refactor: /\b(refactor|restructure|redesign|clean up|extract|move|rename|simplify|optimi[sz]e)\b/i,
     review:   /\b(review|check|audit|security|pr|pull request|assess|validate)\b/i,
-    test:     /\b(test|unit test|integration test|testing|spec|assert|mock)\b/i,
-    integrate:/\b(import|integrate|connect|wire|bind|require|export|depend|graph)\b|require[ds]\b/i,
+    test:     /\b(tests?|unit tests?|integration tests?|testing|specs?|assert(ion)?s?|mocks?|fixtures?)\b/i,
+    integrate:/\b(imports?|integrate|connect|wire|bind|requires?|exports?|depends?|dependenc(y|ies)|graph)\b/i,
     navigate: /\b(find|locate|where|search|look for|show me|navigate|browse|list)\b/i,
   };
 
-  function detectIntent(query) {
-    if (!query || typeof query !== 'string') return 'search';
+  /**
+   * Every intent whose pattern matches, strongest first.
+   *
+   * A real request is routinely multi-intent — "fix the failing test" is both a
+   * debug task and a test task — and reporting one label discards that. Worse,
+   * the single-label version returned the FIRST key in INTENT_PATTERNS order, so
+   * `debug` permanently shadowed `test`: no query containing "fix" or "failing"
+   * could ever be labelled a test, no matter how test-shaped it was.
+   *
+   * Ranked by how many distinct terms each pattern matched, so the dominant
+   * intent leads; ties fall back to declaration order for determinism.
+   *
+   * @param {string} query
+   * @returns {string[]} matched intents, never empty (defaults to ['search'])
+   */
+  function detectIntents(query) {
+    if (!query || typeof query !== 'string') return ['search'];
+    const scored = [];
+    let order = 0;
     for (const [intent, re] of Object.entries(INTENT_PATTERNS)) {
-      if (re.test(query)) return intent;
+      const hits = query.match(new RegExp(re.source, re.flags.includes('g') ? re.flags : re.flags + 'g'));
+      if (hits && hits.length) {
+        scored.push({ intent, hits: new Set(hits.map((h) => h.toLowerCase())).size, order: order });
+      }
+      order++;
     }
-    return 'search';
+    if (scored.length === 0) return ['search'];
+    scored.sort((a, b) => (b.hits - a.hits) || (a.order - b.order));
+    return scored.map((s) => s.intent);
   }
 
-  module.exports = { rank, buildSigIndex, scoreFile, formatRankTable, formatRankJSON, DEFAULT_WEIGHTS, GRAPH_BOOST_AMOUNTS, CENTRALITY_BLEND_WEIGHT, detectIntent };
+  /** Primary intent. Kept for callers that want a single label. */
+  function detectIntent(query) {
+    return detectIntents(query)[0];
+  }
+
+  module.exports = { rank, buildSigIndex, scoreFile, _queryWants, detectIntents, formatRankTable, formatRankJSON, DEFAULT_WEIGHTS, GRAPH_BOOST_AMOUNTS, CENTRALITY_BLEND_WEIGHT, detectIntent };
+  
+};
+
+// ── ./src/retrieval/sig-index-store ──
+__factories["./src/retrieval/sig-index-store"] = function(module, exports) {
+  
+  /**
+   * Complete, unbudgeted signature index for retrieval.
+   *
+   * WHY THIS EXISTS
+   * ---------------
+   * The generated context file (CLAUDE.md / AGENTS.md / copilot-instructions.md)
+   * is a BUDGETED VIEW: `applyTokenBudget` drops and collapses files so the
+   * artifact stays under `maxTokens`, because it is injected into every prompt.
+   *
+   * `buildSigIndex` used to parse that same artifact to build the ranker's index,
+   * so retrieval inherited the prompt budget. Every file the budget dropped became
+   * permanently unreachable by `sigmap ask` — no ranking change can surface a file
+   * that is not in the index. On this repo that was 53 of 155 source files (34%),
+   * and restoring them moved hit@5 from 50% to 90% on the retrieval corpus.
+   *
+   * The two artifacts have opposite requirements — the prompt file wants to be
+   * small, the index wants to be complete — so they are now separate. This store
+   * is written by `generate` BEFORE the budget is applied, and lives under
+   * `.context/` (gitignored, never injected into a prompt).
+   *
+   * Zero-dependency, bundle-safe (fs + path only).
+   */
+
+  const fs = require('fs');
+  const path = require('path');
+
+  const INDEX_DIR = '.context';
+  const INDEX_FILE = 'sig-index.json';
+  const SCHEMA = 1;
+
+  /** Absolute path to the retrieval index artifact. */
+  function indexPath(cwd) {
+    return path.join(cwd, INDEX_DIR, INDEX_FILE);
+  }
+
+  /**
+   * Persist the complete signature index.
+   *
+   * @param {string} cwd
+   * @param {Array<{filePath: string, sigs: string[]}>} fileEntries - every
+   *        extracted entry, BEFORE applyTokenBudget has dropped or collapsed any.
+   * @param {{ version?: string }} [opts]
+   * @returns {{ path: string, files: number }}
+   */
+  function writeFullIndex(cwd, fileEntries, opts = {}) {
+    const files = {};
+    let count = 0;
+    for (const e of fileEntries || []) {
+      if (!e || !e.filePath || !Array.isArray(e.sigs) || e.sigs.length === 0) continue;
+      const rel = path.relative(cwd, e.filePath).replace(/\\/g, '/');
+      if (!rel || rel.startsWith('..')) continue;
+      files[rel] = e.sigs;
+      count++;
+    }
+
+    const out = indexPath(cwd);
+    fs.mkdirSync(path.dirname(out), { recursive: true });
+    // Write-then-rename so a concurrent `ask` never observes a half-written index.
+    const tmp = `${out}.tmp`;
+    fs.writeFileSync(tmp, JSON.stringify({
+      schema: SCHEMA,
+      sigmapVersion: opts.version || null,
+      generated: new Date().toISOString(),
+      files,
+    }), 'utf8');
+    fs.renameSync(tmp, out);
+    return { path: out, files: count };
+  }
+
+  /**
+   * Load the complete signature index, or an empty Map when absent/unreadable.
+   *
+   * Deliberately NOT version-busted (unlike .sigmap-cache.json): a stale but
+   * complete index still retrieves the right files, whereas discarding it drops
+   * retrieval back to the budgeted view — the exact failure this store exists to
+   * prevent. Staleness is handled by re-running generate or by cache/freshen.
+   *
+   * @param {string} cwd
+   * @returns {Map<string, string[]>}
+   */
+  function readFullIndex(cwd) {
+    const index = new Map();
+    try {
+      const data = JSON.parse(fs.readFileSync(indexPath(cwd), 'utf8'));
+      if (!data || data.schema !== SCHEMA || !data.files) return index;
+      for (const [rel, sigs] of Object.entries(data.files)) {
+        if (Array.isArray(sigs) && sigs.length > 0) index.set(rel, sigs);
+      }
+    } catch (_) { /* absent or corrupt → caller falls back to the context file */ }
+    return index;
+  }
+
+  module.exports = { writeFullIndex, readFullIndex, indexPath, SCHEMA, INDEX_FILE };
   
 };
 
@@ -21235,7 +21636,7 @@ function __tryGit(args, opts = {}) {
   catch (_) { return ''; }
 }
 
-const VERSION = '8.28.1';
+const VERSION = '8.29.0';
 const MARKER = '\n\n## Auto-generated signatures\n<!-- Updated by gen-context.js -->\n';
 
 function requireSourceOrBundled(key) {
@@ -21372,8 +21773,68 @@ function buildFileList(cwd, config) {
     const found = walkDir(abs, config.exclude, config.maxDepth);
     files.push(...found);
   }
+  files.push(...declaredEntrypoints(cwd, config, files));
   // Deduplicate
   return [...new Set(files)];
+}
+
+/**
+ * Source files a project declares as its own entrypoints in package.json
+ * (`main` and every `bin` target), when they live outside srcDirs.
+ *
+ * A CLI's entrypoint is usually at the repo root, so a srcDirs of [src] left
+ * it unindexed and therefore unreachable by `sigmap ask` — on this repo that
+ * was gen-context.js, which holds the whole generator pipeline. Declared
+ * entrypoints are load-bearing by definition, so they are always scanned.
+ */
+function collectTestEntries(cwd, config, existing) {
+  const TEST_ROOTS = ['test', 'tests', '__tests__', 'spec', 'e2e'];
+  const have = new Set((existing || []).map((e) => e.filePath));
+  const out = [];
+  let moduleDocSig = null;
+  try { ({ moduleDocSig } = requireSourceOrBundled('./src/retrieval/module-doc')); } catch (_) {}
+  for (const root of TEST_ROOTS) {
+    const abs = path.join(cwd, root);
+    if (!fs.existsSync(abs)) continue;
+    let files = [];
+    try { files = walkDir(abs, config.exclude, config.maxDepth); } catch (_) { continue; }
+    for (const fp of files) {
+      if (have.has(fp)) continue;
+      let src = '';
+      try { src = fs.readFileSync(fp, 'utf8'); } catch (_) { continue; }
+      let sigs = [];
+      try {
+        const { extractFile } = requireSourceOrBundled('./src/extractors/dispatch');
+        sigs = extractFile(fp, src) || [];
+      } catch (_) { continue; }
+      if (!sigs.length) continue;
+      const doc = moduleDocSig ? moduleDocSig(src, fp) : '';
+      out.push({ filePath: fp, sigs: doc ? [doc, ...sigs] : sigs });
+    }
+  }
+  return out;
+}
+
+function declaredEntrypoints(cwd, config, existing) {
+  const out = [];
+  try {
+    const pkg = JSON.parse(fs.readFileSync(path.join(cwd, 'package.json'), 'utf8'));
+    const have = new Set(existing);
+    const refs = [];
+    if (typeof pkg.main === 'string') refs.push(pkg.main);
+    if (typeof pkg.bin === 'string') refs.push(pkg.bin);
+    else if (pkg.bin && typeof pkg.bin === 'object') refs.push(...Object.values(pkg.bin).filter((v) => typeof v === 'string'));
+    for (const ref of refs) {
+      const abs = path.resolve(cwd, ref);
+      if (have.has(abs) || out.includes(abs)) continue;
+      const rel = path.relative(cwd, abs);
+      if (!rel || rel.startsWith('..')) continue;                       // outside the repo
+      if ((config.exclude || []).some((x) => rel.split(path.sep).includes(x))) continue;
+      if (!fs.existsSync(abs) || !fs.statSync(abs).isFile()) continue;
+      out.push(abs);
+    }
+  } catch (_) { /* no package.json, or unreadable → nothing to add */ }
+  return out;
 }
 
 // ---------------------------------------------------------------------------
@@ -22647,6 +23108,60 @@ function runGenerate(cwd, config, reportMode, reportJson = false) {
 
   let result;
   if (!reportMode) {
+    // Retrieval index (complete, unbudgeted) — written BEFORE applyTokenBudget
+    // and before the strategy split, so it holds every extracted file for every
+    // strategy. The generated context file is a budgeted VIEW for prompt
+    // injection; the ranker must not inherit that budget or files dropped to fit
+    // maxTokens become permanently unreachable by `sigmap ask`.
+    try {
+      const __store = requireSourceOrBundled('./src/retrieval/sig-index-store');
+      // Honour --terse: `sigmap ask` renders .context/query-context.md straight
+      // from these signatures, and that IS prompt-bound, so the user's format
+      // choice has to survive into the index. Terse encoding preserves line
+      // anchors byte-exactly, so get_lines still resolves.
+      // Index-only enrichment: a module's leading comment describes its PURPOSE
+      // in prose, which is the vocabulary a behavioural query actually uses.
+      // Signatures carry shape, not intent — `coverageScore(cwd, fileEntries, config)`
+      // shares no token with "what fraction of the repo made it into the output",
+      // but that file's header says exactly that. Added to the retrieval index
+      // ONLY: the prompt artifact is token-budgeted, the index is not.
+      let __entries = fileEntries;
+      try {
+        // TRIED AND REJECTED: also indexing every per-symbol doc sentence
+        // untruncated (src/retrieval/doc-text.js). 39% of extractor doc hints are
+        // cut at 60 chars, so recovering them looked like free vocabulary. It is
+        // not: train hit@5 fell 75.6% -> 73.3% at every docWeight from 0.2 to 1.0,
+        // and the mined corpus never moved off 62.5%. The MODULE HEADER is the
+        // high-signal prose — it states the file's purpose. Per-symbol sentences
+        // describe internal helpers, so they broaden what each file matches
+        // without making any file a better answer.
+        const { moduleDocSig } = requireSourceOrBundled('./src/retrieval/module-doc');
+        __entries = __entries.map((e) => {
+          let src = e.content;
+          if (typeof src !== 'string') { try { src = fs.readFileSync(e.filePath, 'utf8'); } catch (_) { src = ''; } }
+          const doc = moduleDocSig(src, e.filePath);
+          return doc ? Object.assign({}, e, { sigs: [doc, ...e.sigs] }) : e;
+        });
+      } catch (_) { /* enrichment is best-effort */ }
+      if (config && config.terse) {
+        try {
+          const { encodeTerseSigs } = requireSourceOrBundled('./src/format/terse');
+          __entries = fileEntries.map((e) => Object.assign({}, e, { sigs: encodeTerseSigs(e.sigs) }));
+        } catch (_) { /* terse unavailable → index full signatures */ }
+      }
+      // Test files: indexed, never rendered into the prompt. They were the one
+      // whole category `sigmap ask` could not reach at all — srcDirs excludes
+      // them, so "where are the tests for X" had no answer at any rank. The
+      // prompt artifact stays clean because this list never reaches formatOutput.
+      try {
+        __entries = __entries.concat(collectTestEntries(cwd, config, __entries));
+      } catch (_) { /* best-effort */ }
+      const __w = __store.writeFullIndex(cwd, __entries, { version: VERSION });
+      if (process.argv.includes('--verbose')) {
+        console.warn(`[sigmap] retrieval index: ${__w.files} file(s) → ${path.relative(cwd, __w.path)}`);
+      }
+    } catch (_) { /* non-fatal: ranker falls back to parsing the context file */ }
+
     if (strategy === 'per-module') {
       result = runPerModuleStrategy(cwd, configWithBudget, fileEntries, inputTokenTotal);
     } else if (strategy === 'hot-cold') {
@@ -23333,14 +23848,12 @@ function getRawTokenCount(cwd, config) {
   return total;
 }
 
-function getIntentWeights(intent) {
+// Intent no longer selects scoring weights — the per-intent multipliers were
+// measured to have zero effect on ranking (see src/retrieval/ranker.js).
+// Kept as a single call site so the ask handler keeps one weights source.
+function getIntentWeights(_intent) {
   const { DEFAULT_WEIGHTS } = requireSourceOrBundled('./src/retrieval/ranker');
-  const base = Object.assign({}, DEFAULT_WEIGHTS);
-  if (intent === 'debug')    return Object.assign({}, base, { recencyBoost: base.recencyBoost * 1.5 });
-  if (intent === 'explain')  return Object.assign({}, base, { symbolMatch:  base.symbolMatch  * 1.5 });
-  if (intent === 'refactor') return Object.assign({}, base, { pathMatch:    base.pathMatch    * 1.5 });
-  if (intent === 'review')   return Object.assign({}, base, { exactToken:   base.exactToken   * 1.3 });
-  return base;
+  return Object.assign({}, DEFAULT_WEIGHTS);
 }
 
 function extractQuerySymbols(query) {
@@ -23515,7 +24028,7 @@ function main() {
       process.exit(1);
     }
 
-    const { detectIntent, buildSigIndex, rank } = requireSourceOrBundled('./src/retrieval/ranker');
+    const { detectIntent, detectIntents, buildSigIndex, rank } = requireSourceOrBundled('./src/retrieval/ranker');
     const { coverageScore } = requireSourceOrBundled('./src/analysis/coverage-score');
     const { loadSession, saveSession, mergeSessionContext } = requireSourceOrBundled('./src/session/memory');
     const { detectWorkspaces, inferPackage, scopeToPackage } = requireSourceOrBundled('./src/workspace/detector');
@@ -23692,7 +24205,7 @@ function main() {
       console.log([
         bar,
         ` sigmap ask  "${query}"`,
-        ` Intent    : ${intent}`,
+        ` Intent    : ${detectIntents(query).join(', ')}`,
         ` Context   : ${ctxTok.toLocaleString()} tokens  →  ${path.relative(cwd, outPath)}`,
         ` Coverage  : ${coveragePct}%`,
         ` Risk      : ${riskLevel}`,

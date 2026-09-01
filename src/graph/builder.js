@@ -12,10 +12,11 @@
 const fs   = require('fs');
 const path = require('path');
 
-// Normalize paths for cross-platform consistency (Windows uses backslashes, Unix uses forward slashes)
-// Use lowercase to enable case-insensitive lookups on case-sensitive Windows filesystems
+// Cross-platform node key. Delegates to the ONE shared definition so this graph
+// and the call-graph cannot drift apart again (see src/graph/path-key.js).
+const { graphKey } = require('./path-key');
 function normalizePath(p) {
-  return path.normalize(p).toLowerCase();
+  return graphKey(p);
 }
 
 // ---------------------------------------------------------------------------

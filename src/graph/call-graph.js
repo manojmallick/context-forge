@@ -38,7 +38,8 @@ const NON_CALL = new Set([
   'synchronized',
 ]);
 
-function normalizePath(p) { return path.normalize(p).toLowerCase(); }
+const { graphKey } = require('./path-key');
+function normalizePath(p) { return graphKey(p); }
 function toRel(cwd, f) { return path.relative(cwd, f).replace(/\\/g, '/'); }
 function symId(cwd, absFile, name) { return `${toRel(cwd, absFile)}#${name}`; }
 
@@ -470,8 +471,11 @@ function buildCallFileGraph(cwd, opts = {}) {
     for (const calleeId of calleeIds) {
       const calleeDef = graph.defs.get(calleeId);
       if (!calleeDef || calleeDef.file === callerDef.file) continue;
-      const a = path.resolve(cwd, callerDef.file);
-      const b = path.resolve(cwd, calleeDef.file);
+      // Keyed through graphKey so the file-level call graph shares ONE key space
+      // with the import graph. Previously this kept case while builder.js
+      // lowercased, so a lookup correct for one silently missed on the other.
+      const a = graphKey(path.resolve(cwd, callerDef.file));
+      const b = graphKey(path.resolve(cwd, calleeDef.file));
       add(a, b);
       add(b, a);
     }

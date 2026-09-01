@@ -1,6 +1,6 @@
 ---
 title: Roadmap
-description: SigMap version history and roadmap. From v0.0 to v7.22.0, with recent releases completing the grounded-codegen plan — a realistic §9 ablation (real-symbol corpus, exact-signature grounding, --verbose), a Gemini (AI Studio) provider for the §9 ablation, the init Creation-workflow CLAUDE.md block, scaffold persistence, the LLM A/B hallucination ablation harness, the sigmap create orchestrator and its four guard stages (scaffold, verify-plan, verify-ai-output, review-pr), the conventions command with its full flag set (--conflicts, --inject, --report, --ci, --fix, --update), the grounding benchmark, read-time self-heal, live-index MCP write hooks, the get_callee_signatures MCP tool (exact callee signatures), realistic per-query savings, release-pipeline robustness (bundle integrity + version.json gates, standalone-bundle smoke test), the sigmap gain token-savings dashboard, supply-chain hardening (zero system-shell access), Squeeze input minimization with symbol enrichment, source-of-truth llms.txt, the verify-ai-output Hallucination Guard, and Memory tools (note, status, read_memory MCP tool).
+description: SigMap version history and roadmap. From v0.0 to v8.29.0, with recent releases completing the grounded-codegen plan — a realistic §9 ablation (real-symbol corpus, exact-signature grounding, --verbose), a Gemini (AI Studio) provider for the §9 ablation, the init Creation-workflow CLAUDE.md block, scaffold persistence, the LLM A/B hallucination ablation harness, the sigmap create orchestrator and its four guard stages (scaffold, verify-plan, verify-ai-output, review-pr), the conventions command with its full flag set (--conflicts, --inject, --report, --ci, --fix, --update), the grounding benchmark, read-time self-heal, live-index MCP write hooks, the get_callee_signatures MCP tool (exact callee signatures), realistic per-query savings, release-pipeline robustness (bundle integrity + version.json gates, standalone-bundle smoke test), the sigmap gain token-savings dashboard, supply-chain hardening (zero system-shell access), Squeeze input minimization with symbol enrichment, source-of-truth llms.txt, the verify-ai-output Hallucination Guard, and Memory tools (note, status, read_memory MCP tool).
 head:
   - - meta
     - property: og:title
@@ -22,7 +22,7 @@ head:
 
 One hundred one versions shipped. MIT open source from day one.
 
-**Stats:** 96.8% overall token reduction · 82.2% retrieval hit@5 (1.59× measured lift vs single-shot grep) · 98.0% test-discovery F1 · installed-library grounding (JS/TS + Python) · method-level call-graph (JS/TS, Python, Java, Go, Rust) · 21 MCP tools · 33 languages · 17-language source resolver · 0 npm deps
+**Stats:** 96.8% overall token reduction · 81.1% retrieval hit@5 (1.73× measured lift vs single-shot grep) · 98.0% test-discovery F1 · installed-library grounding (JS/TS + Python) · method-level call-graph (JS/TS, Python, Java, Go, Rust) · 21 MCP tools · 33 languages · 17-language source resolver · 0 npm deps
 
 ## Token reduction by version
 
@@ -835,6 +835,18 @@ Two milestones in one release. **`verify-ai-output` Reliable MVP** (#232) grows 
 **Tags:** `KNOWN_LIMITATIONS.md` · `extraction honesty` · `tier label` · `drift guard` · `G1` · `#520` · `PR #521`
 
 **Impact:** the credibility gap a skeptical reviewer finds first is closed in writing; 6 new guard checks (133 files); zero runtime changes.
+
+---
+
+### v8.29.0 — Retrieval Index Split: the ranker stops reading the prompt ✓ (2026-09-01)
+
+**Minor release — the index and the prompt wanted opposite things and were the same artifact.** The generated context file is token-budgeted because it is injected into every prompt; `buildSigIndex` parsed that same file, so retrieval inherited the budget and every file `applyTokenBudget` dropped became unreachable **at any rank** — 53 of 155 source files on this repo. No ranking change can surface a file that is not indexed. A complete index is now written to `.context/sig-index.json` before the budget is applied and before the strategy split, and merged as the base so uncollapsed signatures win. Because it is never injected anywhere, it can afford what a prompt cannot: module-header prose (the file's *purpose*, which is the vocabulary behavioural queries use) and test files (previously unscanned, so "where are the tests for X" had no answer at any rank).
+
+Four ranking features turned out to be inert. The import- and call-graph boosts never fired: `ask` did not pass a graph, and the lookup could not have matched anyway because `builder.js` lowercased node keys while `call-graph.js` preserved case — every `.get()` missed on any checkout under `/Users/…` or `C:\Users\…`. `scoreFile`'s score was computed and discarded, which silently made `DEFAULT_WEIGHTS` and all seven intent profiles dead config. Penalties demoted test files even when the query asked for tests. And 27% of signatures leaked their line anchors into the term space, because the strip was end-anchored while doc hints follow the anchor. None of it was visible: `src/eval/runner.js` carried its own `rank` **and** its own `buildSigIndex`, so the benchmark measured a parallel implementation.
+
+**Tags:** `sig-index-store` · `module-doc` · `path-key` · `applyTokenBudget` · `_mergeSigIndex` · `detectIntents` · `stripAnchor` · `retrieval-mined.jsonl` · `validate:retrieval` · `#546` · `PR #547`
+
+**Impact:** hit@5 **45.0% → 76.7%** on a 90-task leak-free corpus, ranker changes only. A second corpus is mined from commit subjects paired with the files those commits touched — **authored by nobody tuning the ranker** — and reads 60.9%; the ladder it exposes (leaky 90.0% / self-authored 76.7% / independent 60.9%) is why it exists and is gated in CI. Prompt artifacts do not grow. 14 new guards, each verified to fail when its bug is reintroduced (139 test files).
 
 ---
 

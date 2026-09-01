@@ -10,6 +10,34 @@ Format: [Semantic Versioning](https://semver.org/)
 
 ---
 
+## [8.29.0] — 2026-09-01
+
+Minor release — **"Retrieval Index Split" (v8.29)**: the ranker stops reading the token-budgeted prompt artifact, and the ranking features that were silently inert start executing. Plus the first benchmark corpus this project did not author itself.
+
+### Added
+- **Complete retrieval index, separate from the prompt (#546, PR #547):** new `src/retrieval/sig-index-store.js` writes every extracted file to `.context/sig-index.json` **before** `applyTokenBudget` and before the strategy split, so it is complete for `full`, `per-module` and `hot-cold` alike; atomic write-then-rename so a concurrent `ask` never reads a half-written index. `buildSigIndex` merges it as the **base** (not on top): `_mergeSigIndex` only replaces when the source has *more* signatures, and a budget-collapsed entry has the same count as its full form, so merging the other way would have kept the anchors. Previously the ranker parsed the budgeted context file, so every file the budget dropped was unreachable at any rank — **53 of 155 source files here (34%)**. No ranking change can surface a file that is not indexed.
+- **Index-only enrichment.** Module-header prose (`src/retrieval/module-doc.js`) is indexed but never rendered into a prompt: signatures describe a file's *shape*, the header describes its *purpose*, which is the vocabulary a behavioural query actually uses. Licence boilerplate is filtered (high df, no query value). Test files are indexed too — previously not scanned at all, so "where are the tests for X" had no answer at any rank. Neither reaches the prompt artifact.
+- **Declared entrypoints are always scanned** — `package.json` `main` and every `bin` target, when they live outside `srcDirs`. A CLI's entrypoint is usually at the repo root and was therefore unindexed.
+- **Leak-free benchmark corpora + CI gate.** `benchmarks/tasks/retrieval-hard.jsonl` (90 hand-authored leak-free tasks) and `benchmarks/tasks/retrieval-mined.jsonl` — mined by `scripts/mine-corpus.mjs` from commit subjects paired with the files those commits touched, so **nobody tuning the ranker wrote them**; a leaking query is dropped, never rewritten. `scripts/check-corpus.mjs` adds a verbatim 4-gram check on top of the existing basename-leakage check, because once module prose is indexed a query paraphrased from a file's own header is trivially retrievable. `scripts/run-retrieval-gate.mjs` (`npm run validate:retrieval`) gates CI on floor, regression and corpus hygiene, and runs with learned weights disabled so a developer's local `.context/weights.json` cannot change what CI sees.
+
+### Fixed
+- **Import- and call-graph boosts were inert.** `ask` never passed `graph` at all, and the lookup could not have matched anyway: `src/graph/builder.js` keyed nodes through `normalizePath` (lowercased) while `src/graph/call-graph.js` used a case-preserving `path.resolve`, so every `.get()` missed on any repo path containing an uppercase letter — i.e. every real checkout under `/Users/…` or `C:\Users\…`. New `src/graph/path-key.js` is the single key definition both builders delegate to. The centrality blend already carried a local `|| map.get(abs.toLowerCase())` workaround; that divergence is now removed at the source.
+- **Scoring weights were dead config.** `rank()` discarded `scoreFile`'s score and kept only its penalty, so `DEFAULT_WEIGHTS` and all seven intent profiles changed nothing — zeroing every weight produced byte-identical rankings across 20 queries. The signal is now blended into the score (bounded and multiplicative, so it reorders matches and can never lift a zero-BM25 file). The per-intent profiles are **removed**: with the signal wired, a sweep on the leak-free corpus showed intent-specific weights producing identical metrics to a flat set at every blend value.
+- **Negative-signal penalties fought the query.** A test file was multiplied by 0.4 even when the query asked for tests. Penalties now read the query terms directly rather than routing through `detectIntent` — that classifier is first-match-wins over its pattern object and `debug` precedes `test`, so "fix the failing test" classified as debug and never reached the test branch.
+- **Line anchors leaked into the term space.** The strip was end-anchored, but extractors append a doc hint *after* the anchor, so 27% of signatures contributed their line numbers as index terms (840 junk tokens) — inflating document length for exactly the best-documented files, which BM25 then penalised through length normalisation. The ranker is documented as anchor-invariant; it now is.
+- **Intent detection is multi-label** (`detectIntents`), ranked by match count, so `debug` no longer shadows `test`. Fixing it surfaced a second bug: `\btest\b` does not match "tests", so "write unit tests for the ranker" matched no intent at all and fell through to the default. Patterns now handle plurals across all seven intents; `sigmap ask` reports every matched intent.
+- **The benchmark measured code users never ran.** `src/eval/runner.js` carried its own `rank` **and** its own `buildSigIndex` (hardcoded to `.github/copilot-instructions.md`), both bypassing production — so no ranking regression could appear in the numbers. Both now delegate.
+
+### Changed
+- Measured on leak-free corpora, ranker changes only: self-authored 90-task hit@5 **45.0% → 76.7%**; the independent mined corpus reads **60.9%**. The bias ladder those three corpora expose — leaky 90.0% / self-authored 76.7% / independent 60.9% — is why the mined split exists and is gated. It is small (1 task ≈ 4.3pp) and the defensible miner parameter range spans 53–73%, so it is documented as a band, not a point.
+- Prompt artifacts do not grow: `CLAUDE.md` stays ~55KB; the 176KB retrieval index lives in gitignored `.context/`.
+- Rejected after measurement, with reasons recorded in source so they are not re-derived: same-line locality, full per-symbol doc-hint recovery, pseudo-relevance feedback, and a name/body BM25F split — the last raised hit@5 by one task while lowering hit@1, hit@3 and MRR.
+- `npm run test:integration` now runs `test/integration/all.js`; the hardcoded subset it ran before diverged from CI and was hiding failures.
+- 14 new integration guards (`test/integration/retrieval-index.test.js`), each verified to fail when its bug is reintroduced; 139 test files; bundle rebuilt (154 modules); zero new dependencies.
+- **npm Trusted Publishing (OIDC)** replaces the expiring automation token in the release workflow.
+
+---
+
 ## [8.28.1] — 2026-08-22
 
 Patch release — two silent-failure bug fixes: a false "zero importers" in the Python import graph, and an empty index under the per-module strategy.
