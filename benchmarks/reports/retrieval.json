@@ -1,5 +1,5 @@
 {
-  "generated": "2026-08-22T07:34:34.192Z",
+  "generated": "2026-09-01T15:17:13.123Z",
   "repos": [
     {
       "repo": "express",
@@ -237,7 +237,7 @@
             "binding/form.go",
             "binding/binding.go"
           ],
-          "top1": "binding/multipart_form_mapping.go",
+          "top1": "mode.go",
           "firstHitRank": 4,
           "tier": "partial"
         },
@@ -1266,7 +1266,7 @@
     {
       "repo": "fastify",
       "fileCount": 31,
-      "sigCount": 28,
+      "sigCount": 29,
       "tasks": 8,
       "hitAt5": 0.625,
       "mrr": 0.667,
@@ -1344,7 +1344,7 @@
           "expected": [
             "lib/four-oh-four.js"
           ],
-          "top1": "lib/config-validator.js",
+          "top1": "fastify.js",
           "firstHitRank": null,
           "tier": "wrong"
         },

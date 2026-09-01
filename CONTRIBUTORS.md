@@ -35,6 +35,9 @@ To ensure proper attribution:
 
 We welcome contributions! See [Contributing](./docs/CONTRIBUTING.md) for guidelines.
 
+### Recent Contributors (v8.29.0)
+- **@manojmallick** — feat(retrieval): retrieval index decoupled from the prompt token budget — complete `.context/sig-index.json` written before `applyTokenBudget`; module-doc prose and test files indexed but never prompted; one shared graph key convention (`path-key.js`) after builder/call-graph diverged on case; discarded scoring signal wired in and dead intent profiles removed; penalties no longer fire on the category the query asked for; multi-label intent detection; eval runner pointed at production `rank`/`buildSigIndex`; leak-free + git-mined corpora with a CI gate (#546, PR #547)
+
 ### Recent Contributors (v8.28.1)
 - **@ruurdboeke** — reported and precisely diagnosed the Python absolute-import resolution gap (silent zero-importer results in `get_impact` on `src/` layouts) with a minimal repro and root-cause walkthrough (#532)
 - **@manojmallick** — fix(graph): ancestor-walk resolution for Python absolute imports (#532, PR #533); fix(retrieval): per-module context splits merged into the sig index — `ask`/`query_context` work under `strategy: per-module` (#534, PR #535)
