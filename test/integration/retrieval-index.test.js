@@ -220,21 +220,58 @@ test('A11: a penalty never fires on the category the query asked for', () => {
     'test files surfaced for a non-test query — the penalty stopped working');
 });
 
-test('A12: call-graph boost survives an uppercase repo path', () => {
-  // The callgraph-boost fixture runs in an all-lowercase temp dir, so a
-  // case-sensitivity bug passes there and fails on any real checkout under
-  // /Users or C:\\Users. This exercises the REAL repo path on purpose.
-  assert.ok(/[A-Z]/.test(ROOT), 'this guard needs a repo path containing an uppercase letter');
-  const { buildSigIndex, rank } = require('../../src/retrieval/ranker');
-  const { buildCallFileGraph } = require('../../src/graph/call-graph');
-  const index = buildSigIndex(ROOT);
-  let callGraph = null;
-  try { callGraph = buildCallFileGraph(ROOT); } catch (_) { return; }
-  if (!callGraph || callGraph.forward.size === 0) return;
-  const boosted = rank('rank files against a query', index, { topK: 25, cwd: ROOT, callGraph, learned: false })
-    .filter((r) => r.signals && r.signals.callGraphBoost);
-  assert.ok(boosted.length > 0,
-    'no file received a call-graph boost on an uppercase path — key spaces diverged again');
+test('A12: graph boosts survive an uppercase repo path', () => {
+  // The callgraph-boost fixture builds under a LOWERCASE temp dir, which is
+  // exactly why a case-sensitivity bug lived there undetected: builder.js
+  // lowercases node keys, the ranker looked up case-preserving paths, and on an
+  // all-lowercase path those two happen to agree. A real checkout does not look
+  // like that (/Users/..., C:\\Users\\...).
+  //
+  // This used to assert on the AMBIENT repo path, which made the guard pass on
+  // macOS and HARD-FAIL on a Linux CI runner at /home/runner/work/... — the
+  // condition has to be forced, not borrowed from the environment.
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'SigMap-Upper-'));
+  try {
+    assert.ok(/[A-Z]/.test(dir), 'fixture path must contain an uppercase letter');
+    fs.mkdirSync(path.join(dir, 'src'));
+    fs.writeFileSync(path.join(dir, 'src', 'util.js'),
+      'function helperRoutine(value) { return value + 1; }\nmodule.exports = { helperRoutine };\n');
+    fs.writeFileSync(path.join(dir, 'src', 'app.js'),
+      "const { helperRoutine } = require('./util');\nfunction runServer(port) { return helperRoutine(port); }\nmodule.exports = { runServer };\n");
+    // Filler. Hub suppression treats any file imported by >=20% of the graph as a
+    // hub and refuses to boost it — in a two-file fixture that is one importer,
+    // so the boost could never fire and the guard would fail for the wrong reason.
+    for (let i = 0; i < 8; i++) {
+      fs.writeFileSync(path.join(dir, 'src', `filler${i}.js`),
+        `function unrelatedThing${i}(a, b) { return a - b; }\nmodule.exports = { unrelatedThing${i} };\n`);
+    }
+    execSync(`node ${GEN_CONTEXT}`, { cwd: dir, stdio: 'pipe' });
+
+    delete require.cache[require.resolve('../../src/retrieval/ranker')];
+    const { buildSigIndex, rank } = require('../../src/retrieval/ranker');
+    const { buildFromCwd } = require('../../src/graph/builder');
+    const { buildCallFileGraph } = require('../../src/graph/call-graph');
+
+    const index = buildSigIndex(dir);
+    assert.ok(index.size > 0, 'fixture produced no index');
+
+    const graph = buildFromCwd(dir);
+    const impBoosted = rank('run server port', index, { topK: 5, cwd: dir, graph, learned: false })
+      .filter((r) => r.signals && r.signals.graphBoost);
+    assert.ok(impBoosted.length > 0,
+      'import-graph boost did not fire on an uppercase path — ranker and graph key spaces diverged');
+
+    let callGraph = null;
+    try { callGraph = buildCallFileGraph(dir); } catch (_) { /* optional */ }
+    if (callGraph && callGraph.forward.size > 0) {
+      const cgBoosted = rank('run server port', index, { topK: 5, cwd: dir, callGraph, learned: false })
+        .filter((r) => r.signals && r.signals.callGraphBoost);
+      assert.ok(cgBoosted.length > 0,
+        'call-graph boost did not fire on an uppercase path — key spaces diverged');
+    }
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
 });
 
 test('A13: both graph builders key nodes through the same convention', () => {
