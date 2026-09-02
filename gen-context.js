@@ -15250,6 +15250,7 @@ __factories["./src/mcp/install"] = function(module, exports) {
 
   // Config shapes the supported clients use.
   //  - 'json'  → { mcpServers: { sigmap: { command, args } } }
+  //  - 'vscode'→ { servers: { sigmap: { type: 'stdio', command, args } } }
   //  - 'zed'   → { context_servers: { sigmap: { command: { path, args } } } }
   //  - 'yaml'  → Codex CLI ~/.codex/config.yaml (mcpServers block, appended)
   const CLIENTS = {
@@ -15258,7 +15259,7 @@ __factories["./src/mcp/install"] = function(module, exports) {
     windsurf: { label: 'Windsurf',     format: 'json', scope: 'both',
                 project: ['.windsurf', 'mcp.json'],
                 global:  ['.codeium', 'windsurf', 'mcp_config.json'] },
-    vscode:   { label: 'VS Code',      format: 'json', scope: 'project', project: ['.vscode', 'mcp.json'] },
+    vscode:   { label: 'VS Code',      format: 'vscode', scope: 'project', project: ['.vscode', 'mcp.json'] },
     opencode: { label: 'OpenCode',     format: 'json', scope: 'both',
                 project: ['opencode.json'],
                 global:  ['.config', 'opencode', 'config.json'] },
@@ -15313,6 +15314,31 @@ __factories["./src/mcp/install"] = function(module, exports) {
     return 'installed';
   }
 
+  /**
+   * Install into VS Code's `.vscode/mcp.json`, which keys servers under `servers`
+   * (not `mcpServers`) and expects an explicit transport `type`. A config written
+   * by an older SigMap under `mcpServers` is migrated rather than left in place,
+   * so re-running repairs it instead of leaving two entries VS Code cannot read.
+   */
+  function _installVscode(filePath, scriptPath) {
+    let settings = {};
+    if (fs.existsSync(filePath)) {
+      try { settings = JSON.parse(fs.readFileSync(filePath, 'utf8')) || {}; }
+      catch (_) { settings = {}; }
+    }
+    const stale = settings.mcpServers && settings.mcpServers.sigmap;
+    if (stale) {
+      delete settings.mcpServers.sigmap;
+      if (Object.keys(settings.mcpServers).length === 0) delete settings.mcpServers;
+    }
+    if (!settings.servers) settings.servers = {};
+    if (settings.servers.sigmap && !stale) return 'already';
+    settings.servers.sigmap = { type: 'stdio', command: 'node', args: serverArgs(scriptPath) };
+    fs.mkdirSync(path.dirname(filePath), { recursive: true });
+    fs.writeFileSync(filePath, JSON.stringify(settings, null, 2) + '\n');
+    return stale ? 'updated' : 'installed';
+  }
+
   /** Install into Zed's `context_servers` config (create file/dir if absent). */
   function _installZed(filePath, scriptPath) {
     let settings = {};
@@ -15365,7 +15391,8 @@ __factories["./src/mcp/install"] = function(module, exports) {
     const filePath   = resolveTarget(spec, cwd, home, opts.global);
 
     let status;
-    if (spec.format === 'zed')       status = _installZed(filePath, scriptPath);
+    if (spec.format === 'vscode')    status = _installVscode(filePath, scriptPath);
+    else if (spec.format === 'zed')  status = _installZed(filePath, scriptPath);
     else if (spec.format === 'yaml') status = _installYaml(filePath, scriptPath);
     else                             status = _installJson(filePath, scriptPath);
 
