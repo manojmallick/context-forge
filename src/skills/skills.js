@@ -34,6 +34,24 @@ const SKILLS = {
       '6. **Watch the budget.** Check the `get_budget` MCP tool or `sigmap budget` (estimates from SigMap\'s local ledger — no LLM calls). Near the budget: summarize-then-drop older context instead of accumulating, and prefer terse output.',
     ].join('\n'),
   },
+  'sigmap-task': {
+    title: 'SigMap task loop',
+    kind: 'prompt',
+    description: 'Do a coding task grounded in SigMap: look up before reading, edit by line anchor, verify before reporting.',
+    argumentHint: 'the change you want, in plain words',
+    body: [
+      'Work through these steps **in order**. Do not open any file before step 2.',
+      'Every command runs from the integrated terminal — do not ask the user to run them for you.',
+      '',
+      '1. **Look up, do not search.** `npx sigmap ask "<the task>"` — this writes `.context/query-context.md`.',
+      '2. **Read the map.** `cat .context/query-context.md`. It ranks the relevant files and lists their signatures with `:start-end` line anchors — a few hundred tokens where the same files read whole are tens of thousands. Say which files it surfaced before continuing. If nothing relevant appears, re-run step 1 with different wording; fall back to search only after two attempts, and say so.',
+      '3. **Open only the anchored ranges.** A signature ending `:425-425` means read line 425, not the whole file. Never read a file in full when you hold an anchor for it.',
+      '4. **Make the change.** Follow the conventions visible in the signatures — same layering, same response wrapper, same annotation style. Add no dependencies.',
+      '5. **Verify before reporting.** Write what you changed to `.sigmap-notes.md`, naming every file by its **full repository-relative path** (a bare filename is reported as fake), then run `npx sigmap verify-ai-output .sigmap-notes.md`. It checks every name against the real index, offline, with no model call. Fix anything it flags and re-run before you reply.',
+      '6. **Refresh the map.** `npx sigmap` — your edits made it stale.',
+      '7. **Report.** The files you changed, the ranges you actually read, the step-1 token count, and the step-5 verify result. Say so if you fell back to searching or if verify flagged something.',
+    ].join('\n'),
+  },
   'sigmap-config-optimizer': {
     title: 'SigMap config optimizer',
     description: 'Playbook for getting a correct SigMap config on any repo: detect with sigmap tune, review the per-change reasons, apply, validate.',
@@ -58,7 +76,9 @@ const SKILL_CLIENTS = {
   windsurf: { label: 'Windsurf',       parent: ['.windsurf'],
               target: (cwd, skill) => path.join(cwd, '.windsurf', 'rules', `${skill}.md`) },
   copilot:  { label: 'GitHub Copilot', parent: ['.github'],
-              target: (cwd, skill) => path.join(cwd, '.github', 'instructions', `${skill}.instructions.md`) },
+              target: (cwd, skill) => (SKILLS[skill] && SKILLS[skill].kind === 'prompt'
+                ? path.join(cwd, '.github', 'prompts', `${skill}.prompt.md`)
+                : path.join(cwd, '.github', 'instructions', `${skill}.instructions.md`)) },
   codex:    { label: 'Codex CLI (AGENTS.md)', parent: ['AGENTS.md'],
               target: (cwd) => path.join(cwd, 'AGENTS.md'), inject: true },
 };
@@ -79,6 +99,10 @@ function renderSkill(client, skillName, version) {
     return `---\ndescription: ${skill.description}\nalwaysApply: false\n---\n\n${body}`;
   }
   if (client === 'copilot') {
+    if (skill.kind === 'prompt') {
+      return `---\nname: ${skillName}\nagent: 'agent'\ndescription: ${skill.description}\n`
+        + `argument-hint: ${skill.argumentHint}\n---\n\n${body}`;
+    }
     return `---\napplyTo: "**"\n---\n\n${body}`;
   }
   return body; // windsurf: plain markdown
