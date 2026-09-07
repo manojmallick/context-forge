@@ -214,6 +214,74 @@ test('mcp install with no client name exits non-zero with usage', () => {
   }
 });
 
+
+// ── VS Code uses `servers`, not `mcpServers` (#556) ───────────────────────────
+
+const { installClient: _install } = require(path.resolve(__dirname, '../../../src/mcp/install.js'));
+const readJson = (f) => JSON.parse(fs.readFileSync(f, 'utf8'));
+
+test('vscode: writes a top-level servers key, not mcpServers', () => {
+  const dir = makeTmpDir();
+  const r = _install('vscode', { cwd: dir, scriptPath: '/x/gen-context.js' });
+  assert.strictEqual(r.status, 'installed');
+  const cfg = readJson(r.path);
+  assert.ok(cfg.servers, 'VS Code reads `servers` — it ignores `mcpServers`');
+  assert.ok(!cfg.mcpServers, 'must not write the generic mcpServers shape');
+  assert.ok(cfg.servers.sigmap, 'sigmap entry missing');
+});
+
+test('vscode: the entry declares the stdio transport', () => {
+  const dir = makeTmpDir();
+  const r = _install('vscode', { cwd: dir, scriptPath: '/x/gen-context.js' });
+  const e = readJson(r.path).servers.sigmap;
+  assert.strictEqual(e.type, 'stdio');
+  assert.strictEqual(e.command, 'node');
+  assert.deepStrictEqual(e.args, [path.resolve('/x/gen-context.js'), '--mcp']);
+});
+
+test('vscode: re-running is idempotent', () => {
+  const dir = makeTmpDir();
+  _install('vscode', { cwd: dir, scriptPath: '/x/gen-context.js' });
+  const again = _install('vscode', { cwd: dir, scriptPath: '/x/gen-context.js' });
+  assert.strictEqual(again.status, 'already');
+});
+
+test('vscode: a legacy mcpServers.sigmap config is migrated to servers', () => {
+  const dir = makeTmpDir();
+  fs.mkdirSync(path.join(dir, '.vscode'), { recursive: true });
+  fs.writeFileSync(path.join(dir, '.vscode', 'mcp.json'), JSON.stringify({
+    servers: { playwright: { command: 'npx', args: ['-y', 'pw'] } },
+    mcpServers: { sigmap: { command: 'node', args: ['/old/gen-context.js', '--mcp'] } },
+  }, null, 2));
+  const r = _install('vscode', { cwd: dir, scriptPath: '/x/gen-context.js' });
+  assert.strictEqual(r.status, 'updated');
+  const cfg = readJson(r.path);
+  assert.ok(cfg.servers.sigmap, 'sigmap must move under servers');
+  assert.ok(!cfg.mcpServers, 'the stale mcpServers block must be removed');
+  assert.ok(cfg.servers.playwright, 'unrelated servers must be preserved');
+});
+
+test('vscode: unrelated keys in the file survive', () => {
+  const dir = makeTmpDir();
+  fs.mkdirSync(path.join(dir, '.vscode'), { recursive: true });
+  fs.writeFileSync(path.join(dir, '.vscode', 'mcp.json'),
+    JSON.stringify({ inputs: [{ id: 'token', type: 'promptString' }] }, null, 2));
+  const r = _install('vscode', { cwd: dir, scriptPath: '/x/gen-context.js' });
+  const cfg = readJson(r.path);
+  assert.ok(Array.isArray(cfg.inputs) && cfg.inputs.length === 1, 'inputs must be preserved');
+  assert.ok(cfg.servers.sigmap);
+});
+
+test('other json clients still write mcpServers', () => {
+  for (const client of ['claude', 'cursor', 'mcp']) {
+    const dir = makeTmpDir();
+    const r = _install(client, { cwd: dir, scriptPath: '/x/gen-context.js' });
+    const cfg = readJson(r.path);
+    assert.ok(cfg.mcpServers && cfg.mcpServers.sigmap, `${client} must keep the mcpServers shape`);
+    assert.ok(!cfg.servers, `${client} must not switch to the VS Code shape`);
+  }
+});
+
 // ── Summary ───────────────────────────────────────────────────────────────────
 console.log(`\n${passed} passed, ${failed} failed\n`);
 if (failed > 0) process.exit(1);
