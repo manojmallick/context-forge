@@ -434,24 +434,60 @@ function build(files, cwd, ctx) {
   return { forward, reverse };
 }
 
+// Directory names assumed when neither the caller nor the project config says
+// otherwise. A Maven/Gradle module (`mall-portal/`, `service-api/`) matches none
+// of them, which is why the config is consulted first.
+const DEFAULT_SRC_DIRS = ['src', 'app', 'lib', 'R', 'inst'];
+
+// Walk depth measured from EACH srcDir root, not from cwd — so this is not the
+// same quantity as the extractor's cwd-relative `maxDepth` and must not be read
+// from it. A standard Maven tree reaches `src/main/java/<group>/<artifact>/…`
+// nine directories below its module root, so the previous ceiling of 8 silently
+// dropped the deepest packages (on macrozheng/mall: every `service/impl/` class).
+const DEFAULT_WALK_DEPTH = 12;
+
+/**
+ * Source directories declared in the project's own config, or null when there
+ * is no readable config. Read directly rather than through `loadConfig`, which
+ * can fetch `extends` over the network and spawn a child process — neither is
+ * acceptable inside a graph build.
+ */
+function _configuredSrcDirs(cwd) {
+  try {
+    const raw = fs.readFileSync(path.join(cwd, 'gen-context.config.json'), 'utf8');
+    const cfg = JSON.parse(raw);
+    if (Array.isArray(cfg.srcDirs) && cfg.srcDirs.length > 0) return cfg.srcDirs;
+  } catch (_) { /* absent or unparsable — fall back to the defaults */ }
+  return null;
+}
+
 /**
  * Build a dependency graph scoped to a single cwd by walking all JS/TS/Py/Go
  * files under srcDirs. Useful for the MCP tool handler.
+ *
+ * srcDirs resolution order: explicit `opts.srcDirs` → `gen-context.config.json`
+ * → DEFAULT_SRC_DIRS. Without the config step the graph is empty on any repo
+ * whose sources do not sit under a conventionally-named directory.
  *
  * @param {string} cwd
  * @param {object} [opts]
  * @param {string[]} [opts.srcDirs]
  * @param {string[]} [opts.exclude]
+ * @param {number}   [opts.maxDepth] - walk depth from each srcDir root
  * @returns {{ forward: Map<string,string[]>, reverse: Map<string,string[]> }}
  */
 function buildFromCwd(cwd, opts) {
   // R-package layouts use `R/` and `inst/`; Shiny apps put helpers in `R/`.
   // The existence check below makes these no-ops in non-R projects.
-  const { srcDirs = ['src', 'app', 'lib', 'R', 'inst'], exclude = ['node_modules', '.git', 'dist', 'build'] } = opts || {};
+  const {
+    srcDirs = _configuredSrcDirs(cwd) || DEFAULT_SRC_DIRS,
+    exclude = ['node_modules', '.git', 'dist', 'build'],
+    maxDepth = DEFAULT_WALK_DEPTH,
+  } = opts || {};
   const excludeSet = new Set(exclude);
 
   function walkDir(dir, depth) {
-    if (depth > 8) return [];
+    if (depth > maxDepth) return [];
     let entries;
     try { entries = fs.readdirSync(dir, { withFileTypes: true }); } catch (_) { return []; }
     const out = [];
@@ -500,4 +536,4 @@ function buildFromCwd(cwd, opts) {
   return build(files, cwd, ctx);
 }
 
-module.exports = { build, buildFromCwd, extractFileDeps, normalizePath, loadAliasMap, resolveAlias };
+module.exports = { build, buildFromCwd, extractFileDeps, normalizePath, loadAliasMap, resolveAlias, _configuredSrcDirs, DEFAULT_SRC_DIRS, DEFAULT_WALK_DEPTH };
