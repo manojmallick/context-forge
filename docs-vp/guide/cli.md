@@ -90,7 +90,7 @@ If you are new to the product, start with the workflow pages first:
 | `roots [--explain | --json | --fix]` | Auto-detect source roots for 17 languages and 50+ frameworks; shows confidence and scoring |
 | `tune [--apply | --json]` | Recommend config from repo detection — srcDirs pin, monorepo, adapters, exclude, budget — one reason per change; `--apply` writes |
 | `skills list` | List skill clients (Claude/Cursor/Windsurf/Copilot/AGENTS.md) with presence and install state (`--json`) |
-| `skills install [--client <name> \| --all]` | Install the SigMap agent playbooks in each client's native skill/rules format; plain `install` wires only detected clients |
+| `skills install [--client <name> \| --all]` | Install the SigMap agent playbooks in each client's native skill/rules format, including the invokable `sigmap-task` loop; plain `install` wires only detected clients |
 | `history` | Show usage log + benchmark trend sparklines (hit@5, token reduction) |
 | `note "<text>"` | Append a note to the cross-session decision log (`note` alone lists recent) |
 | `status` | Repo state — branch, dirty files, index freshness, notes |
@@ -1107,7 +1107,15 @@ $ sigmap mcp install claude
 [sigmap] Claude Code: registered MCP server in .claude/settings.json
 ```
 
-Supported clients: `claude`, `cursor`, `windsurf`, `vscode`, `zed`, `codex`, `gemini`, `opencode`, and `mcp` (portable `.mcp.json`). The command emits the correct shape per client — `mcpServers` JSON, Zed `context_servers`, or Codex YAML — and is **idempotent**: a second run reports that sigmap is already registered and never duplicates the entry. An unknown client name exits non-zero and lists the valid clients.
+Supported clients: `claude`, `cursor`, `windsurf`, `vscode`, `zed`, `codex`, `gemini`, `opencode`, and `mcp` (portable `.mcp.json`). The command emits the correct shape per client — `mcpServers` JSON, VS Code `servers`, Zed `context_servers`, or Codex YAML — and is **idempotent**: a second run reports that sigmap is already registered and never duplicates the entry. An unknown client name exits non-zero and lists the valid clients.
+
+**VS Code (v8.30.0).** VS Code reads a top-level `servers` key with an explicit transport `type`, not the generic `mcpServers` shape. Earlier versions wrote `mcpServers` into `.vscode/mcp.json`; the file was created, the command reported success, and VS Code silently ignored it — so GitHub Copilot never saw the server. `mcp install vscode` now writes:
+
+```json
+{ "servers": { "sigmap": { "type": "stdio", "command": "node", "args": ["…", "--mcp"] } } }
+```
+
+A config written by an earlier version is **migrated** rather than left in place: the stale `mcpServers.sigmap` entry is moved under `servers` and reported as `updated`, so re-running repairs a broken setup. Unrelated servers and other top-level keys (such as VS Code's `inputs`) are preserved.
 
 | Option | Description |
 |--------|-------------|
@@ -1239,7 +1247,13 @@ Five rules, each deterministic:
 
 ## skills
 
-Install SigMap's agent playbooks in each client's **native** skill/rules format (v8.26.0) — the multi-adapter idea applied to skills. Two skills ship: **sigmap-usage-maximizer** (the spend-minimizing loop: `ask` before any read → `get_lines` for anchored ranges → `verify_suggestion` before trusting → `squeeze` big pastes → checkpoint → watch `get_budget` and summarize-then-drop near budget) and **sigmap-config-optimizer** (the `tune` playbook: detect → review reasons → `--apply` → `validate`). Deterministic content with a version footer; installs are idempotent and human content is never touched.
+Install SigMap's agent playbooks in each client's **native** skill/rules format (v8.26.0) — the multi-adapter idea applied to skills. Three skills ship:
+
+- **sigmap-usage-maximizer** — the spend-minimizing loop: `ask` before any read → `get_lines` for anchored ranges → `verify_suggestion` before trusting → `squeeze` big pastes → checkpoint → watch `get_budget` and summarize-then-drop near budget.
+- **sigmap-task** (v8.30.0) — an **invokable** loop for environments where MCP is unavailable, driven entirely from the CLI. Where the maximizer is an always-on playbook that mostly names MCP tools, this one is a prompt the user calls deliberately and every step is a shell command: `sigmap ask` → read `.context/query-context.md` → open only the anchored line ranges → make the change → `sigmap verify-ai-output` → regenerate → report. For Copilot it installs as a prompt file, so `/sigmap-task <your change>` runs it in agent mode.
+- **sigmap-config-optimizer** — the `tune` playbook: detect → review reasons → `--apply` → `validate`.
+
+Deterministic content with a version footer; installs are idempotent and human content is never touched.
 
 ```bash
 sigmap skills list                     # clients, targets, install state
@@ -1250,8 +1264,10 @@ sigmap skills install --all --json     # everything, machine-readable
 
 ```
   claude     installed  .claude/skills/sigmap-usage-maximizer/SKILL.md
+  claude     installed  .claude/skills/sigmap-task/SKILL.md
   claude     installed  .claude/skills/sigmap-config-optimizer/SKILL.md
   copilot    installed  .github/instructions/sigmap-usage-maximizer.instructions.md
+  copilot    installed  .github/prompts/sigmap-task.prompt.md
   copilot    installed  .github/instructions/sigmap-config-optimizer.instructions.md
   codex      updated    AGENTS.md
 ```
@@ -1261,7 +1277,7 @@ sigmap skills install --all --json     # everything, machine-readable
 | `claude` | `.claude/skills/<skill>/SKILL.md` (frontmatter name/description) |
 | `cursor` | `.cursor/rules/<skill>.mdc` |
 | `windsurf` | `.windsurf/rules/<skill>.md` |
-| `copilot` | `.github/instructions/<skill>.instructions.md` |
+| `copilot` | `.github/instructions/<skill>.instructions.md`; prompt-kind skills go to `.github/prompts/<skill>.prompt.md` |
 | `codex` | marker-delimited block in `AGENTS.md`, inserted **above** the `## Auto-generated signatures` marker — survives `sigmap` regeneration |
 
 | Option | Description |

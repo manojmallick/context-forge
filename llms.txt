@@ -11,7 +11,7 @@ ranking keeps the relevant context in scope (cutting tokens ~97% as a side
 effect), with no LLM calls, embeddings, or vector database. Works with Claude,
 Cursor, GitHub Copilot, Aider, Windsurf, local LLMs, and MCP.
 
-# Version: 8.29.0 | Benchmark: sigmap-v8.29-main (2026-09-01)
+# Version: 8.30.0 | Benchmark: sigmap-v8.30-main (2026-09-07)
 # Source: auto-generated from package.json, version.json, benchmarks/latest.json, src/mcp/tools.js, src/config/defaults.js
 # Regenerate: npm run generate:llms   |   Validate: npm run validate:llms
 
@@ -23,7 +23,7 @@ Cursor, GitHub Copilot, Aider, Windsurf, local LLMs, and MCP.
 - No blast-radius awareness before editing a hub file — `--impact` shows every file a change touches.
 - Pasted stack traces, CI logs, and JSON bloat the prompt — `squeeze` minimizes them and enriches the top frame from the symbol index.
 
-## Core metrics (benchmark: sigmap-v8.29-main, 2026-09-01)
+## Core metrics (benchmark: sigmap-v8.30-main, 2026-09-07)
 
 - hit@5 retrieval: 81.1% vs 44.0% single-shot grep baseline (1.73× lift)
 - Token reduction: 96.8% average across benchmark repos

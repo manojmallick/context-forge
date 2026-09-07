@@ -10,6 +10,16 @@ Format: [Semantic Versioning](https://semver.org/)
 
 ---
 
+## [8.30.0] — 2026-09-07
+
+### Added
+- `sigmap-task` — an invokable prompt skill that drives the full grounding loop from the CLI, for environments where MCP is unavailable. Installs to `.github/prompts/sigmap-task.prompt.md` for Copilot (`/sigmap-task`) and through the normal skill path for other clients (#554)
+
+### Fixed
+- Java extractor: lifted three hard-coded caps that hid 85% of the API surface on real Java repos — an 8-member-per-class limit applied silently, a 25-signature-per-file cap that shadowed `maxSigsPerFile`, and a 5,000-character class-body scan limit. Omissions are now disclosed with a `… +N more` marker, matching the JS/TS path (#552)
+- Retrieval: generated data holders no longer outrank real logic. A file whose members are overwhelmingly trivial accessors is demoted like other generated code, with an escape hatch when the query asks for an entity, model, DTO or accessor. Entities remain retrievable by their own symbols (#552)
+- `sigmap mcp install vscode` wrote a config VS Code ignores — it emitted a top-level `mcpServers` key where VS Code requires `servers` with an explicit `type`. A config written by an earlier version is now migrated rather than left in place (#557)
+
 ## [8.29.0] — 2026-09-01
 
 Minor release — **"Retrieval Index Split" (v8.29)**: the ranker stops reading the token-budgeted prompt artifact, and the ranking features that were silently inert start executing. Plus the first benchmark corpus this project did not author itself.
