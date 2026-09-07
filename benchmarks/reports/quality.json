@@ -1,6 +1,6 @@
 {
-  "version": "8.29.0",
-  "timestamp": "2026-09-01T15:17:29.057Z",
+  "version": "8.30.0",
+  "timestamp": "2026-09-07T09:35:39.601Z",
   "assumptions": {
     "callsPerDay": 10,
     "models": [
@@ -193,7 +193,7 @@
       "repo": "spring-petclinic",
       "language": "Java",
       "rawTokens": 94094,
-      "finalTokens": 3035,
+      "finalTokens": 3029,
       "groundedSymbols": 13,
       "estimatedRawSymbols": 470,
       "darkSymbols": 457,
@@ -208,32 +208,32 @@
         {
           "model": "GPT-4o",
           "rawDayRegular": 2.35235,
-          "sigDayRegular": 0.075875,
-          "savedDayRegular": 2.276475,
+          "sigDayRegular": 0.075725,
+          "savedDayRegular": 2.276625,
           "rawDayCached": 1.176175,
-          "sigDayCached": 0.0379375,
-          "savedDayCached": 1.1382375,
-          "savedMonthRegular": 68.29425
+          "sigDayCached": 0.0378625,
+          "savedDayCached": 1.1383125,
+          "savedMonthRegular": 68.29875
         },
         {
           "model": "Claude Sonnet",
           "rawDayRegular": 2.8228199999999997,
-          "sigDayRegular": 0.09105,
-          "savedDayRegular": 2.7317699999999996,
+          "sigDayRegular": 0.09086999999999999,
+          "savedDayRegular": 2.73195,
           "rawDayCached": 0.282282,
-          "sigDayCached": 0.009105,
-          "savedDayCached": 0.273177,
-          "savedMonthRegular": 81.95309999999999
+          "sigDayCached": 0.009087,
+          "savedDayCached": 0.27319499999999997,
+          "savedMonthRegular": 81.9585
         },
         {
           "model": "Claude Haiku",
           "rawDayRegular": 0.94094,
-          "sigDayRegular": 0.03035,
-          "savedDayRegular": 0.91059,
+          "sigDayRegular": 0.03029,
+          "savedDayRegular": 0.91065,
           "rawDayCached": 0.094094,
-          "sigDayCached": 0.003035,
-          "savedDayCached": 0.091059,
-          "savedMonthRegular": 27.317700000000002
+          "sigDayCached": 0.0030290000000000004,
+          "savedDayCached": 0.091065,
+          "savedMonthRegular": 27.319499999999998
         }
       ]
     },
@@ -1102,6 +1102,6 @@
     "totalGroundedSymbols": 9503,
     "totalDarkSymbols": 57963,
     "totalHiddenFiles": 5186,
-    "gpt4oSavedPerMonth": 9951.17
+    "gpt4oSavedPerMonth": 9951.18
   }
 }

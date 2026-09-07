@@ -6424,6 +6424,19 @@ __factories["./src/extractors/html"] = function(module, exports) {
 __factories["./src/extractors/java"] = function(module, exports) {
   
   const { lineAt, withAnchor } = __require('./src/extractors/line-anchor');
+  const { capWithNotice, capMembersWithNotice } = __require('./src/util/truncate');
+
+  // Class bodies are scanned to this many characters. Generated JVM sources
+  // (MyBatis/JPA entities) routinely run past 10KB, so the ceiling only guards
+  // against pathological input rather than trimming ordinary classes.
+  const MAX_CLASS_BODY_CHARS = 200000;
+
+  // Per-class member ceiling. Sits above the default `maxSigsPerFile` so the
+  // caller's configured budget governs the output rather than this file.
+  const MAX_MEMBERS_PER_CLASS = 120;
+
+  // Per-file signature ceiling, likewise above the configured default.
+  const MAX_SIGS_PER_FILE = 200;
 
   /**
    * Extract signatures from Java source code.
@@ -6451,17 +6464,20 @@ __factories["./src/extractors/java"] = function(module, exports) {
       const block = extractBlock(stripped, bodyStart);
       sigs.push(hinted(withAnchor(`${m[1]} ${m[2]}`, lineAt(stripped, m.index), lineAt(stripped, bodyStart + block.length)), m[2]));
       for (const meth of extractMembers(block)) {
-        sigs.push(hinted(withAnchor(`  ${meth.text}`, lineAt(stripped, bodyStart + meth.declIdx), lineAt(stripped, bodyStart + meth.endIdx)), meth.name));
+        // The disclosure marker carries no offsets; anchor it at the class body.
+        const declIdx = meth.declIdx || 0;
+        const endIdx = meth.endIdx || 0;
+        sigs.push(hinted(withAnchor(`  ${meth.text}`, lineAt(stripped, bodyStart + declIdx), lineAt(stripped, bodyStart + endIdx)), meth.name));
       }
     }
 
-    return sigs.slice(0, 25);
+    return capWithNotice(sigs, MAX_SIGS_PER_FILE, 'signatures');
   }
 
   function extractBlock(src, startIndex) {
     let depth = 1;
     let i = startIndex;
-    const end = Math.min(src.length, startIndex + 5000);
+    const end = Math.min(src.length, startIndex + MAX_CLASS_BODY_CHARS);
     while (i < end && depth > 0) {
       if (src[i] === '{') depth++;
       else if (src[i] === '}') depth--;
@@ -6483,7 +6499,7 @@ __factories["./src/extractors/java"] = function(module, exports) {
         endIdx: m.index + m[0].length,
       });
     }
-    return members.slice(0, 8);
+    return capMembersWithNotice(members, MAX_MEMBERS_PER_CLASS);
   }
 
   function normalizeParams(params) {
@@ -15250,6 +15266,7 @@ __factories["./src/mcp/install"] = function(module, exports) {
 
   // Config shapes the supported clients use.
   //  - 'json'  → { mcpServers: { sigmap: { command, args } } }
+  //  - 'vscode'→ { servers: { sigmap: { type: 'stdio', command, args } } }
   //  - 'zed'   → { context_servers: { sigmap: { command: { path, args } } } }
   //  - 'yaml'  → Codex CLI ~/.codex/config.yaml (mcpServers block, appended)
   const CLIENTS = {
@@ -15258,7 +15275,7 @@ __factories["./src/mcp/install"] = function(module, exports) {
     windsurf: { label: 'Windsurf',     format: 'json', scope: 'both',
                 project: ['.windsurf', 'mcp.json'],
                 global:  ['.codeium', 'windsurf', 'mcp_config.json'] },
-    vscode:   { label: 'VS Code',      format: 'json', scope: 'project', project: ['.vscode', 'mcp.json'] },
+    vscode:   { label: 'VS Code',      format: 'vscode', scope: 'project', project: ['.vscode', 'mcp.json'] },
     opencode: { label: 'OpenCode',     format: 'json', scope: 'both',
                 project: ['opencode.json'],
                 global:  ['.config', 'opencode', 'config.json'] },
@@ -15313,6 +15330,31 @@ __factories["./src/mcp/install"] = function(module, exports) {
     return 'installed';
   }
 
+  /**
+   * Install into VS Code's `.vscode/mcp.json`, which keys servers under `servers`
+   * (not `mcpServers`) and expects an explicit transport `type`. A config written
+   * by an older SigMap under `mcpServers` is migrated rather than left in place,
+   * so re-running repairs it instead of leaving two entries VS Code cannot read.
+   */
+  function _installVscode(filePath, scriptPath) {
+    let settings = {};
+    if (fs.existsSync(filePath)) {
+      try { settings = JSON.parse(fs.readFileSync(filePath, 'utf8')) || {}; }
+      catch (_) { settings = {}; }
+    }
+    const stale = settings.mcpServers && settings.mcpServers.sigmap;
+    if (stale) {
+      delete settings.mcpServers.sigmap;
+      if (Object.keys(settings.mcpServers).length === 0) delete settings.mcpServers;
+    }
+    if (!settings.servers) settings.servers = {};
+    if (settings.servers.sigmap && !stale) return 'already';
+    settings.servers.sigmap = { type: 'stdio', command: 'node', args: serverArgs(scriptPath) };
+    fs.mkdirSync(path.dirname(filePath), { recursive: true });
+    fs.writeFileSync(filePath, JSON.stringify(settings, null, 2) + '\n');
+    return stale ? 'updated' : 'installed';
+  }
+
   /** Install into Zed's `context_servers` config (create file/dir if absent). */
   function _installZed(filePath, scriptPath) {
     let settings = {};
@@ -15365,7 +15407,8 @@ __factories["./src/mcp/install"] = function(module, exports) {
     const filePath   = resolveTarget(spec, cwd, home, opts.global);
 
     let status;
-    if (spec.format === 'zed')       status = _installZed(filePath, scriptPath);
+    if (spec.format === 'vscode')    status = _installVscode(filePath, scriptPath);
+    else if (spec.format === 'zed')  status = _installZed(filePath, scriptPath);
     else if (spec.format === 'yaml') status = _installYaml(filePath, scriptPath);
     else                             status = _installJson(filePath, scriptPath);
 
@@ -15397,7 +15440,7 @@ __factories["./src/mcp/server"] = function(module, exports) {
 
   const SERVER_INFO = {
     name: 'sigmap',
-    version: '8.29.0',
+    version: '8.30.0',
     description: 'SigMap MCP server — code signatures on demand',
   };
 
@@ -16760,7 +16803,18 @@ __factories["./src/retrieval/ranker"] = function(module, exports) {
     generatedCode: 0.3,    // dist/build/.next in path
     docsFile:      0.2,    // docs/doc/README in path
     nodeModules:   0.0,    // node_modules (zero score)
+    dataHolder:    0.3,    // generated POJO/entity: almost entirely accessors
   };
+
+  // A file whose members are overwhelmingly trivial accessors is a data holder,
+  // not logic. Path-based detection cannot see these: generated JPA/MyBatis
+  // entities live in ordinary source trees. They match a query on any column
+  // name they happen to carry (`getNote`/`setNote` matches "note" as strongly as
+  // the service that actually implements order notes), so on an entity-heavy
+  // repo they crowd real code out of the top results.
+  const ACCESSOR_RE = /^\s*(get|set|is)[A-Z]\w*\s*\(/;
+  const DATA_HOLDER_RATIO = 0.8;
+  const DATA_HOLDER_MIN_MEMBERS = 6;
 
   // Query terms that mean the penalised category IS the target. Read from the
   // query tokens directly, NOT via detectIntent: that classifier is first-match-
@@ -16768,18 +16822,33 @@ __factories["./src/retrieval/ranker"] = function(module, exports) {
   // test" classifies as debug and never reaches the test branch.
   const WANTS_TESTS = new Set(['test', 'tests', 'spec', 'specs', 'unit', 'integration', 'e2e', 'assertion', 'assert', 'mock', 'fixture', 'coverage', 'testing']);
   const WANTS_DOCS = new Set(['doc', 'docs', 'documentation', 'readme', 'changelog', 'guide', 'tutorial']);
+  const WANTS_MODELS = new Set(['entity', 'entities', 'model', 'models', 'pojo', 'dto', 'bean', 'getter', 'getters', 'setter', 'setters', 'accessor', 'accessors', 'field', 'fields', 'column', 'columns', 'schema']);
 
   /** Which penalised categories the query is explicitly asking for. */
   function _queryWants(queryTokens) {
-    const wants = { tests: false, docs: false };
+    const wants = { tests: false, docs: false, models: false };
     for (const t of queryTokens || []) {
       if (WANTS_TESTS.has(t)) wants.tests = true;
       if (WANTS_DOCS.has(t)) wants.docs = true;
+      if (WANTS_MODELS.has(t)) wants.models = true;
     }
     return wants;
   }
 
-  function _computePenalty(filePath, wants) {
+  /**
+   * True when a file's members are overwhelmingly trivial accessors — a generated
+   * entity or POJO rather than logic. Type declarations are excluded from the
+   * ratio so a small class is not misjudged by its own `class X` line.
+   */
+  function _isDataHolder(sigs) {
+    if (!Array.isArray(sigs)) return false;
+    const members = sigs.filter((line) => /^\s/.test(line) || !/^(class|interface|enum|struct|function|module\.exports)\b/.test(line));
+    if (members.length < DATA_HOLDER_MIN_MEMBERS) return false;
+    const accessors = members.filter((line) => ACCESSOR_RE.test(line)).length;
+    return accessors / members.length >= DATA_HOLDER_RATIO;
+  }
+
+  function _computePenalty(filePath, wants, sigs) {
     const pathLower = filePath.toLowerCase();
     if (pathLower.includes('node_modules')) return PENALTY_SIGNALS.nodeModules;
     // A penalty must never fire on the very thing the user asked for. Before
@@ -16791,6 +16860,11 @@ __factories["./src/retrieval/ranker"] = function(module, exports) {
     if (/(^|\/)(dist|build|\.next|\.nuxt|out|\.venv|venv)($|\/)/.test(pathLower)) return PENALTY_SIGNALS.generatedCode;
     if (/(^|\/)(docs|doc|readme|changelog)($|\/)/.test(pathLower)) {
       return (wants && wants.docs) ? 1.0 : PENALTY_SIGNALS.docsFile;
+    }
+    // Content-based, and last: a data holder is still a real source file, so it
+    // is only demoted once the path-based categories have had their say.
+    if (_isDataHolder(sigs)) {
+      return (wants && wants.models) ? 1.0 : PENALTY_SIGNALS.dataHolder;
     }
     return 1.0;
   }
@@ -16849,7 +16923,7 @@ __factories["./src/retrieval/ranker"] = function(module, exports) {
     if (!sigs || sigs.length === 0) return { score: 0, signals: { exactToken: 0, symbolMatch: 0, prefixMatch: 0, pathMatch: 0, penalty: 1.0 } };
 
     const w = weights || DEFAULT_WEIGHTS;
-    const signals = { exactToken: 0, symbolMatch: 0, prefixMatch: 0, pathMatch: 0, penalty: _computePenalty(filePath, wants) };
+    const signals = { exactToken: 0, symbolMatch: 0, prefixMatch: 0, pathMatch: 0, penalty: _computePenalty(filePath, wants, sigs) };
 
     // Module-doc prose is excluded here on purpose. This signal measures overlap
     // with DECLARED IDENTIFIERS; prose relevance is BM25's job, where it is scored
@@ -17445,7 +17519,7 @@ __factories["./src/retrieval/ranker"] = function(module, exports) {
     return detectIntents(query)[0];
   }
 
-  module.exports = { rank, buildSigIndex, scoreFile, _queryWants, detectIntents, formatRankTable, formatRankJSON, DEFAULT_WEIGHTS, GRAPH_BOOST_AMOUNTS, CENTRALITY_BLEND_WEIGHT, detectIntent };
+  module.exports = { rank, buildSigIndex, scoreFile, _queryWants, _isDataHolder, detectIntents, formatRankTable, formatRankJSON, DEFAULT_WEIGHTS, GRAPH_BOOST_AMOUNTS, CENTRALITY_BLEND_WEIGHT, detectIntent };
   
 };
 
@@ -18738,6 +18812,24 @@ __factories["./src/skills/skills"] = function(module, exports) {
         '6. **Watch the budget.** Check the `get_budget` MCP tool or `sigmap budget` (estimates from SigMap\'s local ledger — no LLM calls). Near the budget: summarize-then-drop older context instead of accumulating, and prefer terse output.',
       ].join('\n'),
     },
+    'sigmap-task': {
+      title: 'SigMap task loop',
+      kind: 'prompt',
+      description: 'Do a coding task grounded in SigMap: look up before reading, edit by line anchor, verify before reporting.',
+      argumentHint: 'the change you want, in plain words',
+      body: [
+        'Work through these steps **in order**. Do not open any file before step 2.',
+        'Every command runs from the integrated terminal — do not ask the user to run them for you.',
+        '',
+        '1. **Look up, do not search.** `npx sigmap ask "<the task>"` — this writes `.context/query-context.md`.',
+        '2. **Read the map.** `cat .context/query-context.md`. It ranks the relevant files and lists their signatures with `:start-end` line anchors — a few hundred tokens where the same files read whole are tens of thousands. Say which files it surfaced before continuing. If nothing relevant appears, re-run step 1 with different wording; fall back to search only after two attempts, and say so.',
+        '3. **Open only the anchored ranges.** A signature ending `:425-425` means read line 425, not the whole file. Never read a file in full when you hold an anchor for it.',
+        '4. **Make the change.** Follow the conventions visible in the signatures — same layering, same response wrapper, same annotation style. Add no dependencies.',
+        '5. **Verify before reporting.** Write what you changed to `.sigmap-notes.md`, naming every file by its **full repository-relative path** (a bare filename is reported as fake), then run `npx sigmap verify-ai-output .sigmap-notes.md`. It checks every name against the real index, offline, with no model call. Fix anything it flags and re-run before you reply.',
+        '6. **Refresh the map.** `npx sigmap` — your edits made it stale.',
+        '7. **Report.** The files you changed, the ranges you actually read, the step-1 token count, and the step-5 verify result. Say so if you fell back to searching or if verify flagged something.',
+      ].join('\n'),
+    },
     'sigmap-config-optimizer': {
       title: 'SigMap config optimizer',
       description: 'Playbook for getting a correct SigMap config on any repo: detect with sigmap tune, review the per-change reasons, apply, validate.',
@@ -18762,7 +18854,9 @@ __factories["./src/skills/skills"] = function(module, exports) {
     windsurf: { label: 'Windsurf',       parent: ['.windsurf'],
                 target: (cwd, skill) => path.join(cwd, '.windsurf', 'rules', `${skill}.md`) },
     copilot:  { label: 'GitHub Copilot', parent: ['.github'],
-                target: (cwd, skill) => path.join(cwd, '.github', 'instructions', `${skill}.instructions.md`) },
+                target: (cwd, skill) => (SKILLS[skill] && SKILLS[skill].kind === 'prompt'
+                  ? path.join(cwd, '.github', 'prompts', `${skill}.prompt.md`)
+                  : path.join(cwd, '.github', 'instructions', `${skill}.instructions.md`)) },
     codex:    { label: 'Codex CLI (AGENTS.md)', parent: ['AGENTS.md'],
                 target: (cwd) => path.join(cwd, 'AGENTS.md'), inject: true },
   };
@@ -18783,6 +18877,10 @@ __factories["./src/skills/skills"] = function(module, exports) {
       return `---\ndescription: ${skill.description}\nalwaysApply: false\n---\n\n${body}`;
     }
     if (client === 'copilot') {
+      if (skill.kind === 'prompt') {
+        return `---\nname: ${skillName}\nagent: 'agent'\ndescription: ${skill.description}\n`
+          + `argument-hint: ${skill.argumentHint}\n---\n\n${body}`;
+      }
       return `---\napplyTo: "**"\n---\n\n${body}`;
     }
     return body; // windsurf: plain markdown
@@ -21636,7 +21734,7 @@ function __tryGit(args, opts = {}) {
   catch (_) { return ''; }
 }
 
-const VERSION = '8.29.0';
+const VERSION = '8.30.0';
 const MARKER = '\n\n## Auto-generated signatures\n<!-- Updated by gen-context.js -->\n';
 
 function requireSourceOrBundled(key) {

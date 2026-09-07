@@ -83,9 +83,9 @@ features:
   <span><strong>New — arity-checked verification:</strong> <code>verify</code> now checks not just <em>does this function exist</em> but <em>is it called with a plausible number of arguments</em> — against your repo's exact signatures (JS/TS via the v8.27 balanced scanner, Python via AST). Wrong argument counts flag <code>arity-mismatch</code> with the real signature as the suggestion. Conservative by construction; unknown symbols stay <code>fake-symbol</code>. The first grounding check no grep loop can replicate. Zero dependencies, offline, deterministic.</span>
 </div>
 <div style="margin-top:.4rem;display:inline-flex;flex-wrap:wrap;gap:.5rem;justify-content:center;background:var(--vp-c-default-soft,#f3f4f6);border:1px solid rgba(0,0,0,.08);border-radius:999px;padding:.55rem .9rem;font-size:.9rem;color:var(--vp-c-text-2)">
-  <span><strong>Benchmark:</strong> sigmap-v8.29-main</span>
+  <span><strong>Benchmark:</strong> sigmap-v8.30-main</span>
   <span>·</span>
-  <span>81.1% hit@5 · 96.8% token reduction · 2026-09-01</span>
+  <span>81.1% hit@5 · 96.8% token reduction · 2026-09-07</span>
 </div>
 </div>
 
@@ -176,7 +176,7 @@ See the full [end-to-end walkthrough](/guide/walkthrough) to watch this in actio
 | Overall token reduction | — | **96.8%** |
 | GPT-4o overflow repos | 16/21 | **0/21** |
 
-Latest saved benchmark run: **2026-09-01 (v8.29.0)**.
+Latest saved benchmark run: **2026-09-07 (v8.30.0)**.
 
 </div>
 

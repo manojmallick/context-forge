@@ -35,6 +35,9 @@ To ensure proper attribution:
 
 We welcome contributions! See [Contributing](./docs/CONTRIBUTING.md) for guidelines.
 
+### Recent Contributors (v8.30.0)
+- **@manojmallick** — feat(skills): `sigmap-task`, an invokable prompt skill driving the full grounding loop from the CLI for MCP-less environments — installs as `/sigmap-task` for Copilot (#553, PR #554); fix(extractors): lifted three hard-coded Java caps hiding 85% of the API surface, with disclosure markers matching the JS/TS path (#551, PR #552); fix(retrieval): generated data holders demoted so they stop outranking logic, entities still retrievable by symbol (#558, PR #552); fix(mcp): `mcp install vscode` now writes VS Code's `servers` key instead of a config it silently ignores, migrating older configs (#556, PR #557)
+
 ### Recent Contributors (v8.29.0)
 - **@manojmallick** — feat(retrieval): retrieval index decoupled from the prompt token budget — complete `.context/sig-index.json` written before `applyTokenBudget`; module-doc prose and test files indexed but never prompted; one shared graph key convention (`path-key.js`) after builder/call-graph diverged on case; discarded scoring signal wired in and dead intent profiles removed; penalties no longer fire on the category the query asked for; multi-label intent detection; eval runner pointed at production `rank`/`buildSigIndex`; leak-free + git-mined corpora with a CI gate (#546, PR #547)
 

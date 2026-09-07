@@ -72,7 +72,18 @@ const PENALTY_SIGNALS = {
   generatedCode: 0.3,    // dist/build/.next in path
   docsFile:      0.2,    // docs/doc/README in path
   nodeModules:   0.0,    // node_modules (zero score)
+  dataHolder:    0.3,    // generated POJO/entity: almost entirely accessors
 };
+
+// A file whose members are overwhelmingly trivial accessors is a data holder,
+// not logic. Path-based detection cannot see these: generated JPA/MyBatis
+// entities live in ordinary source trees. They match a query on any column
+// name they happen to carry (`getNote`/`setNote` matches "note" as strongly as
+// the service that actually implements order notes), so on an entity-heavy
+// repo they crowd real code out of the top results.
+const ACCESSOR_RE = /^\s*(get|set|is)[A-Z]\w*\s*\(/;
+const DATA_HOLDER_RATIO = 0.8;
+const DATA_HOLDER_MIN_MEMBERS = 6;
 
 // Query terms that mean the penalised category IS the target. Read from the
 // query tokens directly, NOT via detectIntent: that classifier is first-match-
@@ -80,18 +91,33 @@ const PENALTY_SIGNALS = {
 // test" classifies as debug and never reaches the test branch.
 const WANTS_TESTS = new Set(['test', 'tests', 'spec', 'specs', 'unit', 'integration', 'e2e', 'assertion', 'assert', 'mock', 'fixture', 'coverage', 'testing']);
 const WANTS_DOCS = new Set(['doc', 'docs', 'documentation', 'readme', 'changelog', 'guide', 'tutorial']);
+const WANTS_MODELS = new Set(['entity', 'entities', 'model', 'models', 'pojo', 'dto', 'bean', 'getter', 'getters', 'setter', 'setters', 'accessor', 'accessors', 'field', 'fields', 'column', 'columns', 'schema']);
 
 /** Which penalised categories the query is explicitly asking for. */
 function _queryWants(queryTokens) {
-  const wants = { tests: false, docs: false };
+  const wants = { tests: false, docs: false, models: false };
   for (const t of queryTokens || []) {
     if (WANTS_TESTS.has(t)) wants.tests = true;
     if (WANTS_DOCS.has(t)) wants.docs = true;
+    if (WANTS_MODELS.has(t)) wants.models = true;
   }
   return wants;
 }
 
-function _computePenalty(filePath, wants) {
+/**
+ * True when a file's members are overwhelmingly trivial accessors — a generated
+ * entity or POJO rather than logic. Type declarations are excluded from the
+ * ratio so a small class is not misjudged by its own `class X` line.
+ */
+function _isDataHolder(sigs) {
+  if (!Array.isArray(sigs)) return false;
+  const members = sigs.filter((line) => /^\s/.test(line) || !/^(class|interface|enum|struct|function|module\.exports)\b/.test(line));
+  if (members.length < DATA_HOLDER_MIN_MEMBERS) return false;
+  const accessors = members.filter((line) => ACCESSOR_RE.test(line)).length;
+  return accessors / members.length >= DATA_HOLDER_RATIO;
+}
+
+function _computePenalty(filePath, wants, sigs) {
   const pathLower = filePath.toLowerCase();
   if (pathLower.includes('node_modules')) return PENALTY_SIGNALS.nodeModules;
   // A penalty must never fire on the very thing the user asked for. Before
@@ -103,6 +129,11 @@ function _computePenalty(filePath, wants) {
   if (/(^|\/)(dist|build|\.next|\.nuxt|out|\.venv|venv)($|\/)/.test(pathLower)) return PENALTY_SIGNALS.generatedCode;
   if (/(^|\/)(docs|doc|readme|changelog)($|\/)/.test(pathLower)) {
     return (wants && wants.docs) ? 1.0 : PENALTY_SIGNALS.docsFile;
+  }
+  // Content-based, and last: a data holder is still a real source file, so it
+  // is only demoted once the path-based categories have had their say.
+  if (_isDataHolder(sigs)) {
+    return (wants && wants.models) ? 1.0 : PENALTY_SIGNALS.dataHolder;
   }
   return 1.0;
 }
@@ -161,7 +192,7 @@ function scoreFile(filePath, sigs, queryTokens, weights, wants) {
   if (!sigs || sigs.length === 0) return { score: 0, signals: { exactToken: 0, symbolMatch: 0, prefixMatch: 0, pathMatch: 0, penalty: 1.0 } };
 
   const w = weights || DEFAULT_WEIGHTS;
-  const signals = { exactToken: 0, symbolMatch: 0, prefixMatch: 0, pathMatch: 0, penalty: _computePenalty(filePath, wants) };
+  const signals = { exactToken: 0, symbolMatch: 0, prefixMatch: 0, pathMatch: 0, penalty: _computePenalty(filePath, wants, sigs) };
 
   // Module-doc prose is excluded here on purpose. This signal measures overlap
   // with DECLARED IDENTIFIERS; prose relevance is BM25's job, where it is scored
@@ -757,4 +788,4 @@ function detectIntent(query) {
   return detectIntents(query)[0];
 }
 
-module.exports = { rank, buildSigIndex, scoreFile, _queryWants, detectIntents, formatRankTable, formatRankJSON, DEFAULT_WEIGHTS, GRAPH_BOOST_AMOUNTS, CENTRALITY_BLEND_WEIGHT, detectIntent };
+module.exports = { rank, buildSigIndex, scoreFile, _queryWants, _isDataHolder, detectIntents, formatRankTable, formatRankJSON, DEFAULT_WEIGHTS, GRAPH_BOOST_AMOUNTS, CENTRALITY_BLEND_WEIGHT, detectIntent };
