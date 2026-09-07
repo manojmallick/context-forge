@@ -1,6 +1,19 @@
 'use strict';
 
 const { lineAt, withAnchor } = require('./line-anchor');
+const { capWithNotice, capMembersWithNotice } = require('../util/truncate');
+
+// Class bodies are scanned to this many characters. Generated JVM sources
+// (MyBatis/JPA entities) routinely run past 10KB, so the ceiling only guards
+// against pathological input rather than trimming ordinary classes.
+const MAX_CLASS_BODY_CHARS = 200000;
+
+// Per-class member ceiling. Sits above the default `maxSigsPerFile` so the
+// caller's configured budget governs the output rather than this file.
+const MAX_MEMBERS_PER_CLASS = 120;
+
+// Per-file signature ceiling, likewise above the configured default.
+const MAX_SIGS_PER_FILE = 200;
 
 /**
  * Extract signatures from Java source code.
@@ -28,17 +41,20 @@ function extract(src) {
     const block = extractBlock(stripped, bodyStart);
     sigs.push(hinted(withAnchor(`${m[1]} ${m[2]}`, lineAt(stripped, m.index), lineAt(stripped, bodyStart + block.length)), m[2]));
     for (const meth of extractMembers(block)) {
-      sigs.push(hinted(withAnchor(`  ${meth.text}`, lineAt(stripped, bodyStart + meth.declIdx), lineAt(stripped, bodyStart + meth.endIdx)), meth.name));
+      // The disclosure marker carries no offsets; anchor it at the class body.
+      const declIdx = meth.declIdx || 0;
+      const endIdx = meth.endIdx || 0;
+      sigs.push(hinted(withAnchor(`  ${meth.text}`, lineAt(stripped, bodyStart + declIdx), lineAt(stripped, bodyStart + endIdx)), meth.name));
     }
   }
 
-  return sigs.slice(0, 25);
+  return capWithNotice(sigs, MAX_SIGS_PER_FILE, 'signatures');
 }
 
 function extractBlock(src, startIndex) {
   let depth = 1;
   let i = startIndex;
-  const end = Math.min(src.length, startIndex + 5000);
+  const end = Math.min(src.length, startIndex + MAX_CLASS_BODY_CHARS);
   while (i < end && depth > 0) {
     if (src[i] === '{') depth++;
     else if (src[i] === '}') depth--;
@@ -60,7 +76,7 @@ function extractMembers(block) {
       endIdx: m.index + m[0].length,
     });
   }
-  return members.slice(0, 8);
+  return capMembersWithNotice(members, MAX_MEMBERS_PER_CLASS);
 }
 
 function normalizeParams(params) {

@@ -451,6 +451,67 @@ test('v6.6 formatRankJSON: includes intent and signals', () => {
 // ---------------------------------------------------------------------------
 // Results
 // ---------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------
+// Data-holder penalty — generated entities must not outrank logic (#552 follow-up)
+// ---------------------------------------------------------------------------
+
+const { _isDataHolder } = require(path.join(ROOT, 'src', 'retrieval', 'ranker'));
+
+const ENTITY = ['class OmsOrder  :8-547'].concat(
+  ['Id', 'MemberId', 'Note', 'Status', 'PayType', 'CouponId', 'OrderSn'].flatMap((f) => [
+    `  get${f}() → String  :10-10`,
+    `  set${f}(String ${f.toLowerCase()}) → void  :14-14`,
+  ]));
+const SERVICE = [
+  'class OmsPortalOrderServiceImpl  :33-145',
+  '  generateOrder(OrderParam orderParam) → Map<String, Object>  :94-94',
+  '  generateConfirmOrder(List<Long> cartIds) → ConfirmOrderResult  :70-70',
+  '  paySuccess(Long orderId, Integer payType) → Map  :120-120',
+  '  cancelOrder(Long orderId) → void  :130-130',
+  '  sendDelayMessageCancelOrder(Long orderId) → void  :138-138',
+  '  cancelTimeOutOrder() → CommonResult  :142-142',
+];
+
+test('data holder: an accessor-only entity is detected', () => {
+  assert.strictEqual(_isDataHolder(ENTITY), true);
+});
+
+test('data holder: a service with real methods is not', () => {
+  assert.strictEqual(_isDataHolder(SERVICE), false);
+});
+
+test('data holder: a small class is not judged a data holder', () => {
+  assert.strictEqual(_isDataHolder(['class Tiny  :1-9', '  getId() → Long  :3-3', '  setId(Long id) → void  :5-5']), false);
+});
+
+test('data holder: a generated entity no longer outranks the service that shares its terms', () => {
+  const index = new Map([
+    ['mall-mbg/src/main/java/com/macro/mall/model/OmsOrder.java', ENTITY],
+    ['mall-portal/src/main/java/com/macro/mall/portal/service/impl/OmsPortalOrderServiceImpl.java', SERVICE],
+  ]);
+  const results = rank('order note', index, { topK: 10 });
+  const svc = results.findIndex((r) => r.file.includes('OmsPortalOrderServiceImpl'));
+  const ent = results.findIndex((r) => r.file.includes('model/OmsOrder.java'));
+  assert.ok(svc !== -1 && ent !== -1, 'both files should be ranked');
+  assert.ok(svc < ent, `the service must outrank the entity (service ${svc}, entity ${ent})`);
+});
+
+test('data holder: the penalty is not applied when the query asks for the entity', () => {
+  const index = new Map([['mall-mbg/src/main/java/com/macro/mall/model/OmsOrder.java', ENTITY]]);
+  const penalised = rank('order note', index, { topK: 5 })[0].signals.penalty;
+  const wanted = rank('order note entity getter', index, { topK: 5 })[0].signals.penalty;
+  assert.ok(penalised < 1.0, 'a plain query should demote the entity');
+  assert.strictEqual(wanted, 1.0, 'asking for an entity/getter must lift the penalty');
+});
+
+test('data holder: the entity is still retrievable by its own symbol', () => {
+  const index = new Map([['mall-mbg/src/main/java/com/macro/mall/model/OmsOrder.java', ENTITY]]);
+  const results = rank('setNote', index, { topK: 5 });
+  assert.ok(results.length > 0 && results[0].score > 0,
+    'demoting must not make the symbol unfindable — that was the bug #552 fixed');
+});
+
 console.log('');
 console.log(`${passed} passed, ${failed} failed`);
 
