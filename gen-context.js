@@ -18805,7 +18805,7 @@ __factories["./src/skills/skills"] = function(module, exports) {
         'Follow this loop before any file exploration in a repo with SigMap installed.',
         '',
         '1. **Ask before reading.** `sigmap ask "<task>"` (or the `query_context` MCP tool) ranks the relevant files as ~hundreds of tokens of signatures instead of thousands of raw-file tokens. Never open files to "look around".',
-        '2. **Read ranges, not files.** Use the `get_lines` MCP tool with the `:start-end` line anchors carried on every signature to pull only the lines you need.',
+        '2. **Read ranges, not files.** Use the `get_lines` MCP tool — or `sigmap lines <file> :<line> --context <n>` where MCP is unavailable — with the `:start-end` line anchors carried on every signature to pull only the lines you need.',
         '3. **Ground before trusting.** Run the `verify_suggestion` MCP tool (or `sigmap verify-ai-output`) on generated code before applying it — it flags fabricated files, imports, symbols, and npm scripts against the live index.',
         '4. **Squeeze big pastes.** Any stack trace, CI/build log, or JSON blob goes through `sigmap squeeze` (or the `squeeze_output` MCP tool) before it enters context — the signal survives, the noise does not.',
         '5. **Checkpoint progress.** Use the `create_checkpoint` MCP tool or `sigmap note "<decision>"` so a follow-up session resumes without re-deriving state.',
@@ -18823,7 +18823,7 @@ __factories["./src/skills/skills"] = function(module, exports) {
         '',
         '1. **Look up, do not search.** `npx sigmap ask "<the task>"` — this writes `.context/query-context.md`.',
         '2. **Read the map.** `cat .context/query-context.md`. It ranks the relevant files and lists their signatures with `:start-end` line anchors — a few hundred tokens where the same files read whole are tens of thousands. Say which files it surfaced before continuing. If nothing relevant appears, re-run step 1 with different wording; fall back to search only after two attempts, and say so.',
-        '3. **Open only the anchored ranges.** A signature ending `:425-425` means read line 425, not the whole file. Never read a file in full when you hold an anchor for it.',
+        '3. **Read the anchored range, by command.** A signature ending `:425-425` means line 425, not the 547-line file. Run `npx sigmap lines <file> :425 --context 10` — paste the anchor straight off the signature. Never `cat` a whole file when you hold an anchor for it: on a real repo a 220-line span costs ~2,700 tokens where the anchored window costs ~220.',
         '4. **Make the change.** Follow the conventions visible in the signatures — same layering, same response wrapper, same annotation style. Add no dependencies.',
         '5. **Verify before reporting.** Write what you changed to `.sigmap-notes.md`, naming every file by its **full repository-relative path** (a bare filename is reported as fake), then run `npx sigmap verify-ai-output .sigmap-notes.md`. It checks every name against the real index, offline, with no model call. Fix anything it flags and re-run before you reply.',
         '6. **Refresh the map.** `npx sigmap` — your edits made it stale.',
@@ -23740,6 +23740,8 @@ Usage:
   ${cmd} tune --apply                      Write the recommendations into gen-context.config.json (merges; your keys preserved)
   ${cmd} skills list                       List skill clients (Claude/Cursor/Windsurf/Copilot/AGENTS.md) and install state (--json)
   ${cmd} skills install                    Install the SigMap agent playbooks for detected clients (--client <name> | --all)
+  ${cmd} lines <file> <start>-<end>        Print an exact line range — CLI twin of get_lines (secrets redacted)
+  ${cmd} lines <file> :<line> --context <n>  Window around one signature anchor (default ±10)
   ${cmd} note "<text>"                     Append a note to the cross-session decision log
   ${cmd} note                              List recent notes (also: note --list <N>)
   ${cmd} status                            Show repo state — branch, dirty files, index freshness, notes
@@ -25340,6 +25342,55 @@ function main() {
     console.error(r.redacted
       ? `[sigmap] redact: masked ${r.findings.length} secret(s) — ${parts.join(', ')}`
       : '[sigmap] redact: no secrets found');
+    process.exit(0);
+  }
+
+  // `sigmap lines <file> <start>-<end>` — the CLI twin of the get_lines MCP
+  // tool. Without it, an agent in an MCP-less environment receives precise
+  // `:start-end` anchors from `ask` and has no sanctioned way to spend them,
+  // so it falls back to reading whole files and throws the saving away.
+  // Delegates to the same handler as MCP so both paths share the sandbox,
+  // the bounds clamping and the secret redaction.
+  if (args[0] === 'lines') {
+    const valOf = (f) => { const i = args.indexOf(f); return i >= 0 && args[i + 1] ? args[i + 1] : null; };
+    const positional = [];
+    const VALUE_FLAGS = new Set(['--cwd', '--context']);
+    for (let i = 1; i < args.length; i++) {
+      const a = args[i];
+      if (a.startsWith('--')) { if (VALUE_FLAGS.has(a)) i++; continue; }
+      positional.push(a);
+    }
+    const file = positional[0];
+    const range = positional[1];
+    if (!file || !range) {
+      console.error('[sigmap] usage: sigmap lines <file> <start>-<end>   (or :<line> --context <n>)');
+      process.exit(2);
+    }
+
+    // Accept `84-104`, a bare `94`, or the `:94` form copied straight off a
+    // signature anchor — the whole point is to paste what `ask` printed.
+    const ctx = Math.max(0, parseInt(valOf('--context') || '10', 10));
+    let start;
+    let end;
+    const span = /^:?(\d+)\s*-\s*(\d+)$/.exec(range);
+    const single = /^:?(\d+)$/.exec(range);
+    if (span) { start = parseInt(span[1], 10); end = parseInt(span[2], 10); }
+    else if (single) { const n = parseInt(single[1], 10); start = Math.max(1, n - ctx); end = n + ctx; }
+    else {
+      console.error(`[sigmap] lines: could not read range "${range}" — expected <start>-<end> or :<line>`);
+      process.exit(2);
+    }
+
+    const { getLines } = requireSourceOrBundled('./src/mcp/handlers');
+    const out = getLines({ file, start, end }, cwd);
+    // The handler reports its own failures as prose; surface them on stderr
+    // with a non-zero exit so a script can tell a hit from a miss.
+    if (/^(Missing required argument|Refused:|File not found:|Could not read |Arguments )/.test(out)
+        || /has only \d+ lines; requested/.test(out)) {
+      console.error('[sigmap] ' + out);
+      process.exit(1);
+    }
+    process.stdout.write(out + '\n');
     process.exit(0);
   }
 

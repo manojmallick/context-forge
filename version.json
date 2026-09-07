@@ -5,7 +5,7 @@
   "languages": 33,
   "extractors": 43,
   "mcp_tools": 21,
-  "tests": 140,
+  "tests": 141,
   "metrics": {
     "hit_at_5": 0.811,
     "baseline_hit_at_5": 0.136,
