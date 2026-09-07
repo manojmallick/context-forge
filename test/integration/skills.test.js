@@ -151,5 +151,66 @@ test('CLI: skills list --json, install --client creates, --help documents skills
   rm(dir);
 });
 
+
+// ---------------------------------------------------------------------------
+// sigmap-task prompt skill (#553) — invokable, CLI-only, MCP-free
+// ---------------------------------------------------------------------------
+
+test('sigmap-task is a prompt-kind skill', () => {
+  assert.ok(SKILLS['sigmap-task'], 'sigmap-task skill must exist');
+  assert.strictEqual(SKILLS['sigmap-task'].kind, 'prompt');
+});
+
+test('copilot installs sigmap-task to .github/prompts as a .prompt.md', () => {
+  const dir = tmp({ dirs: ['.github'] });
+  const r = installSkills('copilot', { cwd: dir, version: '9.9.9' });
+  const entry = r.results.find((x) => x.skill === 'sigmap-task');
+  assert.ok(entry, 'sigmap-task must be installed');
+  assert.ok(entry.path.endsWith(path.join('.github', 'prompts', 'sigmap-task.prompt.md')),
+    `wrong target: ${entry.path}`);
+  rm(dir);
+});
+
+test('copilot still installs playbooks to .github/instructions', () => {
+  const dir = tmp({ dirs: ['.github'] });
+  const r = installSkills('copilot', { cwd: dir, version: '9.9.9' });
+  const entry = r.results.find((x) => x.skill === 'sigmap-usage-maximizer');
+  assert.ok(entry.path.includes(path.join('.github', 'instructions')), `wrong target: ${entry.path}`);
+  rm(dir);
+});
+
+test('the prompt file carries frontmatter that makes /sigmap-task invokable', () => {
+  const out = renderSkill('copilot', 'sigmap-task', '9.9.9');
+  assert.ok(out.startsWith('---\n'), 'must open with frontmatter');
+  const fm = out.split('---')[1];
+  assert.ok(/name:\s*sigmap-task/.test(fm), 'needs a name for /invocation');
+  assert.ok(/agent:\s*'agent'/.test(fm), 'must run in agent mode to execute commands');
+  assert.ok(/argument-hint:/.test(fm), 'needs an argument hint');
+  assert.ok(!/applyTo/.test(fm), 'prompt files must not use the instructions frontmatter');
+});
+
+test('the task loop never instructs the agent to use MCP tools', () => {
+  const body = SKILLS['sigmap-task'].body;
+  for (const mcpOnly of ['query_context', 'get_lines', 'verify_suggestion', 'squeeze_output', 'get_budget']) {
+    assert.ok(!body.includes(mcpOnly), `sigmap-task must stay CLI-only, found: ${mcpOnly}`);
+  }
+  assert.ok(body.includes('npx sigmap ask'), 'must lead with the CLI lookup');
+  assert.ok(body.includes('verify-ai-output'), 'must verify via the CLI');
+});
+
+test('the task loop tells the agent to use full repo-relative paths when verifying', () => {
+  assert.ok(/repository-relative path/.test(SKILLS['sigmap-task'].body),
+    'bare filenames are reported as fake files — the loop must say so');
+});
+
+test('sigmap-task installs for claude as a normal skill file', () => {
+  const dir = tmp({ dirs: ['.claude'] });
+  const r = installSkills('claude', { cwd: dir, version: '9.9.9' });
+  const entry = r.results.find((x) => x.skill === 'sigmap-task');
+  assert.ok(entry.path.endsWith(path.join('.claude', 'skills', 'sigmap-task', 'SKILL.md')),
+    `wrong target: ${entry.path}`);
+  rm(dir);
+});
+
 console.log(`\n  skills: ${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);
