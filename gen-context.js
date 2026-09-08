@@ -12109,6 +12109,13 @@ __factories["./src/graph/call-graph"] = function(module, exports) {
   // Java: methods + constructors with braced bodies. Statement-shaped matches
   // (calls, control flow) are rejected because their `)` is followed by `;`,
   // and keyword headers (`if`, `while`, …) fall to the NON_CALL guard.
+  // Words that can precede `name(` in a STATEMENT, so their presence means the
+  // line is not a method declaration.
+  const STMT_KEYWORDS = new Set([
+    'return', 'throw', 'else', 'do', 'try', 'case', 'yield', 'assert', 'new',
+    'if', 'while', 'for', 'switch', 'catch', 'synchronized', 'instanceof', 'await',
+  ]);
+
   function javaDefs(masked) {
     const defs = [];
     const seen = new Set();
@@ -12125,11 +12132,24 @@ __factories["./src/graph/call-graph"] = function(module, exports) {
       // skip `throws A, B` up to the body `{` (same line — multi-line headers are skipped)
       let k = close + 1;
       while (k < masked.length && masked[k] !== '{' && masked[k] !== ';' && masked[k] !== '\n' && masked[k] !== '=') k++;
-      if (masked[k] !== '{') continue;
+      // A `;` here is an interface or abstract method DECLARATION. It owns no body,
+      // so it emits no calls — but in Spring the declared interface is what callers
+      // name, so without it as a node every controller→service edge has no target.
+      // Recorded with an empty body range: can receive edges, never produces them.
+      // `before` is everything between line start and the method name. A real
+      // declaration has modifiers or a return type there (`void chargeCard(`);
+      // a call statement has only whitespace (`identity(1);`) or a statement
+      // keyword (`return helper(a);`) — neither may be read as a declaration,
+      // or the call resolves to a phantom local def instead of the real target.
+      const headWord = (before.match(/([A-Za-z_$][\w$]*)\s*$/) || [])[1];
+      const isDecl = masked[k] === ';' && /\S/.test(before) && !STMT_KEYWORDS.has(headWord);
+      if (masked[k] !== '{' && !isDecl) continue;
       const key = name + ':' + k;
       if (seen.has(key)) continue;
       seen.add(key);
-      defs.push({ name, line: lineAt(masked, m.index + 1), bodyStart: k, bodyEnd: matchDelim(masked, k, '{', '}') });
+      defs.push(isDecl
+        ? { name, line: lineAt(masked, m.index + 1), bodyStart: k, bodyEnd: k }
+        : { name, line: lineAt(masked, m.index + 1), bodyStart: k, bodyEnd: matchDelim(masked, k, '{', '}') });
     }
     return defs;
   }
@@ -12183,7 +12203,7 @@ __factories["./src/graph/call-graph"] = function(module, exports) {
     const re = /([A-Za-z_$][\w$]*)\s*\(/g;
     let m;
     while ((m = re.exec(slice)) !== null) {
-      // skip a `.name(` method access (can't resolve the receiver deterministically)
+      // skip a `.name(` method access — resolved separately via receiverCallsInRange
       const before = slice[m.index - 1];
       if (before === '.') continue;
       if (!NON_CALL.has(m[1])) names.add(m[1]);
@@ -12191,16 +12211,75 @@ __factories["./src/graph/call-graph"] = function(module, exports) {
     return names;
   }
 
+  // Collect `receiver.method(` pairs within [start,end). A chained or computed
+  // receiver (`a.b().c(`, `arr[0].c(`) is skipped: only a plain identifier can be
+  // looked up in the declaration map, and guessing is worse than no edge.
+  function receiverCallsInRange(masked, start, end) {
+    const slice = masked.slice(start, end);
+    const out = [];
+    const re = /([A-Za-z_$][\w$]*)\s*\.\s*([A-Za-z_$][\w$]*)\s*\(/g;
+    let m;
+    while ((m = re.exec(slice)) !== null) {
+      const before = slice[m.index - 1];
+      if (before === '.' || before === ')' || before === ']') continue;
+      if (NON_CALL.has(m[2])) continue;
+      out.push({ receiver: m[1], method: m[2] });
+    }
+    return out;
+  }
+
+  // `private UserService userService;` / `UserService svc = new UserService();`
+  // / `for (OmsOrderItem item : list)` → { userService: 'UserService', … }.
+  // Declarations only: a bare assignment carries no type and is not inferred.
+  const DECL_RE = /(?:^|[;{}(,\n])\s*(?:(?:public|private|protected|static|final|volatile|transient)\s+)*([A-Z][\w$]*)(?:\s*<[^>;=(){}]*>)?(?:\s*\[\s*\])?\s+([a-z_$][\w$]*)\s*(?=[;=:)])/g;
+
+  function buildTypeMap(masked) {
+    const map = new Map();
+    let m;
+    DECL_RE.lastIndex = 0;
+    while ((m = DECL_RE.exec(masked)) !== null) {
+      const [, type, name] = m;
+      if (JVM_KEYWORDS.has(type) || JVM_KEYWORDS.has(name)) continue;
+      if (!map.has(name)) map.set(name, type);   // first declaration wins — deterministic
+    }
+    return map;
+  }
+
+  // Type names that are never a user class, so never a resolvable receiver type.
+  const JVM_KEYWORDS = new Set([
+    'return', 'new', 'if', 'else', 'for', 'while', 'switch', 'case', 'throw', 'catch',
+    'String', 'Integer', 'Long', 'Boolean', 'Double', 'Float', 'Object', 'List', 'Map',
+    'Set', 'Collection', 'Optional', 'Override', 'Autowired', 'Resource', 'Deprecated',
+  ]);
+
   // ── Public API ───────────────────────────────────────────────────────────────
 
-  function _walk(dir, excludeSet, out, depth) {
-    if (depth > 8) return;
+  // Walk depth from each srcDir root (not from cwd). A Maven module reaches
+  // `src/main/java/<group>/<artifact>/service/impl` nine directories down, so the
+  // previous ceiling of 8 never saw the classes that own the method bodies.
+  const DEFAULT_WALK_DEPTH = 12;
+
+  /**
+   * Source directories declared in the project's own config, or null. Read
+   * directly rather than through `loadConfig`, which can fetch `extends` over the
+   * network and spawn a child process — neither belongs inside a graph build.
+   */
+  function _configuredSrcDirs(cwd) {
+    try {
+      const cfg = JSON.parse(fs.readFileSync(path.join(cwd, 'gen-context.config.json'), 'utf8'));
+      if (Array.isArray(cfg.srcDirs) && cfg.srcDirs.length > 0) return cfg.srcDirs;
+    } catch (_) { /* absent or unparsable — fall back to the defaults */ }
+    return null;
+  }
+
+  function _walk(dir, excludeSet, out, depth, maxDepth) {
+    if (depth > (maxDepth === undefined ? DEFAULT_WALK_DEPTH : maxDepth)) return;
     let entries;
     try { entries = fs.readdirSync(dir, { withFileTypes: true }); } catch (_) { return; }
     for (const e of entries) {
       if (excludeSet.has(e.name) || e.name.startsWith('.')) continue;
       const full = path.join(dir, e.name);
-      if (e.isDirectory()) _walk(full, excludeSet, out, depth + 1);
+      if (e.isDirectory()) _walk(full, excludeSet, out, depth + 1, maxDepth);
       else if (e.isFile()) {
         const ext = path.extname(e.name).toLowerCase();
         if (JS_EXTS.has(ext) || PY_EXTS.has(ext) || JAVA_EXTS.has(ext) || GO_EXTS.has(ext) || RS_EXTS.has(ext)) out.push(full);
@@ -12226,9 +12305,13 @@ __factories["./src/graph/call-graph"] = function(module, exports) {
     const excludeSet = new Set(opts.exclude || ['node_modules', '.git', 'dist', 'build', 'coverage', 'vendor']);
     let files = opts.files ? opts.files.map((f) => path.resolve(f)) : [];
     if (!opts.files) {
-      for (const sd of (opts.srcDirs || ['src', 'app', 'lib'])) {
+      // Same resolution order as the dependency graph (#560): explicit opts →
+      // the project's own config → the historical defaults. Without the config
+      // step this is empty on any repo whose sources are not under src/app/lib.
+      const srcDirs = opts.srcDirs || _configuredSrcDirs(cwd) || ['src', 'app', 'lib'];
+      for (const sd of srcDirs) {
         const abs = path.resolve(cwd, sd);
-        if (fs.existsSync(abs)) _walk(abs, excludeSet, files, 0);
+        if (fs.existsSync(abs)) _walk(abs, excludeSet, files, 0, opts.maxDepth);
       }
     }
 
@@ -12241,6 +12324,18 @@ __factories["./src/graph/call-graph"] = function(module, exports) {
     const defsByName = new Map();     // absFile → Map<name, symbolId[]>
     const normToAbs = new Map();      // normalized abs → abs
     const defs = new Map();           // symbolId → {file,name,line}
+
+    // JVM convention: a public type lives in a file of the same name. This is the
+    // deterministic type→file mapping receiver resolution needs, with no AST.
+    const fileByTypeName = new Map();   // 'UserService' → [absFile]
+    for (const f of files) {
+      const ext = path.extname(f).toLowerCase();
+      if (JAVA_EXTS.has(ext)) {
+        const base = path.basename(f, path.extname(f));
+        if (!fileByTypeName.has(base)) fileByTypeName.set(base, []);
+        fileByTypeName.get(base).push(f);
+      }
+    }
 
     for (const f of files) {
       normToAbs.set(normalizePath(path.resolve(f)), path.resolve(f));
@@ -12261,12 +12356,20 @@ __factories["./src/graph/call-graph"] = function(module, exports) {
 
     const forward = new Map();
     const reverse = new Map();
-    const addEdge = (from, to) => {
+    // Additive: `forward`/`reverse` keep their existing shape, so every current
+    // consumer is unaffected. Confidence is looked up by "from\u0000to".
+    const edgeConfidence = new Map();
+    const addEdge = (from, to, confidence) => {
       if (from === to) return;
       if (!forward.has(from)) forward.set(from, new Set());
       forward.get(from).add(to);
       if (!reverse.has(to)) reverse.set(to, new Set());
       reverse.get(to).add(from);
+      if (confidence) {
+        const k = from + '\u0000' + to;
+        // A 'high' resolution never loses to a later 'medium' one.
+        if (edgeConfidence.get(k) !== 'high') edgeConfidence.set(k, confidence);
+      }
     };
 
     for (const [f, fileDefs] of perFileDefs.entries()) {
@@ -12284,17 +12387,50 @@ __factories["./src/graph/call-graph"] = function(module, exports) {
           .sort();
         importedAbs.push(...siblings);
       }
+      // Receiver types come from declarations anywhere in the file: fields are
+      // declared outside any method body, locals inside one.
+      const typeMap = JAVA_EXTS.has(ext) ? buildTypeMap(masked) : null;
+      // Types reachable from this file, by name — imports first, then same-package
+      // siblings, so an import always wins over a coincidental sibling name.
+      const scopeByTypeName = new Map();
+      if (typeMap) {
+        for (const imp of importedAbs) {
+          const base = path.basename(imp, path.extname(imp));
+          if (!scopeByTypeName.has(base)) scopeByTypeName.set(base, imp);
+        }
+      }
+
       for (const d of fileDefs) {
         const callerId = symId(cwd, f, d.name);
         if (!forward.has(callerId)) forward.set(callerId, new Set()); // ensure node exists
         const callees = callsInRange(masked, d.bodyStart, d.bodyEnd);
         for (const nm of callees) {
           const local = (defsByName.get(f) || new Map()).get(nm);
-          if (local && local.length) { for (const id of local) addEdge(callerId, id); continue; }
+          if (local && local.length) { for (const id of local) addEdge(callerId, id, 'high'); continue; }
           for (const imp of importedAbs) {
             const ids = (defsByName.get(imp) || new Map()).get(nm);
-            if (ids && ids.length) { for (const id of ids) addEdge(callerId, id); break; }
+            if (ids && ids.length) { for (const id of ids) addEdge(callerId, id, 'high'); break; }
           }
+        }
+
+        // `receiver.method(` — resolve the receiver's declared type to a file.
+        if (!typeMap) continue;
+        for (const { receiver, method } of receiverCallsInRange(masked, d.bodyStart, d.bodyEnd)) {
+          // A receiver that is itself a type name is a static call: `Foo.bar()`.
+          const typeName = typeMap.get(receiver)
+            || (fileByTypeName.has(receiver) ? receiver : null);
+          if (!typeName) continue;                 // unknown receiver → no edge, never a guess
+
+          let target = scopeByTypeName.get(typeName);
+          let confidence = 'high';                 // typed receiver, resolved in scope
+          if (!target) {
+            const candidates = fileByTypeName.get(typeName) || [];
+            if (candidates.length !== 1) continue; // ambiguous or absent → no edge
+            target = candidates[0];
+            confidence = 'medium';                 // type known, but not in this file's scope
+          }
+          const ids = (defsByName.get(target) || new Map()).get(method);
+          if (ids && ids.length) for (const id of ids) addEdge(callerId, id, confidence);
         }
       }
     }
@@ -12304,7 +12440,7 @@ __factories["./src/graph/call-graph"] = function(module, exports) {
       for (const [k, set] of mapOfSets.entries()) out.set(k, [...set]);
       return out;
     };
-    return { forward: toArr(forward), reverse: toArr(reverse), defs };
+    return { forward: toArr(forward), reverse: toArr(reverse), defs, edgeConfidence };
   }
 
   /**
@@ -12426,7 +12562,7 @@ __factories["./src/graph/call-graph"] = function(module, exports) {
   }
 
   module.exports = {
-    buildCallGraph, buildCallFileGraph, methodImpact, methodCallees,
+    buildCallGraph, buildTypeMap, receiverCallsInRange, DEFAULT_WALK_DEPTH, buildCallFileGraph, methodImpact, methodCallees,
     formatCallGraph, formatCallGraphJSON,
     extractDefs, maskJs, maskPy, maskRust,
   };
