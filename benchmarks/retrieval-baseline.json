@@ -1,13 +1,13 @@
 {
   "hard": {
-    "hitAt5": 0.767,
-    "mrr": 0.639,
-    "precisionAt5": 0.153,
+    "hitAt5": 0.744,
+    "mrr": 0.644,
+    "precisionAt5": 0.149,
     "tasks": 90
   },
   "mined": {
     "hitAt5": 0.609,
-    "mrr": 0.447,
+    "mrr": 0.443,
     "precisionAt5": 0.13,
     "tasks": 23
   },
