@@ -255,6 +255,37 @@ const STMT_KEYWORDS = new Set([
   'if', 'while', 'for', 'switch', 'catch', 'synchronized', 'instanceof', 'await',
 ]);
 
+// Types a Java class declares it implements or extends, with generic arguments
+// stripped and any package qualifier dropped: `implements Foo<Bar, Baz>` yields
+// ['Foo'], never 'Baz>'. Also records whether the class is a Spring bean and
+// whether it is @Primary, which is what disambiguates several implementations.
+function javaTypeDecl(masked) {
+  const m = /(?:^|\n)[^\n]*?\bclass\s+([A-Za-z_$][\w$]*)([^{]*)\{/.exec(masked);
+  if (!m) return null;
+  const [, className, tail] = m;
+  const supers = [];
+  for (const kw of ['implements', 'extends']) {
+    const k = new RegExp('\\b' + kw + '\\s+([^{]*?)(?=\\b(?:implements|extends)\\b|$)').exec(tail);
+    if (!k) continue;
+    let depth = 0;
+    let cur = '';
+    for (const ch of k[1]) {
+      if (ch === '<') { depth++; continue; }
+      if (ch === '>') { depth--; continue; }
+      if (ch === ',' && depth === 0) { if (cur.trim()) supers.push(cur.trim()); cur = ''; continue; }
+      if (depth === 0) cur += ch;
+    }
+    if (cur.trim()) supers.push(cur.trim());
+  }
+  const head = masked.slice(0, m.index + m[0].length);
+  return {
+    className,
+    supers: supers.map((t) => t.split('.').pop().trim()).filter(Boolean),
+    isBean: /@(Service|Component|Repository|Controller|RestController)\b/.test(head),
+    isPrimary: /@Primary\b/.test(head),
+  };
+}
+
 function javaDefs(masked) {
   const defs = [];
   const seen = new Set();
@@ -476,6 +507,32 @@ function buildCallGraph(cwd, opts = {}) {
     }
   }
 
+  // interface/superclass name → implementing files, for the Spring hop below.
+  const implsByType = new Map();     // 'PaymentService' → [{ file, isBean, isPrimary }]
+  for (const f of files) {
+    if (!JAVA_EXTS.has(path.extname(f).toLowerCase())) continue;
+    let decl;
+    try { decl = javaTypeDecl(maskJs(fs.readFileSync(f, 'utf8'))); } catch (_) { continue; }
+    if (!decl) continue;
+    for (const sup of decl.supers) {
+      if (!implsByType.has(sup)) implsByType.set(sup, []);
+      implsByType.get(sup).push({ file: f, isBean: decl.isBean, isPrimary: decl.isPrimary });
+    }
+  }
+
+  /**
+   * The single implementing file for a type, or null when it is ambiguous.
+   * One implementation resolves outright; several resolve only via @Primary.
+   * Anything still ambiguous yields no edge — polymorphism is not guessed.
+   */
+  const soleImpl = (typeName) => {
+    const cands = implsByType.get(typeName) || [];
+    if (cands.length === 1) return cands[0].file;
+    const primary = cands.filter((c) => c.isPrimary);
+    if (primary.length === 1) return primary[0].file;
+    return null;
+  };
+
   for (const f of files) {
     normToAbs.set(normalizePath(path.resolve(f)), path.resolve(f));
     let src;
@@ -570,6 +627,16 @@ function buildCallGraph(cwd, opts = {}) {
         }
         const ids = (defsByName.get(target) || new Map()).get(method);
         if (ids && ids.length) for (const id of ids) addEdge(callerId, id, confidence);
+
+        // Spring: the call names the interface, but the code that runs — and
+        // that a reviewer changes — lives in the implementation. Both edges are
+        // true, so both are recorded; without the second, blast radius on an
+        // implementation is empty.
+        const implFile = soleImpl(typeName);
+        if (implFile && implFile !== target) {
+          const implIds = (defsByName.get(implFile) || new Map()).get(method);
+          if (implIds && implIds.length) for (const id of implIds) addEdge(callerId, id, confidence);
+        }
       }
     }
   }
@@ -701,7 +768,7 @@ function formatCallGraphJSON(result, kind) {
 }
 
 module.exports = {
-  buildCallGraph, buildTypeMap, receiverCallsInRange, DEFAULT_WALK_DEPTH, buildCallFileGraph, methodImpact, methodCallees,
+  buildCallGraph, buildTypeMap, receiverCallsInRange, javaTypeDecl, DEFAULT_WALK_DEPTH, buildCallFileGraph, methodImpact, methodCallees,
   formatCallGraph, formatCallGraphJSON,
   extractDefs, maskJs, maskPy, maskRust,
 };
