@@ -1,0 +1,12 @@
+{
+  "generated_note": "Deterministic counts from the cloned JVM repos. Regenerate with --save.",
+  "repos": [
+    {
+      "repo": "spring-petclinic",
+      "symbols": 165,
+      "edges": 106,
+      "high": 72,
+      "medium": 34
+    }
+  ]
+}
