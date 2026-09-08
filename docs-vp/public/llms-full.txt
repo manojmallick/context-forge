@@ -132,6 +132,8 @@ sigmap tune                              Recommend config from repo detection �
 sigmap tune --apply                      Write the recommendations into gen-context.config.json (merges; your keys preserved)
 sigmap skills list                       List skill clients (Claude/Cursor/Windsurf/Copilot/AGENTS.md) and install state (--json)
 sigmap skills install                    Install the SigMap agent playbooks for detected clients (--client <name> | --all)
+sigmap lines <file> <start>-<end>        Print an exact line range — CLI twin of get_lines (secrets redacted)
+sigmap lines <file> :<line> --context <n>  Window around one signature anchor (default ±10)
 sigmap note "<text>"                     Append a note to the cross-session decision log
 sigmap note                              List recent notes (also: note --list <N>)
 sigmap status                            Show repo state — branch, dirty files, index freshness, notes
