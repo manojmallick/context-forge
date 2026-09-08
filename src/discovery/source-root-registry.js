@@ -156,10 +156,19 @@ const REGISTRY = {
       akka:  { detectionFiles: [], detectionDeps: ['akka'], srcDirs: ['src/main/scala','src'] },
       play:  { detectionFiles: [], detectionDeps: ['play'], srcDirs: ['app','conf'] },
       spark: { detectionFiles: [], detectionDeps: ['spark'],srcDirs: ['src/main/scala'] },
-      zio:   { detectionFiles: [], detectionDeps: ['zio'],  srcDirs: ['src/main/scala'] },
+      zio:   { detectionFiles: [], detectionDeps: ['zio'], srcDirs: ['src/main/scala'] },
     },
     srcDirs:  ['src/main/scala','src'],
     penalties: ['target'],
+  },
+
+  lua: {
+    manifestFiles: ['.luarc.json', 'selene.toml', 'stylua.toml'],
+    frameworks: {
+      luarocks: { detectionFiles: ['*.rockspec'], srcDirs: ['src','lua','lib'] },
+    },
+    srcDirs:  ['src','lua','lib'],
+    penalties: ['.luarocks','luarocks_modules'],
   },
 
   r: {

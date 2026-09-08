@@ -19,6 +19,7 @@ const EXT_TO_LANG = {
   '.java': 'java', '.kt': 'kotlin', '.cs': 'csharp', '.cpp': 'cpp',
   '.c': 'cpp', '.h': 'cpp', '.hpp': 'cpp', '.swift': 'swift',
   '.dart': 'dart', '.scala': 'scala', '.php': 'php',
+  '.lua': 'lua',
   '.gd': 'gdscript',
   '.r': 'r', '.R': 'r',
 };

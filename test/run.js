@@ -37,6 +37,7 @@ const LANG_EXT = {
   swift: 'swift',
   dart: 'dart',
   scala: 'scala',
+  lua: 'lua',
   r: 'r',
   vue: 'vue',
   svelte: 'svelte',

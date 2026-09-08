@@ -1,0 +1,7 @@
+require dkjson as json
+require app.helper as helper
+local function trim(value)  # Trim surrounding whitespace
+function M.render(node, opts)  # Render a node
+function player:move(dx, dy)
+M.parse = function(input, strict)
+private = function(secret)

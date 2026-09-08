@@ -81,7 +81,7 @@ const SUPPORTED_CODE_EXTS = new Set([
   '.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs',
   '.py', '.pyw', '.java', '.kt', '.kts', '.go', '.rs', '.cs',
   '.cpp', '.c', '.h', '.hpp', '.cc', '.rb', '.rake', '.php',
-  '.swift', '.dart', '.scala', '.sc', '.vue', '.svelte',
+  '.swift', '.dart', '.scala', '.sc', '.lua', '.vue', '.svelte',
   '.html', '.htm', '.css', '.scss', '.sass', '.less',
   '.yml', '.yaml', '.sh', '.bash', '.zsh', '.fish',
   '.sql', '.graphql', '.gql', '.tf', '.tfvars', '.proto',

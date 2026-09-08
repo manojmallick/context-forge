@@ -7,7 +7,7 @@ const { git } = require('../util/git');
 const CODE_EXTS = new Set([
   '.js','.mjs','.cjs','.ts','.tsx','.jsx',
   '.py','.rb','.go','.rs','.java','.kt',
-  '.cs','.cpp','.c','.h','.swift','.dart','.scala','.php',
+  '.cs','.cpp','.c','.h','.swift','.dart','.scala','.php','.lua',
 ]);
 
 const AUTO_SKIP = new Set([
