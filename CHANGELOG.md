@@ -10,6 +10,20 @@ Format: [Semantic Versioning](https://semver.org/)
 
 ---
 
+## [8.31.0] — 2026-09-08
+
+### Added
+- `sigmap lines <file> <start>-<end>` — the CLI twin of the `get_lines` MCP tool, for environments where MCP is unavailable. Accepts a `:94` anchor pasted straight off a signature with `--context N`. Delegates to the same handler as MCP, so it shares the project-root sandbox, EOF clamping and secret redaction (#568)
+- Spring interface calls now link to their implementation, so blast radius on the class that owns the code is no longer empty. Exactly one implementation resolves outright; several resolve only via a single `@Primary`; anything still ambiguous produces no edge rather than a guess (#565)
+- A JVM call-graph gate (`npm run validate:callgraph-jvm`) asserting named caller→callee pairs and edge volume against a committed baseline — offline and deterministic. Verified to fail on a simulated revert (#567)
+
+### Fixed
+- The dependency graph was **empty** on Maven/Gradle repos: `buildFromCwd` hard-coded `srcDirs` to `src`/`app`/`lib`/`R`/`inst` and never read the project config, then capped the walk at 8 directories. Java package-import resolution already worked but was never reached. On a 524-file Spring repo: 0 → 524 nodes, 341 with importers (#561)
+- The Java call graph discarded every `receiver.method(` call — 58% of call sites in a real Spring module — so controller→service edges did not exist. Receiver types are now resolved from field and local declarations; unresolvable receivers still produce no edge. Interface method declarations are indexed so calls to them have a target. On the same repo: 0 → 10,213 edges (#563)
+
+### Changed
+- Retrieval baseline re-recorded. The hard split moved 76.7% → 74.4% purely because the index is regenerated under a token budget and this release added ~1,000 lines; holding the index fixed, pre- and post-merge code produce identical results and the same 23 misses. MRR rose 0.639 → 0.644 (#569)
+
 ## [8.30.0] — 2026-09-07
 
 ### Added

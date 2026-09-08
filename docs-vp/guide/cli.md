@@ -1,6 +1,6 @@
 ---
 title: CLI reference
-description: Complete SigMap CLI reference. All commands and flags with examples — ask, evidence, budget, redact, tune, skills, squeeze, conventions, plan, bench, judge, verify, verify-ai-output, verify-plan, review-pr, create, memory, note, status, doctor, validate, roots, daemon, history, --package, --global, --ci, --cost, --coverage, --watch, --diff, --callers, --callees, --mcp, --report, --health, weights --export/--import and more.
+description: Complete SigMap CLI reference. All commands and flags with examples — ask, evidence, budget, redact, tune, skills, squeeze, conventions, plan, bench, judge, verify, verify-ai-output, verify-plan, review-pr, create, memory, lines, note, status, doctor, validate, roots, daemon, history, --package, --global, --ci, --cost, --coverage, --watch, --diff, --callers, --callees, --mcp, --report, --health, weights --export/--import and more.
 head:
   - - meta
     - property: og:title
@@ -92,6 +92,7 @@ If you are new to the product, start with the workflow pages first:
 | `skills list` | List skill clients (Claude/Cursor/Windsurf/Copilot/AGENTS.md) with presence and install state (`--json`) |
 | `skills install [--client <name> \| --all]` | Install the SigMap agent playbooks in each client's native skill/rules format, including the invokable `sigmap-task` loop; plain `install` wires only detected clients |
 | `history` | Show usage log + benchmark trend sparklines (hit@5, token reduction) |
+| `lines <file> <start>-<end>` | Print an exact line range — the CLI twin of the `get_lines` MCP tool; `:<line> --context <n>` for an anchor window |
 | `note "<text>"` | Append a note to the cross-session decision log (`note` alone lists recent) |
 | `status` | Repo state — branch, dirty files, index freshness, notes |
 | `doctor` | Diagnose config, index, freshness, coverage, and MCP wiring — with a fix per issue (`--json`; exits 1 on hard failure) |
@@ -1286,6 +1287,39 @@ sigmap skills install --all --json     # everything, machine-readable
 | `--all` | Install for every supported client |
 | *(no flag)* | Wire only clients whose parent artifact already exists (`.claude/`, `.cursor/`, `.windsurf/`, `.github/`, `AGENTS.md`) — the `--setup` precedent |
 | `--json` | Machine-readable list / install results (`installed` \| `updated` \| `already`) |
+
+---
+
+## lines
+
+Print an exact range of a file — the CLI twin of the `get_lines` MCP tool (v8.31.0). Where MCP is unavailable, `sigmap ask` hands an agent precise `:start-end` anchors and, without this, no sanctioned way to spend them: it falls back to reading whole files and throws the saving away. Measured on a real Copilot session, an agent read 2,659 tokens via `sed -n '1,220p'` where the anchored window needed 217.
+
+```bash
+sigmap lines src/graph/builder.js 447-451     # an explicit range
+sigmap lines src/graph/builder.js :447         # a window around one line
+sigmap lines src/graph/builder.js :447 --context 20
+```
+
+```text
+$ sigmap lines src/graph/builder.js :447 --context 2
+# src/graph/builder.js:445-449
+```
+ * @returns {{ forward: Map<string,string[]>, reverse: Map<string,string[]> }}
+ */
+function buildFromCwd(cwd, opts) {
+  // R-package layouts use `R/` and `inst/`; Shiny apps put helpers in `R/`.
+```
+```
+
+The `:447` form takes an anchor **pasted straight off a signature** — `ask` prints `buildFromCwd(cwd, opts) → { forward: …  :447-501`, and that string is the argument.
+
+It delegates to the same handler as MCP, so both paths share the project-root sandbox, the end-of-file clamping and the secret redaction. A range beyond the end of the file clamps rather than failing; a path resolving outside the project is refused.
+
+| Option | Description |
+|--------|-------------|
+| `--context <n>` | Lines either side of a `:<line>` anchor (default 10). Ignored for an explicit range |
+
+Exit codes: `0` printed · `1` missing file, refused path, or a start past end-of-file · `2` usage error or an unparsable range.
 
 ---
 

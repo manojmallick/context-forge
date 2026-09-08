@@ -35,6 +35,9 @@ To ensure proper attribution:
 
 We welcome contributions! See [Contributing](./docs/CONTRIBUTING.md) for guidelines.
 
+### Recent Contributors (v8.31.0)
+- **@manojmallick** — fix(graph): dependency graph was empty on Maven/Gradle repos — `srcDirs` hard-coded and never read from config, plus an 8-directory walk cap (#560, PR #561); fix(graph): Java call graph discarded every `receiver.method(` call, 58% of call sites in a Spring module — receiver types now resolved from declarations, interface declarations indexed so calls have a target (#562, PR #563); feat(graph): Spring interface calls linked to their implementation, ambiguity left unresolved rather than guessed (#564, PR #565); test(graph): a JVM call-graph gate verified to fail on a simulated revert (#566, PR #567); feat(cli): `sigmap lines` — the CLI twin of `get_lines` for MCP-less environments (PR #568); chore(bench): retrieval baseline re-recorded after establishing the movement was index regeneration under a token budget, not a ranking change (PR #569)
+
 ### Recent Contributors (v8.30.0)
 - **@manojmallick** — feat(skills): `sigmap-task`, an invokable prompt skill driving the full grounding loop from the CLI for MCP-less environments — installs as `/sigmap-task` for Copilot (#553, PR #554); fix(extractors): lifted three hard-coded Java caps hiding 85% of the API surface, with disclosure markers matching the JS/TS path (#551, PR #552); fix(retrieval): generated data holders demoted so they stop outranking logic, entities still retrievable by symbol (#558, PR #552); fix(mcp): `mcp install vscode` now writes VS Code's `servers` key instead of a config it silently ignores, migrating older configs (#556, PR #557)
 
